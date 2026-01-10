@@ -14,12 +14,15 @@ export const authService = {
     const token = await AsyncStorage.getItem('accessToken');
     if (token) {
       credentials.headers.Authorization = `Bearer ${token}`;
-    }
-
-
-
+    } 
     console.log('credentials',credentials)
     const response = await api.post('/upload_handler.php', credentials);
+    console.log(response);
+    return response.data;
+  },
+  sendInterest: async (credentials: any) => {
+    console.log('credentials',credentials)
+    const response = await api.post('/interest/send_interest.php', credentials);
     console.log(response);
     return response.data;
   },

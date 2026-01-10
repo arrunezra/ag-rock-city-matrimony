@@ -1,7 +1,7 @@
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { Input, InputField } from '@/components/ui/input';
+import { Input, InputField, InputIcon } from '@/components/ui/input';
 import { Button, ButtonText, ButtonSpinner, ButtonIcon } from '@/components/ui/button';
 import { Link, LinkText } from '@/components/ui/link';
 import { FormControl, FormControlError, FormControlErrorText, FormControlLabel, FormControlLabelText } from '@/components/ui/form-control';
@@ -16,10 +16,17 @@ import { Heading } from '@/components/ui/heading';
 import { Spinner } from '@/components/ui/spinner';
 import { Divider } from '@/components/ui/divider';
 import { BadgeText } from '@/components/ui/badge';
+import { Toast, ToastTitle, useToast } from '@/components/ui/toast';
+import { Avatar, AvatarFallbackText, AvatarImage } from '@/components/ui/avatar';
+import { Fab, FabIcon, FabLabel } from '@/components/ui/fab';
+import { Modal, ModalBackdrop, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
+import { Card } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 
 
 export  { 
     Box,
+    Card,
     Text, 
     VStack, 
     Input, 
@@ -49,5 +56,24 @@ export  {
     Heading, 
     Spinner,
     Divider,  
-    BadgeText 
-} ;
+    BadgeText ,
+    useToast, 
+    Toast, 
+    ToastTitle,
+    Avatar,
+    AvatarImage, 
+    AvatarFallbackText,
+    Fab,
+    FabLabel,
+    FabIcon,
+    Modal,
+    ModalBackdrop,
+    ModalContent,
+    ModalCloseButton,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
+    InputIcon,
+    Switch,
+
+ } ;

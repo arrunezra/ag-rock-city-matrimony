@@ -9,7 +9,7 @@ export default function SuccessScreen({ onDone }: { onDone: () => void }) {
         {/* Lottie Animation */}
         <Box className="w-64 h-64">
           <LottieView
-            source={require('@/assets/animations/success.json')}
+            source={require('../../assets/animations/success.json')}
             autoPlay
             loop={false}
             style={{ width: '100%', height: '100%' }}

@@ -3,11 +3,14 @@ import { createStackNavigator } from '@react-navigation/stack';
 import CustomDrawer from '../components/common/CustomDrawer';
 import LandingScreen from '../screens/main/LandingScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
-import StaffScreen from '../screens/main/StaffScreen';
+import StaffScreen from '../screens/staff/StaffScreen';
 import WizardScreen from '../screens/main/WizardScreen';
 import ProfileAccess from '../screens/profile/ProfileAccess';
 import ProfileDetailScreen from '../screens/profile/ProfileDetailScreen';
-
+import TabNavigator from './TabNavigator';
+import StaffDetailScreen from '../screens/staff/StaffDetailScreen';
+import SettingsScreen from '../screens/settings/SettingsScreen';
+import StaffManagement from '../screens/staff/StaffManagement';
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
 
@@ -17,6 +20,11 @@ const MainStack = () => (
       headerShown: false,
     }}>
     <Stack.Screen name="Landing" component={LandingScreen} />
+    <Stack.Screen 
+    name="StaffDetail" 
+    component={StaffDetailScreen} 
+    options={{ title: 'Staff Information' }} 
+  />
     {/* Add other screens that don't need drawer here */}
   </Stack.Navigator>
 );
@@ -31,12 +39,22 @@ export default function DrawerNavigator() {
           width: '80%',
         },
       }}>
+        {/* 1. Main App (Tabs) */}
       <Drawer.Screen
         name="Home"
-        component={MainStack}
+        component={TabNavigator}
         options={{
           title: 'Dashboard',
           drawerLabel: 'Home',
+        }}
+      />
+      
+      <Drawer.Screen
+        name="MainStack"
+        component={MainStack}
+        options={{
+          title: 'Dashboard',
+          drawerLabel: 'Homes',
         }}
       />
       <Drawer.Screen
@@ -51,7 +69,15 @@ export default function DrawerNavigator() {
         name="Staff"
         component={StaffScreen}
         options={{
-          title: 'Staff Management',
+          title: 'Staff hardcoded',
+          drawerLabel: 'Staff',
+        }}
+      />
+      <Drawer.Screen
+        name="StaffManagement"
+        component={StaffManagement}
+        options={{
+          title: 'Staff from API',
           drawerLabel: 'Staff',
         }}
       />
@@ -71,14 +97,23 @@ export default function DrawerNavigator() {
           drawerLabel: 'Profile Access',
         }}
       />
+      {/* Hidden Detail Screens (Not visible in drawer menu) */}
       <Drawer.Screen
         name="ProfileDetail"
         component={ProfileDetailScreen}
-        options={{
-          title: 'Profile Detail',
-          drawerLabel: 'Profile Detail',
+        options={{ 
+          drawerItemStyle: { display: 'none' }, // Hides from menu
+          title: 'Profile Detail' 
+        }}
+      />
+      <Drawer.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ 
+          drawerItemStyle: { display: 'none' }, // Hides from menu
+          title: 'Settings' 
         }}
       />
     </Drawer.Navigator>
-  );
+   );
 }

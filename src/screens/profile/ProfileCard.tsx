@@ -1,10 +1,31 @@
-import React from 'react';
-import { Image, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Image, TouchableOpacity } from 'react-native';
 import { Box, VStack, HStack, Heading, Text, Button, ButtonIcon } from '@/src/components/common/GluestackUI';
 import { Briefcase, Heart, Icon, MapPin } from '@/src/components/common/IconUI';
+import profileService from '@/src/services/profileService';
 // import { MapPin, Briefcase, Heart } from 'lucide-react-native';
 
 export const ProfileCard = ({ profile, onPress }: any) => {
+    const [isLiked, setIsLiked] = useState(false);
+    const handleLike = async () => {
+    try {
+      // Optimistic UI update
+      setIsLiked(true);
+      
+      const response = await profileService.sendInterest({
+        receiver_id: profile.id
+      });
+
+      if (!response.success) {
+        // Revert if server fails
+        setIsLiked(false);
+        Alert.alert(response.message);
+      }
+    } catch (error) {
+      setIsLiked(false);
+      console.error("Like failed", error);
+    }
+  };
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
       <Box className="bg-white rounded-3xl mb-5 overflow-hidden border border-outline-100 shadow-sm">
@@ -24,6 +45,17 @@ export const ProfileCard = ({ profile, onPress }: any) => {
               <Heading size="xl" className="text-typography-900">
                 {profile.first_name}, {profile.age || '28'}
               </Heading>
+              <Button 
+                variant="outline" 
+                onPress={handleLike}
+                className={`rounded-full h-12 w-12 p-0 ${isLiked ? 'bg-error-50 border-error-200' : 'border-outline-200'}`}
+            >
+                <Icon 
+                as={Heart} 
+                className={isLiked ? 'text-error-600 fill-error-600' : 'text-typography-400'} 
+                />
+            </Button>
+
               <HStack className="items-center gap-1">
                 <Icon as={MapPin} size="xs" className="text-typography-400" />
                 <Text size="sm" className="text-typography-500">{profile.community || 'Tamil'}</Text>

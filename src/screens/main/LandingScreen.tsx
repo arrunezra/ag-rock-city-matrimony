@@ -20,13 +20,17 @@ export default function LandingScreen({ navigation }:any) {
     { label: 'On Leave', value: '3', color: '$warning' },
     { label: 'Tasks', value: '12', color: '$info' },
   ];
-
-  const quickActions = [
-    { label: 'Add Staff', route: 'Staff', icon: 'user-plus' },
-    { label: 'Schedule', route: 'Schedule', icon: 'calendar' },
-    { label: 'Reports', route: 'Reports', icon: 'file-text' },
-    { label: 'Messages', route: 'Messages', icon: 'message-circle' },
-  ];
+const quickActions = [
+  { label: 'Add Staff', route: 'Staff' }, // Works: 'Staff' is in the Drawer
+  { label: 'My Interests', route: 'Interests' }, // Works: 'Interests' is a Tab
+  { label: 'Profile Access', route: 'ProfileAccess' }, // Works: 'ProfileAccess' is a Tab
+];
+  // const quickActions = [
+  //   { label: 'Add Staff', route: 'Staff', icon: 'user-plus' },
+  //   { label: 'Schedule', route: 'Schedule', icon: 'calendar' },
+  //   { label: 'Reports', route: 'Reports', icon: 'file-text' },
+  //   { label: 'Messages', route: 'Messages', icon: 'message-circle' },
+  // ];
 
   return (
     <ScrollView className="flex-1 bg-background-0">
