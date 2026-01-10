@@ -1,0 +1,1 @@
+export const API_BASE_URL_DEV = 'https://agrcdev.jeasuns.com/agrcdev/php';
