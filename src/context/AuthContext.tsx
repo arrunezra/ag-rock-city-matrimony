@@ -39,29 +39,40 @@ const checkAuthStatus = async () => {
     }
   };
 
- const login = async (credentials: any) => {
-    try {
-      const response = await authService.login(credentials);
-      
-      // The backend returns access_token and refresh_token now
-      if (response.access_token) {
+const login = async (credentials: any) => {
+  try {
+    const { phoneNumber, password, rememberMe } = credentials;
+    const response = await authService.login({ phoneNumber, password });      
+    
+    if (response.access_token) {
+      // 1. Always update memory state so user is redirected to Home immediately
+      setAccessToken(response.access_token);
+      setIsAuthenticated(true);
+
+      if (response.user) {
+        setUser(response.user);
+      }
+
+      // 2. Conditional Persistence based on "Remember Me"
+      if (rememberMe) {
+        // Save to permanent storage (persists after app close)
         await AsyncStorage.setItem('accessToken', response.access_token);
-        await AsyncStorage.setItem('refreshToken', response.refresh_token);
-        
+        await AsyncStorage.setItem('refreshToken', response.refresh_token || '');
         if (response.user) {
           await AsyncStorage.setItem('userData', JSON.stringify(response.user));
-          setUser(response.user);
         }
-        
-        setAccessToken(response.access_token);
-        setIsAuthenticated(true);
-        return { success: true };
+      } else {
+        // Clear permanent storage so they are logged out on next app restart
+        await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'userData']);
       }
-      return { success: false, message: response.message };
-    } catch (error: any) {
-      return { success: false, message: error.response?.message || error.message };
+      
+      return { success: true };
     }
-  };
+    return { success: false, message: response.message };
+  } catch (error: any) {
+    return { success: false, message: error.response?.message || error.message };
+  }
+};
   const logout = async () => {
     try {
       // 1. Notify Backend (Optional)

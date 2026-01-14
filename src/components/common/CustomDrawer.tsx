@@ -11,19 +11,21 @@ import { Pressable } from '@/components/ui/pressable';
 import { Divider } from '@/components/ui/divider';
 import { HomeIcon, UserIcon, UsersIcon, ShieldCheckIcon, SettingsIcon, Icon, LogOutIcon, HelpCircleIcon } from './IconUI';
 import authService from '@/src/services/authService';
- 
+
 const CustomDrawer = (props: any) => {
-  const { user, logout } = useAuth(); 
+  const { user, logout } = useAuth();
   const { navigation } = props;
-  const userData:any = authService.getUser();
+  const userData: any = authService.getUser();
   // Added dynamic icons to your menu items
   const menuItems = [
     { label: 'Dashboard', icon: HomeIcon, route: 'Home' },
     { label: 'My Profile', icon: UserIcon, route: 'Profile' },
     { label: 'Staff Management', icon: UsersIcon, route: 'Staff' },
     { label: 'Profile Access', icon: ShieldCheckIcon, route: 'ProfileAccess' },
-    { label: 'Settings', icon: SettingsIcon, route: 'Settings' }, 
-    { label: 'Staff Management', icon: UsersIcon, route: 'StaffManagement' }, 
+    { label: 'Settings', icon: SettingsIcon, route: 'Settings' },
+    { label: 'Staff Management', icon: UsersIcon, route: 'StaffManagement' },
+    { label: 'Church Management', icon: UsersIcon, route: 'Church' },
+    { label: 'Church Dashboard', icon: UsersIcon, route: 'ChurchDashboard' },
   ];
 
   const handleLogout = async () => {
@@ -45,8 +47,8 @@ const CustomDrawer = (props: any) => {
               </AvatarFallbackText>
               {/* If user.profile_thumb exists, it will show the image */}
               {userData?.profile_thumb && (
-                <AvatarImage 
-                  source={{ uri: userData?.profile_thumb }} 
+                <AvatarImage
+                  source={{ uri: userData?.profile_thumb }}
                   alt="Profile Image"
                 />
               )}
@@ -85,7 +87,7 @@ const CustomDrawer = (props: any) => {
         {/* Support Section */}
         <VStack className="px-4">
           <Pressable
-            onPress={() => {}}
+            onPress={() => { }}
             className="py-3 px-3 rounded-xl active:bg-primary-50"
           >
             <HStack className="items-center gap-4">
@@ -112,7 +114,7 @@ const CustomDrawer = (props: any) => {
           </HStack>
         </Pressable>
         <Text className="text-center text-xs text-typography-400 mt-2">
-           App Version 1.0.2
+          App Version 1.0.2
         </Text>
       </Box>
     </Box>

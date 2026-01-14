@@ -12,20 +12,32 @@ export default function HomeScreen() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
+  const [filters, setFilters] = useState({
+    gender: '',
+    marital_status: '',
+    annual_income: '',
+    min_age: '',
+    max_age: ''
+  });
   const fetchProfiles = async (pageNumber: number, shouldRefresh = false) => {
     if (loading || (pageNumber > totalPages && !shouldRefresh)) return;
 
     setLoading(true);
     try {
-      const response = await api.get(`/get_profiles.php?page=${pageNumber}`);
+      // CONVERTED TO POST
+      const response = await api.post('/profile/getprofiles.php', {
+        page: pageNumber,
+        ...filters // Send all filter values in the body
+      });
+
       if (response.data.success) {
         const newData = response.data.data;
         setProfiles(shouldRefresh ? newData : [...profiles, ...newData]);
         setTotalPages(response.data.totalPages);
+        setPage(pageNumber);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Fetch Error:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);

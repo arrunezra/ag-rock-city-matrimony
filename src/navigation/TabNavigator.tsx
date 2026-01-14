@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
- import api from '@/src/api/api';
+import api from '@/src/api/api';
 import LandingScreen from '../screens/main/LandingScreen';
 import ProfileAccess from '../screens/profile/ProfileAccess';
-import { Icon, HomeIcon,  UserIcon  } from '@/src/components/common/IconUI';
+import { Icon, HomeIcon, UserIcon } from '@/src/components/common/IconUI';
 
- 
+
 //import RequestsScreen from '../screens/RequestsScreen'; // This is your 'Interests' screen
 
 const Tab = createBottomTabNavigator();
@@ -21,11 +21,11 @@ export default function TabNavigator() {
     } catch (e) { console.error(e); }
   };
 
-  useEffect(() => {
-    updateBadge();
-    const interval = setInterval(updateBadge, 60000);
-    return () => clearInterval(interval);
-  }, []);
+  // useEffect(() => {
+  //   updateBadge();
+  //   const interval = setInterval(updateBadge, 60000);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   return (
     <Tab.Navigator
@@ -35,23 +35,23 @@ export default function TabNavigator() {
         tabBarStyle: { height: 60, paddingBottom: 8 },
       }}
     >
-      <Tab.Screen 
-        name="Dashboard" 
-        component={LandingScreen} 
+      <Tab.Screen
+        name="Dashboard"
+        component={LandingScreen}
         options={{
           tabBarLabel: 'Home',
           tabBarIcon: ({ color }) => <Icon as={HomeIcon} className={color} />,
         }}
       />
-      <Tab.Screen 
-        name="ProfileAccess" 
-        component={ProfileAccess} 
+      <Tab.Screen
+        name="ProfileAccess"
+        component={ProfileAccess}
         options={{
           tabBarLabel: 'Access',
           tabBarIcon: ({ color }) => <Icon as={UserIcon} className={color} />,
         }}
       />
-     
+
     </Tab.Navigator>
   );
 }

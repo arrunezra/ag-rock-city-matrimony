@@ -11,6 +11,8 @@ import TabNavigator from './TabNavigator';
 import StaffDetailScreen from '../screens/staff/StaffDetailScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
 import StaffManagement from '../screens/staff/StaffManagement';
+import ChurchManagement from '../screens/Church/ChurchManagement';
+import ChurchDashboard from '../screens/Church/ChurchDashboard';
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
 
@@ -20,11 +22,11 @@ const MainStack = () => (
       headerShown: false,
     }}>
     <Stack.Screen name="Landing" component={LandingScreen} />
-    <Stack.Screen 
-    name="StaffDetail" 
-    component={StaffDetailScreen} 
-    options={{ title: 'Staff Information' }} 
-  />
+    <Stack.Screen
+      name="StaffDetail"
+      component={StaffDetailScreen}
+      options={{ title: 'Staff Information' }}
+    />
     {/* Add other screens that don't need drawer here */}
   </Stack.Navigator>
 );
@@ -39,7 +41,7 @@ export default function DrawerNavigator() {
           width: '80%',
         },
       }}>
-        {/* 1. Main App (Tabs) */}
+      {/* 1. Main App (Tabs) */}
       <Drawer.Screen
         name="Home"
         component={TabNavigator}
@@ -48,7 +50,7 @@ export default function DrawerNavigator() {
           drawerLabel: 'Home',
         }}
       />
-      
+
       <Drawer.Screen
         name="MainStack"
         component={MainStack}
@@ -101,19 +103,35 @@ export default function DrawerNavigator() {
       <Drawer.Screen
         name="ProfileDetail"
         component={ProfileDetailScreen}
-        options={{ 
+        options={{
           drawerItemStyle: { display: 'none' }, // Hides from menu
-          title: 'Profile Detail' 
+          title: 'Profile Detail'
         }}
       />
       <Drawer.Screen
         name="Settings"
         component={SettingsScreen}
-        options={{ 
+        options={{
           drawerItemStyle: { display: 'none' }, // Hides from menu
-          title: 'Settings' 
+          title: 'Settings'
+        }}
+      />
+      <Drawer.Screen
+        name="ChurchDashboard"
+        component={ChurchDashboard}
+        options={{
+          drawerItemStyle: { display: 'none' }, // Hides from menu
+          title: 'Church Dashboard'
+        }}
+      />
+      <Drawer.Screen
+        name="Church"
+        component={ChurchManagement}
+        options={{
+          drawerItemStyle: { display: 'none' }, // Hides from menu
+          title: 'Church Management'
         }}
       />
     </Drawer.Navigator>
-   );
+  );
 }

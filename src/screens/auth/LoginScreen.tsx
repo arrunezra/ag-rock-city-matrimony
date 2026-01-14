@@ -5,20 +5,21 @@ import { KeyboardAvoidingView, useKeyboardAnimation } from 'react-native-keyboar
 
 // New Imports (Points to your local UI components) 
 
-import {Image,Link,LinkText,ButtonSpinner, Center,ScrollView,Box,VStack,Input,InputField,Button,ButtonText,Text,FormControl, FormControlError, FormControlErrorText, FormControlLabel, FormControlLabelText } from '@/src/components/common/GluestackUI';
+import { Image, Link, LinkText, ButtonSpinner, Center, ScrollView, Box, VStack, Input, InputField, Button, ButtonText, Text, FormControl, FormControlError, FormControlErrorText, FormControlLabel, FormControlLabelText, HStack, Checkbox, CheckboxIndicator, CheckboxIcon, CheckboxLabel } from '@/src/components/common/GluestackUI';
 
 import authService from '@/src/services/authService';
 import { useAuth } from '@/src/context/AuthContext';
- 
+import { CheckIcon } from '@/src/components/common/IconUI';
+
 export default function LoginScreen({ navigation }: any) {
   const { progress } = useKeyboardAnimation();
   const { login } = useAuth(); // Get login from context
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState(false);
-
+  const [rememberMe, setRememberMe] = useState(false);
   const validateForm = () => {
     const newErrors: any = {};
     if (!email) {
@@ -35,22 +36,23 @@ export default function LoginScreen({ navigation }: any) {
     return Object.keys(newErrors).length === 0;
   };
 
-const handleLogin = async () => {
+  const handleLogin = async () => {
     if (!validateForm()) return;
     setLoading(true);
     try {
       // Ensure key names match your PHP (PhoneNumber vs email)
-      const response = await login({ 
-        phoneNumber: email, 
-        password: password 
+      const response = await login({
+        phoneNumber: email,
+        password: password,
+        rememberMe: rememberMe
       });
 
       // Based on our optimized PHP code, we check for access_token
       if (response.success) {
         // Save both tokens to AsyncStorage
-         console.log("Login successful");
+        console.log("Login successful");
 
-       // navigation.replace('Home');
+        // navigation.replace('Home');
       } else {
         Alert.alert('Error', response.message || 'Login failed');
       }
@@ -72,7 +74,7 @@ const handleLogin = async () => {
       <ScrollView className="flex-1 bg-background-0">
         <Center className="flex-1 px-4 py-8">
           <Box className="w-full max-w-[384px]">
-            
+
             {/* Logo Section */}
             <Box className="items-center mb-10 mt-4">
               <Image
@@ -126,14 +128,28 @@ const handleLogin = async () => {
                 </FormControlError>
               </FormControl>
 
-              {/* Forgot Password */}
-              <Box className="items-end ">
+              {/* Remember Me & Forgot Password Row */}
+              <HStack className="justify-between items-center mt-2">
+                <Checkbox
+                  size="sm"
+                  value="remember"
+                  isChecked={rememberMe}
+                  onChange={(val) => setRememberMe(val)}
+                  aria-label="Remember me"
+                >
+                  <CheckboxIndicator className="mr-2">
+                    <CheckboxIcon as={CheckIcon} />
+                  </CheckboxIndicator>
+                  <CheckboxLabel className="text-sm text-typography-500">Remember Me</CheckboxLabel>
+                </Checkbox>
+
                 <Link onPress={() => Alert.alert('Forgot Password', 'Feature coming soon!')}>
                   <LinkText className="text-primary-500 text-sm no-underline">
                     Forgot Password?
                   </LinkText>
                 </Link>
-              </Box>
+              </HStack>
+
 
               {/* Login Button */}
               <Button
@@ -155,10 +171,10 @@ const handleLogin = async () => {
                 </Link>
               </Box>
               <Link onPress={() => navigation.navigate('ThemeSettings')}>
-                  <LinkText className="text-primary-500 font-semibold no-underline">
-                    Theme Settings
-                  </LinkText>
-                </Link>
+                <LinkText className="text-primary-500 font-semibold no-underline">
+                  Theme Settings
+                </LinkText>
+              </Link>
             </VStack>
           </Box>
         </Center>
