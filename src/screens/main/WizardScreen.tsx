@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import SuccessScreen from '../common/SuccessScreen';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SelectDragIndicator, SelectDragIndicatorWrapper } from '@/components/ui/select';
 
 // --- DATA SOURCES ---
 const RELIGIONS = ["Christian", "Hindu", "Muslim", "Sikh", "Jain"];
@@ -244,7 +245,7 @@ export default function WizardScreen() {
             <Heading size="xl">Religion Details</Heading>
             <Select onValueChange={(v) => updateForm('religion', v)} selectedValue={formData.religion}>
               <SelectTrigger variant="outline" className="h-14">
-                <SelectInput placeholder="Select Religion" />
+                <SelectInput placeholder="Select Religion" className="flex-1" />
                 <SelectIcon as={ChevronDownIcon} className="mr-3" />
               </SelectTrigger>
               <SelectPortal>
@@ -256,7 +257,7 @@ export default function WizardScreen() {
 
             <Select onValueChange={(v) => updateForm('community', v)} selectedValue={formData.community}>
               <SelectTrigger variant="outline" className="h-14">
-                <SelectInput placeholder="Select Community" />
+                <SelectInput placeholder="Select Community" className="flex-1" />
                 <SelectIcon as={ChevronDownIcon} className="mr-3" />
               </SelectTrigger>
               <SelectPortal>
@@ -307,7 +308,7 @@ export default function WizardScreen() {
                 <Heading size="lg" className="text-typography-800">Choose City</Heading>
                 <Select onValueChange={(v) => updateForm('city', v)} selectedValue={formData.city}>
                   <SelectTrigger variant="outline" className="rounded-md border-outline-300 h-14">
-                    <SelectInput placeholder="Choose City" />
+                    <SelectInput placeholder="Choose City" className="flex-1" />
                     <SelectIcon className="mr-3" as={ChevronDownIcon} />
                   </SelectTrigger>
                   <SelectPortal>
@@ -359,11 +360,14 @@ export default function WizardScreen() {
                   selectedValue={formData.maritalStatus}
                 >
                   <SelectTrigger variant="outline" className="h-14">
-                    <SelectInput placeholder="Select Status" />
+                    <SelectInput placeholder="Select Status" className="flex-1" />
                     <SelectIcon as={ChevronDownIcon} className="mr-3" />
                   </SelectTrigger>
-                  <SelectPortal>
+                  <SelectPortal >
                     <SelectBackdrop /><SelectContent>
+                      <SelectDragIndicatorWrapper>
+                        <SelectDragIndicator />
+                      </SelectDragIndicatorWrapper>
                       <SelectItem label="Never Married" value="Never Married" />
                       <SelectItem label="Divorced" value="Divorced" />
                       <SelectItem label="Widowed" value="Widowed" />
@@ -431,7 +435,7 @@ export default function WizardScreen() {
                             </Input>
                             <Box className="flex-1">
                               <Select onValueChange={(v) => updateKidDetail(index, 'gender', v)} selectedValue={kid.gender}>
-                                <SelectTrigger className="h-10 bg-white"><SelectInput placeholder="Gender" /></SelectTrigger>
+                                <SelectTrigger className="h-10 bg-white"><SelectInput placeholder="Gender" className="flex-1" /></SelectTrigger>
                                 <SelectPortal><SelectBackdrop /><SelectContent>
                                   <SelectItem label="Boy" value="Boy" /><SelectItem label="Girl" value="Girl" />
                                 </SelectContent></SelectPortal>
@@ -469,7 +473,7 @@ export default function WizardScreen() {
                 <Heading size="lg" className="text-typography-800">Highest Qualification</Heading>
                 <Select onValueChange={(v) => updateForm('qualification', v)} selectedValue={formData.qualification}>
                   <SelectTrigger variant="outline" className="rounded-md border-outline-300 h-14">
-                    <SelectInput placeholder="Highest Qualification" />
+                    <SelectInput placeholder="Highest Qualification" className="flex-1" />
                     <SelectIcon className="mr-3" as={ChevronDownIcon} />
                   </SelectTrigger>
                   <SelectPortal>
@@ -511,7 +515,7 @@ export default function WizardScreen() {
             <Heading size="xl">Income & Work</Heading>
             <Select onValueChange={(v) => updateForm('income', v)} selectedValue={formData.income}>
               <SelectTrigger variant="outline" className="h-14">
-                <SelectInput placeholder="Annual Income" />
+                <SelectInput placeholder="Annual Income" className="flex-1" />
                 <SelectIcon as={ChevronDownIcon} className="mr-3" />
               </SelectTrigger>
               <SelectPortal>
