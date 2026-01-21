@@ -4,6 +4,10 @@ import { Box, Spinner, Center } from '@/src/components/common/GluestackUI';
 import api from '@/src/api/api';
 import { ProfileCard } from './ProfileCard';
 import { useNavigation } from '@react-navigation/native';
+import { profileService } from '@/src/services/profileService';
+import LottieView from 'lottie-react-native';
+import NotFoundScreen from '../common/NotFoundScreen';
+import FailedScreen from '../common/FailedScreen';
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
@@ -25,16 +29,22 @@ export default function HomeScreen() {
     setLoading(true);
     try {
       // CONVERTED TO POST
-      const response = await api.post('/profile/getprofiles.php', {
+      let post = {
         page: pageNumber,
         ...filters // Send all filter values in the body
-      });
+      }
+      console.log('getprofiless', post);
+      const response = await profileService.getprofile(post);
 
-      if (response.data.success) {
-        const newData = response.data.data;
+      if (response.success) {
+        const newData = response.data;
         setProfiles(shouldRefresh ? newData : [...profiles, ...newData]);
         setTotalPages(response.data.totalPages);
         setPage(pageNumber);
+      } else {
+        if (response.status == 200 && response.message == "Record not found") {
+          setProfiles([]);
+        }
       }
     } catch (error) {
       console.error("Fetch Error:", error);
@@ -76,7 +86,7 @@ export default function HomeScreen() {
 
   return (
     <Box className="flex-1 bg-background-50">
-      <FlatList
+      {profiles.length > 0 ? <FlatList
         data={profiles}
         keyExtractor={(item, index) => `${item.id}-${index}`}
         renderItem={({ item }) => (
@@ -94,7 +104,9 @@ export default function HomeScreen() {
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5} // Load more when 50% from bottom
         ListFooterComponent={renderFooter}
-      />
+      /> : <NotFoundScreen />}
+
     </Box>
   );
 }
+//<FailedScreen onRetry={handleRefresh} />

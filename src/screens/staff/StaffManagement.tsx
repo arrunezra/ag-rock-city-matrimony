@@ -1,11 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, FlatList, Pressable, ScrollView } from 'react-native';
 import {
   Box, VStack, HStack, Text, Heading, Fab, FabIcon, Card,
   Spinner, Modal, ModalBackdrop, ModalContent, ModalHeader,
   ModalBody, ModalFooter, Button, ButtonText, Input, InputField, Divider,
   InputIcon, Switch,
-  Center
+  Center,
+  Select,
+  SelectTrigger,
+  SelectPortal,
+  SelectContent,
+  SelectInput,
+  SelectItem,
+  SelectBackdrop
 } from '@/src/components/common/GluestackUI';
 import { AddIcon, ChevronUpIcon, EditIcon, Icon, SearchIcon } from '@/src/components/common/IconUI';
 
@@ -42,19 +49,31 @@ export default function StaffManagement() {
     department: ''
   });
 
-  useEffect(() => { fetchStaff(); }, []);
+  useEffect(() => { fetchStaff(1, false); }, []);
 
-  useEffect(() => {
-    const filtered = staffList.filter((item: any) => {
+  // useEffect(() => {
+  //   const filtered = staffList.filter((item: any) => {
+  //     const fullName = `${item.firstName} ${item.lastName}`.toLowerCase();
+  //     const dept = item.department.toLowerCase();
+  //     const query = searchQuery.toLowerCase();
+
+  //     return fullName.includes(query) || dept.includes(query);
+  //   });
+  //   setStaffList(filtered);
+  // }, [searchQuery, staffList]);
+  const filteredStaff = useMemo(() => {
+    // If no search query, return the full list immediately
+    if (!searchQuery.trim()) return staffList;
+
+    const query = searchQuery.toLowerCase();
+
+    return staffList.filter((item: any) => {
       const fullName = `${item.firstName} ${item.lastName}`.toLowerCase();
-      const dept = item.department.toLowerCase();
-      const query = searchQuery.toLowerCase();
+      const dept = (item.department || "").toLowerCase();
 
       return fullName.includes(query) || dept.includes(query);
     });
-    setStaffList(filtered);
-  }, [searchQuery, staffList]);
-
+  }, [searchQuery, staffList]); // Only re-calculates if these change
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -62,22 +81,23 @@ export default function StaffManagement() {
     await fetchStaff(1, false);
     setRefreshing(false);
   };
-
+  const roles = ["Pastor", "Administrator", "Youth Leader", "Worship Leader", "Volunteer"];
+  const employmentTypes = ["Full-time", "Part-time", "Volunteer", "Contract"];
   // Form State matching your columns
   const [form, setForm] = useState({
     firstName: '', lastName: '', department: '', role: '',
     designation: '', church_Id: 'CH001', mobileNo: '',
-    alrenativeMobileNo: '', address: '', activeStatus: 1, staff_id: ''
+    alrenativeMobileNo: '', address: '', activeStatus: 1, staff_id: '', employment_type: ''
   });
 
   const fetchStaff = async (pageNumber = 1, shouldAppend = false) => {
-    if (loading || (pageNumber > totalPages)) return;
+    if ((pageNumber > totalPages)) return;
 
     setLoading(true);
     try {
-      const res = await api.post('/staff_api.php', {
+      const res = await api.post('/staff/staffdetails.php', {
         action: 'fetch', // Tells PHP to handle pagination, not insert
-        Church_Id: 'CH001',
+        Church_Id: '',
         page: pageNumber,
         limit: 10,
         search: searchQuery
@@ -124,7 +144,8 @@ export default function StaffManagement() {
       mobileNo: staff.mobileNo,
       alrenativeMobileNo: staff.alrenativeMobileNo || '',
       address: staff.address,
-      activeStatus: staff.activeStatus // Keep existing status
+      activeStatus: staff.activeStatus, // Keep existing status
+      employment_type: staff.employment_type
     });
     setShowModal(true);
   };
@@ -254,22 +275,9 @@ export default function StaffManagement() {
   return (
     <Box className="flex-1 bg-background-50">
       {/* Search Header Section */}
-      <VStack className="bg-white px-4 pb-4 pt-2 border-b border-outline-50">
-        <Heading size="lg" className="mb-3">Staff Directory</Heading>
-        <Input variant="rounded" size="md">
-          <InputIcon className="ml-3">
-            <Icon as={SearchIcon} />
-          </InputIcon>
-          <InputField
-            placeholder="Search by name or department..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </Input>
-      </VStack>
 
       <FlatList
-        data={staffList} // Use filtered list here
+        data={filteredStaff} // Use filtered list here
         renderItem={renderItem}
         keyExtractor={(item: any) => item.id.toString()}
         ref={flatListRef}
@@ -308,7 +316,7 @@ export default function StaffManagement() {
             </Center>
           ) : <Box className="h-10" /> // Small spacer at bottom
         }
-        ListEmptyComponent={loading ?
+        ListEmptyComponent={refreshing ?
           <Spinner size="large" className="mt-10" /> :
           <Text className="text-center mt-10">{searchQuery ? "No matches found" : "No staff found"}</Text>}
       />
@@ -327,7 +335,7 @@ export default function StaffManagement() {
         setForm({
           firstName: '', lastName: '', department: '', role: '',
           designation: '', church_Id: 'CH001', mobileNo: '',
-          alrenativeMobileNo: '', address: '', activeStatus: 1, staff_id: ''
+          alrenativeMobileNo: '', address: '', activeStatus: 1, staff_id: '', employment_type: ''
         });
 
         setShowModal(true);
@@ -386,6 +394,26 @@ export default function StaffManagement() {
                   </FormControl>
                 </HStack>
 
+                <FormControl>
+                  <FormControlLabel><FormControlLabelText>ROLE</FormControlLabelText></FormControlLabel>
+                  <Select onValueChange={v => setForm({ ...form, role: v })} selectedValue={form.role}>
+                    <SelectTrigger><SelectInput placeholder="Select Role" /></SelectTrigger>
+                    <SelectPortal><SelectBackdrop /><SelectContent>
+                      {roles.map(r => <SelectItem label={r} value={r} key={r} />)}
+                    </SelectContent></SelectPortal>
+                  </Select>
+                </FormControl>
+
+                <FormControl>
+                  <FormControlLabel><FormControlLabelText>EMPLOYMENT TYPE</FormControlLabelText></FormControlLabel>
+                  <Select onValueChange={v => setForm({ ...form, employment_type: v })} selectedValue={form.employment_type}>
+                    <SelectTrigger><SelectInput placeholder="Select Type" /></SelectTrigger>
+                    <SelectPortal><SelectBackdrop /><SelectContent>
+                      {employmentTypes.map(e => <SelectItem label={e} value={e} key={e} />)}
+                    </SelectContent></SelectPortal>
+                  </Select>
+                </FormControl>
+
                 <Divider className="my-2" />
 
                 {/* Contact Section */}
@@ -419,6 +447,8 @@ export default function StaffManagement() {
                     />
                   </Input>
                 </FormControl>
+
+
 
               </VStack>
             </ScrollView>

@@ -26,6 +26,9 @@ const CustomDrawer = (props: any) => {
     { label: 'Staff Management', icon: UsersIcon, route: 'StaffManagement' },
     { label: 'Church Management', icon: UsersIcon, route: 'Church' },
     { label: 'Church Dashboard', icon: UsersIcon, route: 'ChurchDashboard' },
+    { label: 'Wizard For Profile creator', icon: UsersIcon, route: 'WizardScreen' },
+
+
   ];
 
   const handleLogout = async () => {

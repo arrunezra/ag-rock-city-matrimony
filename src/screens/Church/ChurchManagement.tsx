@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FlatList, ScrollView, Alert, TouchableOpacity, Linking, Image } from 'react-native';
+import { FlatList, ScrollView, Alert, TouchableOpacity, Linking, Image, Platform } from 'react-native';
 import {
     Box, VStack, HStack, Input, InputField, Button, ButtonText, Text, Heading, Spinner,
     FormControl, FormControlLabel, FormControlLabelText, FormControlError, FormControlErrorText, Select, SelectTrigger,
@@ -33,8 +33,7 @@ export default function ChurchManagement() {
         id: null, church_id: '', church_name: '', denomination: '', address: '', city: '', state: '',
         country: 'IND', postal_code: '', pastor_name: '', pastor_phone: '', church_phone: '', church_email: '', active_status: 'Active'
     });
-    const roles = ["Pastor", "Administrator", "Youth Leader", "Worship Leader", "Volunteer"];
-    const employmentTypes = ["Full-time", "Part-time", "Volunteer", "Contract"];
+
     const [previewStaff, setPreviewStaff] = useState<any>(null);
     const [showPreview, setShowPreview] = useState(false);
     const [image, setImage] = useState<any>(null);
@@ -121,16 +120,66 @@ export default function ChurchManagement() {
         handlePickAndCrop();
     };
     const handlePickAndCrop = () => {
+        console.log('handlePickAndCrop', previewStaff);
+
+        // Ensure previewStaff exists before starting
+        if (!previewStaff?.id) {
+            Alert.alert("Error", "No staff member selected");
+            return;
+        }
+
         ImagePicker.openPicker({
             width: 800,
             height: 800,
             cropping: true,
-            includeBase64: true,
+            includeBase64: false, // Set to false if using FormData to save memory
             compressImageQuality: 0.8,
             mediaType: 'photo',
-        }).then((res: any) => {
+        }).then(async (res: any) => {
+            // Use 'res.path' which contains the URI of the cropped image
+            const croppedUri = res.path;
+
             setImage(res);
             setShowPreview(true);
+
+            const formData = new FormData();
+
+            // Prepare the file object
+            const fileToUpload = {
+                // Standardizing URI for both platforms
+                uri: Platform.OS === 'ios' ? croppedUri.replace('file://', '') : croppedUri,
+                type: res.mime || 'image/jpeg',
+                name: `staff_avatar_${previewStaff.id}.jpg`,
+            };
+
+            formData.append('profile_image', fileToUpload as any);
+            formData.append('staff_id', previewStaff.id.toString());
+            formData.append('action', 'upload_avatar');
+
+            try {
+                const response = await api.post('/church/staffmanagement.php', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                    onUploadProgress: (progressEvent) => {
+                        if (progressEvent.total) {
+                            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                            console.log(`Upload progress: ${percentCompleted}%`);
+                        }
+                    },
+                });
+
+                if (response.data.success) {
+                    Alert.alert("Success", "Profile photo updated!");
+                    // Optionally refresh your list here
+                    fetchChurches(1, false);
+                } else {
+                    Alert.alert("Error", response.data.message || "Server rejected upload");
+                }
+            } catch (error) {
+                console.error("Upload error:", error);
+                Alert.alert("Error", "Failed to upload image to server.");
+            }
         }).catch((err: any) => {
             if (err.code !== 'E_PICKER_CANCELLED') {
                 Alert.alert("Error", err.message);
@@ -193,17 +242,7 @@ export default function ChurchManagement() {
                     <Button variant="outline" onPress={() => setFilters({ church_name: '', denomination: '', active_status: '' })}><ButtonText>Reset</ButtonText></Button>
                 </HStack>
             </VStack>
-            <Avatar size="md" className="bg-primary-500">
-                {image &&
-                    <AvatarImage source={{ uri: image.path }} />
-                }
 
-                {/* {item.profile_image ? (
-            <AvatarImage source={{ uri: item.profile_image }} />
-        ) : (
-            <AvatarFallbackText>{item.name}</AvatarFallbackText>
-        )} */}
-            </Avatar>
             <FlatList
                 data={list}
                 keyExtractor={(item) => item.id.toString()}
@@ -225,14 +264,14 @@ export default function ChurchManagement() {
                                     {item?.profile_image ? (
                                         <AvatarImage source={{ uri: item?.profile_image }} />
                                     ) : (
-                                        <AvatarFallbackText>{item.name}</AvatarFallbackText>
+                                        <AvatarFallbackText>{item.church_name}</AvatarFallbackText>
                                     )}
                                 </Avatar>
                             </TouchableOpacity>
 
 
                             <VStack className="flex-1">
-                                <Text className="font-bold text-typography-900">{item.name}</Text>
+                                <Text className="font-bold text-typography-900">{item.church_name}</Text>
                                 <Text size="xs" className="text-typography-500">{item.church_name}</Text>
                                 <HStack space="xs" className="items-center">
                                     <Box className="mt-1 self-start">
@@ -338,25 +377,7 @@ export default function ChurchManagement() {
                                 </Select>
                             </FormControl>
 
-                            <FormControl>
-                                <FormControlLabel><FormControlLabelText>ROLE</FormControlLabelText></FormControlLabel>
-                                <Select onValueChange={v => setForm({ ...form, role: v })} selectedValue={form.role}>
-                                    <SelectTrigger><SelectInput placeholder="Select Role" /></SelectTrigger>
-                                    <SelectPortal><SelectBackdrop /><SelectContent>
-                                        {roles.map(r => <SelectItem label={r} value={r} key={r} />)}
-                                    </SelectContent></SelectPortal>
-                                </Select>
-                            </FormControl>
 
-                            <FormControl>
-                                <FormControlLabel><FormControlLabelText>EMPLOYMENT TYPE</FormControlLabelText></FormControlLabel>
-                                <Select onValueChange={v => setForm({ ...form, employment_type: v })} selectedValue={form.employment_type}>
-                                    <SelectTrigger><SelectInput placeholder="Select Type" /></SelectTrigger>
-                                    <SelectPortal><SelectBackdrop /><SelectContent>
-                                        {employmentTypes.map(e => <SelectItem label={e} value={e} key={e} />)}
-                                    </SelectContent></SelectPortal>
-                                </Select>
-                            </FormControl>
 
 
                         </VStack>
