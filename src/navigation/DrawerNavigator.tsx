@@ -4,7 +4,7 @@ import CustomDrawer from '../components/common/CustomDrawer';
 import LandingScreen from '../screens/main/LandingScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import StaffScreen from '../screens/staff/StaffScreen';
-import WizardScreen from '../screens/main/WizardScreen';
+import WizardScreen from '../screens/profile/WizardScreen';
 import ProfileAccess from '../screens/profile/ProfileAccess';
 import ProfileDetailScreen from '../screens/profile/ProfileDetailScreen';
 import TabNavigator from './TabNavigator';

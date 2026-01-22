@@ -26,6 +26,20 @@ export const profileService = {
     console.log(response);
     return response.data;
   },
+  createProfile: async (profile: any) => {
+    console.log('profile==', profile)
+    const response = await api.post('/profile/complete_profile.php', profile);
+    console.log(response);
+    return response.data;
+  },
+  getCities: async (stateId: any, searchQuery: string | null = null) => {
+    console.log('stateId', stateId)
+    const url = searchQuery
+      ? `/helpers/get_cities.php?statecode=${stateId}&search=${encodeURIComponent(searchQuery)}`
+      : `/helpers/get_cities.php?statecode=${stateId}`;
+    const response = await api.get(url);
+    return response.data;
+  },
   getprofile: async (credentials: any) => {
     console.log('credentials', credentials)
     const response = await api.post('/profile/getprofile.php', credentials);
