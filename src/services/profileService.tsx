@@ -4,9 +4,7 @@ import api from "../api/api";
 
 export const profileService = {
   login: async (credentials: any) => {
-    console.log('credentials', credentials)
     const response = await api.post('/auth/login.php', credentials);
-    console.log(response);
     return response.data;
   },
   uploadImage: async (credentials: any) => {
@@ -15,25 +13,18 @@ export const profileService = {
     if (token) {
       credentials.headers.Authorization = `Bearer ${token}`;
     }
-    console.log('credentials', credentials)
     const response = await api.post('/upload_handler.php', credentials);
-    console.log(response);
     return response.data;
   },
   sendInterest: async (credentials: any) => {
-    console.log('credentials', credentials)
     const response = await api.post('/interest/send_interest.php', credentials);
-    console.log(response);
     return response.data;
   },
   createProfile: async (profile: any) => {
-    console.log('profile==', profile)
-    const response = await api.post('/profile/complete_profile.php', profile);
-    console.log(response);
+    const response = await api.post('/profile/complete_profile.php', profile)
     return response.data;
   },
   getCities: async (stateId: any, searchQuery: string | null = null) => {
-    console.log('stateId', stateId)
     const url = searchQuery
       ? `/helpers/get_cities.php?statecode=${stateId}&search=${encodeURIComponent(searchQuery)}`
       : `/helpers/get_cities.php?statecode=${stateId}`;
@@ -41,9 +32,11 @@ export const profileService = {
     return response.data;
   },
   getprofile: async (credentials: any) => {
-    console.log('credentials', credentials)
     const response = await api.post('/profile/getprofile.php', credentials);
-    console.log(response);
+    return response.data;
+  },
+  validateMobileOrEmail: async (credentials: any) => {
+    const response = await api.post('/profile/validate_mobileno.php', credentials);
     return response.data;
   },
 };

@@ -21,6 +21,7 @@ import { ThemeProvider } from './components/ui/ThemeProvider/ThemeProvider';
 import { useEffect, useState } from 'react';
 import { PermissionTypes, requestPermission } from './src/utils/permissionHandler';
 import { openSettings } from 'react-native-permissions';
+import { AlertProvider } from './src/context/AlertContext';
 
 function App() {
   const [isAllPermissionGranted, setIsAllPermissionGranted] = useState(false);
@@ -46,10 +47,12 @@ function App() {
       <SafeAreaProvider>
         <KeyboardProvider>
           <AuthProvider>
-            {isAllPermissionGranted ? <AppNavigator /> : <Pressable onPress={() => openSettings()}> <Text style={{
-              fontSize: 20, color: 'red', textAlign: 'center',
-              marginTop: 200
-            }}>Permission Not Granted</Text></Pressable>}
+            <AlertProvider>
+              {isAllPermissionGranted ? <AppNavigator /> : <Pressable onPress={() => openSettings()}> <Text style={{
+                fontSize: 20, color: 'red', textAlign: 'center',
+                marginTop: 200
+              }}>Permission Not Granted</Text></Pressable>}
+            </AlertProvider>
           </AuthProvider>
         </KeyboardProvider>
       </SafeAreaProvider>

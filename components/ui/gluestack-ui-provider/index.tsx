@@ -10,7 +10,7 @@ export type ThemeFlavor = 'blue' | 'green';
 
 export function GluestackUIProvider({
   mode = 'light',
-  flavor = 'blue', // New prop
+  flavor = 'green', // New prop
   ...props
 }: {
   mode?: ModeType;
@@ -24,7 +24,7 @@ export function GluestackUIProvider({
     setColorScheme(mode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
-// Combine flavor and colorScheme (e.g., "blue-dark")
+  // Combine flavor and colorScheme (e.g., "blue-dark")
   const activeConfigKey = `${flavor}-${colorScheme}` as keyof typeof config;
   const activeStyles = config[activeConfigKey] || config['green-light'];
   return (

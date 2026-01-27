@@ -83,7 +83,7 @@ export default function LoginScreen({ navigation }: any) {
                 className="mb-4 h-32 w-32" // Using Tailwind for size
               />
               <Text className="text-4xl font-bold mb-2">Welcome Back</Text>
-              <Text className="text-primary-500 text-center">
+              <Text className="text-center">
                 Sign in to continue to your account
               </Text>
             </Box>
@@ -93,9 +93,9 @@ export default function LoginScreen({ navigation }: any) {
               {/* Email */}
               <FormControl isInvalid={!!errors.email}>
                 <FormControlLabel className="mb-1">
-                  <FormControlLabelText>Email</FormControlLabelText>
+                  <FormControlLabelText size='lg'>Email</FormControlLabelText>
                 </FormControlLabel>
-                <Input>
+                <Input className="h-16" size='lg'>
                   <InputField
                     placeholder="Enter your email"
                     value={email}
@@ -112,9 +112,9 @@ export default function LoginScreen({ navigation }: any) {
               {/* Password */}
               <FormControl isInvalid={!!errors.password}>
                 <FormControlLabel className="mb-1">
-                  <FormControlLabelText>Password</FormControlLabelText>
+                  <FormControlLabelText size='lg'>Password</FormControlLabelText>
                 </FormControlLabel>
-                <Input>
+                <Input className="h-16" size='lg'>
                   <InputField
                     type="password"
                     placeholder="Enter your password"
@@ -131,7 +131,7 @@ export default function LoginScreen({ navigation }: any) {
               {/* Remember Me & Forgot Password Row */}
               <HStack className="justify-between items-center mt-2">
                 <Checkbox
-                  size="sm"
+                  size="md"
                   value="remember"
                   isChecked={rememberMe}
                   onChange={(val) => setRememberMe(val)}
@@ -144,7 +144,7 @@ export default function LoginScreen({ navigation }: any) {
                 </Checkbox>
 
                 <Link onPress={() => Alert.alert('Forgot Password', 'Feature coming soon!')}>
-                  <LinkText className="text-primary-500 text-sm no-underline">
+                  <LinkText size='md' className="text-primary-500 text-sm no-underline">
                     Forgot Password?
                   </LinkText>
                 </Link>
@@ -153,6 +153,7 @@ export default function LoginScreen({ navigation }: any) {
 
               {/* Login Button */}
               <Button
+                size='xl'
                 className="mt-4 bg-primary-700"
                 onPress={handleLogin}
                 isDisabled={loading}
