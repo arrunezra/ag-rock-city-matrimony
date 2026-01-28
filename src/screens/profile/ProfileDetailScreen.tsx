@@ -2,16 +2,52 @@ import React from 'react';
 import { ScrollView, Image } from 'react-native';
 import { Box, VStack, HStack, Heading, Text, BadgeText, Divider, } from '@/src/components/common/GluestackUI';
 import { Badge } from '@/src/components/common/IconUI';
+import { API_BASE_URL_DEV_Profiles_Images, API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
+import FastImage from "@d11/react-native-fast-image";
+import LottieView from 'lottie-react-native';
 
 export default function ProfileDetailScreen({ route }: any) {
   const { profile } = route.params;
+  const getProfileSource = () => {
+    // Check if a remote thumb actually exists
+    if (profile.profile_pic) {
+      return <FastImage
+        source={{
+          uri: `${API_BASE_URL_DEV_Profiles_Images}/${profile.profile_pic}`,
+          priority: FastImage.priority.high,
+          cache: FastImage.cacheControl.immutable,
+        }}
+        style={{ width: '100%', height: '100%' }}
+        resizeMode={FastImage.resizeMode.cover}
+      />
 
+    } else {
+      return <Box className="h-full w-full bg-background-100">
+        <LottieView
+          source={require('../../assets/animations/Artboard.json')}
+          autoPlay
+          loop={false}
+          style={{ width: '100%', height: '100%', position: 'absolute' }}
+        />
+        {/* The Overlay Layer */}
+        {/* The Overlay - Positioned Middle Bottom */}
+        <Box
+          className="absolute bottom-6 self-center bg-white/70 px-6 py-2 rounded-full shadow-md"
+          style={{ zIndex: 10 }}
+        >
+          <Text className="text-center text-typography-900 font-semibold text-md">
+            No Profile Image
+          </Text>
+        </Box>
+      </Box>
+    }
+  }
   return (
     <Box className="flex-1 bg-white">
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Large Header Image */}
         <Box className="h-[450px] w-full">
-          <Image source={{ uri: profile.profile_pic }} className="w-full h-full" resizeMode="cover" />
+          {getProfileSource()}
         </Box>
 
         <VStack className="p-6 gap-6 -mt-8 bg-white rounded-t-[40px]">
@@ -35,9 +71,9 @@ export default function ProfileDetailScreen({ route }: any) {
           <VStack className="gap-4">
             <Heading size="md">Professional Details</Heading>
             <HStack className="flex-wrap gap-4">
-               <DetailItem label="Profession" value={profile.work_sector} />
-               <DetailItem label="Income" value={profile.income_range || '10-15 LPA'} />
-               <DetailItem label="Community" value={profile.community} />
+              <DetailItem label="Profession" value={profile.work_sector} />
+              <DetailItem label="Income" value={profile.income_range || '10-15 LPA'} />
+              <DetailItem label="Community" value={profile.community} />
             </HStack>
           </VStack>
 

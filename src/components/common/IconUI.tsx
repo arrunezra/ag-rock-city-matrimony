@@ -2,7 +2,9 @@ import { AddIcon, ChevronDownIcon, ChevronLeftIcon, Icon, HelpCircleIcon, Chevro
 import {
     MapPin, Briefcase, Heart, Badge, HomeIcon, MailIcon, UserIcon, LogOutIcon, UsersIcon, ShieldCheckIcon,
     SettingsIcon, CameraIcon, SearchIcon, EditIcon, Phone, Calendar, MessageSquare,
-    CheckIcon, ChevronUpIcon
+    CheckIcon, ChevronUpIcon,
+    MessageCircleIcon,
+    HeartIcon
 } from 'lucide-react-native';
 
 
@@ -32,5 +34,6 @@ export {
     MessageSquare,
     CheckIcon,
     ChevronUpIcon,
-
+    MessageCircleIcon,
+    HeartIcon
 };

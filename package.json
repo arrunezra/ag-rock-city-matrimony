@@ -10,6 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@d11/react-native-fast-image": "^8.13.0",
     "@dotlottie/react-player": "^1.6.19",
     "@expo/html-elements": "^0.10.1",
     "@gluestack-ui/core": "^3.0.10",

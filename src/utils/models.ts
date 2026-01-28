@@ -4,11 +4,15 @@ export interface User {
   email: string;
   phone: string;
   department:string;
-  role?: 'admin' | 'staff' | 'user';
+  role?: 'member' | 'staff' | 'admin' | 'super admin';
   employeeId?: string;
   position?: string;
   joinDate?: string;
   status?: string;
+  profilethumb?: string;
+  profilePic?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface AuthResponse {
@@ -19,6 +23,7 @@ export interface AuthResponse {
 export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  userRole: string | null; // Add this
   accessToken: string | null;
   isAuthenticated: boolean;
   updateUser: (updatedData: User) => Promise<void>;

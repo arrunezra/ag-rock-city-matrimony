@@ -1,9 +1,9 @@
-import  { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import authService from '../services/authService';
-import { AuthContextType,User } from '../utils/models';
+import { AuthContextType, User } from '../utils/models';
 
- 
+
 
 // 3. Create the Context with an initial undefined value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,16 +17,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const userRole = user?.role || null;
   useEffect(() => {
     checkAuthStatus();
   }, []);
 
-const checkAuthStatus = async () => {
+  const checkAuthStatus = async () => {
     try {
       // Updated keys to match our new logic
       const access = await AsyncStorage.getItem('accessToken');
       const userData = await AsyncStorage.getItem('userData');
-      
+
       if (access && userData) {
         setAccessToken(access);
         setUser(JSON.parse(userData));
@@ -39,40 +40,44 @@ const checkAuthStatus = async () => {
     }
   };
 
-const login = async (credentials: any) => {
-  try {
-    const { phoneNumber, password, rememberMe } = credentials;
-    const response = await authService.login({ phoneNumber, password });      
-    
-    if (response.access_token) {
-      // 1. Always update memory state so user is redirected to Home immediately
-      setAccessToken(response.access_token);
-      setIsAuthenticated(true);
+  const login = async (credentials: any) => {
+    try {
+      const { phoneNumber, password, rememberMe } = credentials;
+      const response = await authService.login({ phoneNumber, password });
+      console.log('Login response:', response);
+      if (response.access_token) {
+        // 1. Always update memory state so user is redirected to Home immediately
+        setAccessToken(response.access_token);
+        setIsAuthenticated(true);
 
-      if (response.user) {
-        setUser(response.user);
-      }
-
-      // 2. Conditional Persistence based on "Remember Me"
-      if (rememberMe) {
-        // Save to permanent storage (persists after app close)
-        await AsyncStorage.setItem('accessToken', response.access_token);
-        await AsyncStorage.setItem('refreshToken', response.refresh_token || '');
         if (response.user) {
-          await AsyncStorage.setItem('userData', JSON.stringify(response.user));
+          setUser(response.user);
         }
-      } else {
-        // Clear permanent storage so they are logged out on next app restart
-        await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'userData']);
+
+        // 2. Conditional Persistence based on "Remember Me"
+        if (rememberMe) {
+          // Save to permanent storage (persists after app close)
+          await AsyncStorage.setItem('accessToken', response.access_token);
+          await AsyncStorage.setItem('refreshToken', response.refresh_token || '');
+          if (response.user) {
+            await AsyncStorage.setItem('userData', JSON.stringify(response.user));
+          }
+        } else {
+          // Clear permanent storage so they are logged out on next app restart
+          await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'userData']);
+        }
+
+        return { success: true };
       }
-      
-      return { success: true };
+      return { success: false, message: response.message };
+    } catch (error: any) {
+      return { success: false, message: error.response?.message || error.message };
     }
-    return { success: false, message: response.message };
-  } catch (error: any) {
-    return { success: false, message: error.response?.message || error.message };
-  }
-};
+    finally {
+      // Artificial delay (Optional: 1 second) to make splash feel smooth
+      setTimeout(() => setIsLoading(false), 1000);
+    }
+  };
   const logout = async () => {
     try {
       // 1. Notify Backend (Optional)
@@ -88,7 +93,7 @@ const login = async (credentials: any) => {
       return { success: true };
     }
   };
-const signup = async (userData: any) => {
+  const signup = async (userData: any) => {
     try {
       return await authService.signup(userData);
     } catch (error: any) {
@@ -96,9 +101,9 @@ const signup = async (userData: any) => {
     }
   };
 
- 
 
-const updateUser = async (updatedData: any) => {
+
+  const updateUser = async (updatedData: any) => {
     try {
       await AsyncStorage.setItem('userData', JSON.stringify(updatedData));
       setUser(updatedData);
@@ -111,7 +116,8 @@ const updateUser = async (updatedData: any) => {
     <AuthContext.Provider
       value={{
         user,
-        isLoading, 
+        userRole,
+        isLoading,
         accessToken,
         isAuthenticated,
         login,

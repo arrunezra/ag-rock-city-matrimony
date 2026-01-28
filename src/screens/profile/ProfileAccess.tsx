@@ -8,6 +8,7 @@ import { profileService } from '@/src/services/profileService';
 import LottieView from 'lottie-react-native';
 import NotFoundScreen from '../common/NotFoundScreen';
 import FailedScreen from '../common/FailedScreen';
+import { SkeletonItem } from '../common/SkeletonItem';
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
@@ -60,10 +61,11 @@ export default function HomeScreen() {
   }, []);
 
   // Pull to Refresh
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
+    // Do not wait for setPage(1) state to update, pass the value directly
+    await fetchProfiles(1, true);
     setPage(1);
-    fetchProfiles(1, true);
   };
 
   // Load More (Pagination)
@@ -83,10 +85,20 @@ export default function HomeScreen() {
       </Center>
     );
   };
+  const renderContent = () => {
+    // Show Skeletons during the very first load or while refreshing
+    if (loading && profiles.length === 0) {
+      return (
+        <Box className="px-4 py-2">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <SkeletonItem key={i} />
+          ))}
+        </Box>
+      );
+    }
 
-  return (
-    <Box className="flex-1 bg-background-50">
-      {profiles.length > 0 ? <FlatList
+    return (
+      <FlatList
         data={profiles}
         keyExtractor={(item, index) => `${item.id}-${index}`}
         renderItem={({ item }) => (
@@ -94,18 +106,19 @@ export default function HomeScreen() {
             <ProfileCard profile={item} onPress={() => navigation.navigate('ProfileDetail', { profile: item })} />
           </Box>
         )}
-        // Performance Props
-        initialNumToRender={5}
-        maxToRenderPerBatch={10}
-        windowSize={5}
-        // Pagination & Refresh
-        onRefresh={handleRefresh}
+        ListEmptyComponent={!loading ? <NotFoundScreen /> : null}
         refreshing={refreshing}
+        onRefresh={handleRefresh}
         onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5} // Load more when 50% from bottom
+        onEndReachedThreshold={0.5}
         ListFooterComponent={renderFooter}
-      /> : <NotFoundScreen />}
-
+        contentContainerStyle={{ flexGrow: 1 }}
+      />
+    );
+  };
+  return (
+    <Box className="flex-1 bg-background-50">
+      {renderContent()}
     </Box>
   );
 }

@@ -13,15 +13,14 @@ import {
   FormControlErrorText
 } from '@/src/components/common/GluestackUI';
 import { Icon, ChevronLeftIcon, ChevronDownIcon, CheckIcon, SearchIcon } from '@/src/components/common/IconUI';
-import { launchImageLibrary } from 'react-native-image-picker';
+//import { launchImageLibrary } from 'react-native-image-picker';
+import ImagePicker from 'react-native-image-crop-picker';
 import api from '@/src/api/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SuccessScreen from '../common/SuccessScreen';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { SelectDragIndicator, SelectDragIndicatorWrapper } from '@/components/ui/select';
 import profileService from '@/src/services/profileService';
-import { InputIcon, InputSlot } from '@/components/ui/input';
 import _ from 'lodash';
 import { CloseIcon } from '@/components/ui/icon';
 import { Dropdown } from 'react-native-element-dropdown';
@@ -30,6 +29,7 @@ import { useAlert } from '@/src/context/AlertContext';
 import { useAuth } from '@/src/context/AuthContext';
 import { AnimateError } from '../common/AnimateError';
 import { itemData, QualificationTemp, transformGroupedData } from '@/src/utils/qualification';
+import { API_BASE_URL_DEV_Profiles_Images, API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
 
 // --- DATA SOURCES ---
 const RELIGION_DATA = [
@@ -449,6 +449,10 @@ export default function WizardScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocus, setIsFocus] = useState(false);
+  const [profilePic, setProfilePic] = useState('');
+  const [profileThumb, setProfileThumb] = useState('');
+
+  const [userID, setUserID] = useState('');
 
   // Comprehensive Form State
   const [formData, setFormData] = useState<any>({
@@ -478,7 +482,7 @@ export default function WizardScreen() {
     hasChildren: '',
     childrenCount: '',
     kids: [],
-    kids_details: '',
+    kids_details: null,
     step: step,
     gender: 'Male',
     profileFor: profileFor,
@@ -533,39 +537,118 @@ export default function WizardScreen() {
       prev.includes(hobby) ? prev.filter(h => h !== hobby) : [...prev, hobby]
     );
   };
+  // Upload image
 
   const handlePickImage = async () => {
-    const result = await launchImageLibrary({ mediaType: 'photo', quality: 0.8 });
-    if (result.assets && result.assets[0]) {
-      const file = result.assets[0];
+    try {
+      // 1. Open Picker with Cropping enabled
+      const image = await ImagePicker.openPicker({
+        width: 500,           // Standard size for profile pics
+        height: 500,
+        cropping: true,       // Enable the crop tool
+        cropperCircleOverlay: true, // Shows a circle mask (perfect for profile pics)
+        compressImageQuality: 0.8,
+        mediaType: 'photo',
+      });
+
+      // 2. Prepare FormData
       const uploadData = new FormData();
+
+      // image-crop-picker paths usually work directly in FormData
+      const cleanUri = Platform.OS === 'ios' ? image.path.replace('file://', '') : image.path;
+
       uploadData.append('file', {
-        uri: Platform.OS === 'android' ? file.uri : file.uri?.replace('file://', ''),
-        type: file.type || 'image/jpeg',
-        name: file.fileName || 'profile.jpg',
+        uri: cleanUri,
+        type: image.mime || 'image/jpeg', // Library uses 'mime' instead of 'type'
+        name: `${formData.userid}_${Date.now()}.jpg`,
       } as any);
 
-      setIsUploading(true);
-      try {
-        const token = await AsyncStorage.getItem('accessToken');
-        const response = await api.post('/helpers/upload_handler.php', uploadData, {
-          headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` },
-          onUploadProgress: (p) => {
-            if (p.total) setUploadProgress(Math.round((p.loaded * 100) / p.total));
-          }
-        });
+      uploadData.append('userid', formData.userid);
 
-        if (response.data.success) {
-          updateForm('profilePic', response.data.full_url);
-          updateForm('profileThumb', response.data.thumb_url);
+      // 3. Start Upload
+      setIsUploading(true);
+      setUploadProgress(0);
+
+      const token = await AsyncStorage.getItem('accessToken');
+      const response = await api.post('/files/profile_photo_upload.php', uploadData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        },
+        onUploadProgress: ({ loaded, total }) => {
+          if (total) setUploadProgress(Math.round((loaded * 100) / total));
         }
-      } catch (error) {
-        console.error("Upload failed", error);
-      } finally {
-        setIsUploading(false);
+      });
+
+      if (response.data.success) {
+        updateForm('profilePic', API_BASE_URL_DEV_Profiles_Images + '/' + response.data.full_url);
+        updateForm('profileThumb', API_BASE_URL_DEV_Profiles_Thumbs + '/' + response.data.thumb_url);
+      } else {
+        throw new Error(response.data.message || 'Upload failed');
       }
+    } catch (error: any) {
+      // Library throws an error if user cancels, so we check for that
+      if (error.message !== 'User cancelled image selection') {
+        console.error("Upload process error:", error);
+      }
+    } finally {
+      setIsUploading(false);
     }
   };
+
+  // const handlePickImage = async () => {
+  //   try {
+  //     const result = await launchImageLibrary({
+  //       mediaType: 'photo',
+  //       quality: 0.8, // Already helping reduce bandwidth
+  //       selectionLimit: 1
+  //     });
+
+  //     if (result.didCancel || !result.assets?.[0]) return;
+
+  //     const file: any = result.assets[0];
+  //     const uploadData = new FormData();
+
+  //     // Improved URI handling: iOS typically needs 'file://' removed for some uploaders,
+  //     // but standard FormData in RN usually works better with the original URI or 'file://' prefix.
+  //     const cleanUri = Platform.OS === 'ios' ? file.uri.replace('file://', '') : file.uri;
+  //     console.log("cleanUri", cleanUri);
+  //     uploadData.append('file', {
+  //       uri: cleanUri,
+  //       type: file.type || 'image/jpeg',
+  //       name: `${formData.userid}_${Date.now()}.jpg`,
+  //     } as any);
+  //     console.log("user id from state", userID);
+  //     uploadData.append('userid', formData.userid);
+  //     console.log("post userid", formData.userid);
+
+  //     setIsUploading(true);
+  //     setUploadProgress(0);
+
+  //     const token = await AsyncStorage.getItem('accessToken');
+  //     const response = await api.post('/files/profile_photo_upload.php', uploadData, {
+  //       headers: {
+  //         'Content-Type': 'multipart/form-data',
+  //         'Authorization': `Bearer ${token}`
+  //       },
+  //       onUploadProgress: ({ loaded, total }) => {
+  //         if (total) setUploadProgress(Math.round((loaded * 100) / total));
+  //       }
+  //     });
+
+  //     if (response.data.success) {
+  //       updateForm('profilePic', API_BASE_URL_DEV_Profiles_Images + '/' + response.data.full_url);
+  //       updateForm('profileThumb', API_BASE_URL_DEV_Profiles_Thumbs + '/' + response.data.thumb_url);
+  //     } else {
+  //       throw new Error(response.data.message || 'Upload failed');
+  //     }
+  //   } catch (error) {
+  //     console.error("Upload process error:", error);
+  //     // Add User-facing Alert here
+  //   } finally {
+  //     setIsUploading(false);
+  //   }
+  // };
   const validateMobileoremail = async () => {
     const payload = { ...formData };
     try {
@@ -655,8 +738,11 @@ export default function WizardScreen() {
       });
 
       if (response?.success) {
+        console.log("created file userid====", response);
 
         setIsFinished(true);
+        updateForm('userid', response?.userid);
+        setUserID(response?.userid);
         setStep(prev => prev + 1);
       } else {
         // Alert.alert("Error", response?.message);
@@ -673,7 +759,7 @@ export default function WizardScreen() {
   };
   const handleFinalSubmit = async () => {
     setIsUploading(true);
-    const payload = { ...formData, hobbies: JSON.stringify(selectedHobbies), profileFor, casteNoBar: isCasteNoBar, kids_details: JSON.stringify(formData.kids) };
+    const payload = { ...formData, hobbies: JSON.stringify(selectedHobbies), profileFor, step: 10, casteNoBar: isCasteNoBar, kids_details: JSON.stringify(formData.kids) };
     try {
       const response = await profileService.createProfile(payload)
       if (response.success) {
@@ -991,10 +1077,11 @@ export default function WizardScreen() {
           {step === 3 && (
             <VStack className="gap-6">
               <Heading size="xl">Religion Details</Heading>
-              <Box className=" mt-2 ">
+              <Box className="gap-6 mt-2">
+
                 <FormControl isInvalid={validationTriggered && (!formData.religion)}>
-                  <FormControlLabel className="mb-1">
-                    <FormControlLabelText size='md' >Select Religion</FormControlLabelText>
+                  <FormControlLabel className="mb-2">
+                    <FormControlLabelText size='2xl' >Select Religion</FormControlLabelText>
                   </FormControlLabel>
                   <Dropdown
                     style={[styles.dropdown]}
@@ -1019,8 +1106,8 @@ export default function WizardScreen() {
 
 
                 {formData.religion && <FormControl isInvalid={validationTriggered && (!formData.community)}>
-                  <FormControlLabel className="mb-1">
-                    <FormControlLabelText size='md' >Select Community</FormControlLabelText>
+                  <FormControlLabel className="mb-2">
+                    <FormControlLabelText size='2xl' >Select Community</FormControlLabelText>
                   </FormControlLabel>
                   <Dropdown
                     style={[styles.dropdown]}
@@ -1045,8 +1132,8 @@ export default function WizardScreen() {
                 </FormControl>}
 
                 {formData.religion && formData.community && <FormControl isInvalid={validationTriggered && (!formData.livingIn)}>
-                  <FormControlLabel className="mb-1">
-                    <FormControlLabelText size='md' >Select Living In</FormControlLabelText>
+                  <FormControlLabel className="mb-2">
+                    <FormControlLabelText size='2xl' >Select Living In</FormControlLabelText>
                   </FormControlLabel>
                   <Dropdown
                     style={[styles.dropdown]}
@@ -1380,6 +1467,7 @@ export default function WizardScreen() {
                     <Dropdown
                       style={[styles.dropdown]}
                       data={QUALIFICATIONS}
+                      mode="modal"
                       labelField="label"
                       valueField="value"
                       placeholder="Select Highest Qualification"
@@ -1394,8 +1482,8 @@ export default function WizardScreen() {
                         >
                           <Text
                             className={`${item.isHeader
-                              ? 'text-xs font-bold text-slate-500 uppercase tracking-wider'
-                              : 'text-base text-slate-800 ml-2' // Indent child items slightly
+                              ? 'text-xl font-bold text-slate-700 tracking-wider'
+                              : 'text-lg text-slate-800 ml-2' // Indent child items slightly
                               }`}
                           >
                             {item.label}
