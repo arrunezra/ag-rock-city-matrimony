@@ -24,6 +24,7 @@ import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox, CheckboxGroup, CheckboxIcon, CheckboxIndicator, CheckboxLabel } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from '@/components/ui/alert-dialog';
+import { Facebook, Instagram, Twitter } from 'lucide-react-native';
 
 
 export {
@@ -93,4 +94,7 @@ export {
     AlertDialogHeader,
     AlertDialogFooter,
     AlertDialogBody,
+    Facebook,
+    Instagram,
+    Twitter
 };
