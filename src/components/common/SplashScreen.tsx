@@ -1,4 +1,3 @@
-import { GIRL_DEFAULT_PROFILEs } from '@/src/assets/checking';
 import React from 'react';
 import { View, ActivityIndicator, Image, StyleSheet } from 'react-native';
 

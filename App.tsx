@@ -22,6 +22,7 @@ import { useEffect, useState } from 'react';
 import { PermissionTypes, requestPermission } from './src/utils/permissionHandler';
 import { openSettings } from 'react-native-permissions';
 import { AlertProvider } from './src/context/AlertContext';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 function App() {
   const [isAllPermissionGranted, setIsAllPermissionGranted] = useState(false);
@@ -43,20 +44,22 @@ function App() {
     // </GluestackUIProvider>
 
     // <Text style={{ fontSize: 20, color: 'red' }}>App</Text>
-    <ThemeProvider>
-      <SafeAreaProvider>
-        <KeyboardProvider>
-          <AuthProvider>
-            <AlertProvider>
-              {isAllPermissionGranted ? <AppNavigator /> : <Pressable onPress={() => openSettings()}> <Text style={{
-                fontSize: 20, color: 'red', textAlign: 'center',
-                marginTop: 200
-              }}>Permission Not Granted</Text></Pressable>}
-            </AlertProvider>
-          </AuthProvider>
-        </KeyboardProvider>
-      </SafeAreaProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <SafeAreaProvider>
+          <KeyboardProvider>
+            <AuthProvider>
+              <AlertProvider>
+                {isAllPermissionGranted ? <AppNavigator /> : <Pressable onPress={() => openSettings()}> <Text style={{
+                  fontSize: 20, color: 'red', textAlign: 'center',
+                  marginTop: 200
+                }}>Permission Not Granted</Text></Pressable>}
+              </AlertProvider>
+            </AuthProvider>
+          </KeyboardProvider>
+        </SafeAreaProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
 
   );
 }

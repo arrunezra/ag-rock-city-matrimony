@@ -16,11 +16,24 @@ import { HeaderNotification } from '../components/common/HeaderNotification';
 import { HeartIcon, HomeIcon, Icon, MessageCircleIcon } from '../components/common/IconUI';
 import MyPhotos from '../screens/profile/MyPhotos';
 import PartnerPreferences from '../screens/profile/PartnerPreferences';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import ProfileDetailScreen from '../screens/profile/ProfileDetailScreen';
 
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
-
+const Stack = createNativeStackNavigator();
 // --- TABS BASED ON ROLE ---
+
+//#region Member Router
+const MemberStackRouter = () => (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {/* The Tabs stay as the main entry point */}
+        <Stack.Screen name="Tabs" component={MemberTabs} />
+
+        {/* The Detail screen is pushed on top of the tabs */}
+        <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
+    </Stack.Navigator>
+);
 const MemberTabs = () => (
     <Tab.Navigator
         screenOptions={({ route }) => ({
@@ -65,6 +78,9 @@ const MemberTabs = () => (
     </Tab.Navigator>
 );
 
+//#endregion
+
+//#region Admin Router
 const AdminTabs = () => (
     <Tab.Navigator
         screenOptions={({ route }) => ({
@@ -106,6 +122,7 @@ const AdminTabs = () => (
         <Tab.Screen name="Inbox" component={InboxScreen} options={{ title: 'Inbox' }} />
     </Tab.Navigator>
 );
+//#endregion
 
 // --- MAIN DRAWER (The Wrapper) ---
 export function RoleBasedNavigator({ userRole, user, logout }: { userRole: string, user: any, logout: any }) {
@@ -117,7 +134,14 @@ export function RoleBasedNavigator({ userRole, user, logout }: { userRole: strin
                 headerRight: () => (
                     <HeaderNotification
                         count={13} // This would come from your global state or API
-                        onPress={() => navigation.navigate('Main', { screen: 'Inbox' })}
+                        onPress={() => {
+                            const targetScreen = userRole === 'member' ? 'Inbox' : 'Inbox';
+                            // Path: Main (Drawer) -> Tabs (Stack) -> Inbox (Tab)
+                            navigation.navigate('Main', {
+                                screen: 'Tabs',
+                                params: { screen: targetScreen }
+                            });
+                        }}
                     />
                 ),
                 headerStyle: {
@@ -130,7 +154,7 @@ export function RoleBasedNavigator({ userRole, user, logout }: { userRole: strin
         >
             {/* The first screen in the drawer is usually the Tab Navigator */}
             {userRole === 'member' ? (
-                <Drawer.Screen name="Main" component={MemberTabs} options={{ title: 'My Shaadi' }} />
+                <Drawer.Screen name="Main" component={MemberStackRouter} options={{ title: 'My Shaadi' }} />
             ) : (
                 <Drawer.Screen name="Main" component={AdminTabs} options={{ title: 'Admin Panel' }} />
             )}

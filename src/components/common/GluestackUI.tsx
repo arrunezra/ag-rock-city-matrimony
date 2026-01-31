@@ -24,7 +24,8 @@ import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox, CheckboxGroup, CheckboxIcon, CheckboxIndicator, CheckboxLabel } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from '@/components/ui/alert-dialog';
-import { Facebook, Instagram, Twitter } from 'lucide-react-native';
+import { Actionsheet, ActionsheetBackdrop, ActionsheetContent, ActionsheetDragIndicator, ActionsheetDragIndicatorWrapper, ActionsheetIcon, ActionsheetItem, ActionsheetItemText } from '@/components/ui/select/select-actionsheet';
+import { Menu, MenuItem, MenuItemLabel } from '@/components/ui/menu';
 
 
 export {
@@ -94,7 +95,17 @@ export {
     AlertDialogHeader,
     AlertDialogFooter,
     AlertDialogBody,
-    Facebook,
-    Instagram,
-    Twitter
+    Actionsheet,
+    ActionsheetContent,
+    ActionsheetItem,
+    ActionsheetItemText,
+    ActionsheetIcon,
+    ActionsheetDragIndicator,
+    ActionsheetDragIndicatorWrapper,
+    ActionsheetBackdrop,
+    Menu,
+    MenuItem,
+    MenuItemLabel,
+
+
 };

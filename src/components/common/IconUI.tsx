@@ -1,10 +1,25 @@
-import { AddIcon, ChevronDownIcon, ChevronLeftIcon, Icon, HelpCircleIcon, ChevronRightIcon } from '@/components/ui/icon';
+import { AddIcon, ChevronDownIcon, ChevronLeftIcon, Icon, HelpCircleIcon, ChevronRightIcon, CloseIcon } from '@/components/ui/icon';
 import {
     MapPin, Briefcase, Heart, Badge, HomeIcon, MailIcon, UserIcon, LogOutIcon, UsersIcon, ShieldCheckIcon,
     SettingsIcon, CameraIcon, SearchIcon, EditIcon, Phone, Calendar, MessageSquare,
     CheckIcon, ChevronUpIcon,
     MessageCircleIcon,
-    HeartIcon
+    HeartIcon,
+    MapPinIcon,
+    CrownIcon,
+    BriefcaseIcon,
+    LockIcon,
+    GraduationCapIcon,
+    SchoolIcon,
+    BuildingIcon,
+    CircleDollarSignIcon,
+    ArrowLeftRightIcon,
+    ArrowUpIcon,
+    UtensilsIcon,
+    CheckCircleIcon,
+    MoreVerticalIcon,
+    BanIcon,
+    FlagIcon
 } from 'lucide-react-native';
 
 
@@ -35,5 +50,22 @@ export {
     CheckIcon,
     ChevronUpIcon,
     MessageCircleIcon,
-    HeartIcon
+    HeartIcon,
+    MapPinIcon,
+    CrownIcon,
+    BriefcaseIcon,
+    LockIcon,
+    GraduationCapIcon,
+    SchoolIcon,
+    BuildingIcon,
+    CircleDollarSignIcon,
+    CheckCircleIcon,
+    CloseIcon,
+    ArrowLeftRightIcon,
+    ArrowUpIcon,
+    UtensilsIcon,
+    MoreVerticalIcon,
+    BanIcon,
+    FlagIcon
+
 };

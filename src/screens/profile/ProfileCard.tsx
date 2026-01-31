@@ -1,27 +1,36 @@
-import React, { useState } from 'react';
-import { Alert, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, Image, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
 import FastImage from "@d11/react-native-fast-image";
 
 import { Box, VStack, HStack, Heading, Text, Button, ButtonIcon } from '@/src/components/common/GluestackUI';
 import { Briefcase, Heart, Icon, MapPin } from '@/src/components/common/IconUI';
 import profileService from '@/src/services/profileService';
-import { API_BASE_URL_DEV_Profiles_Images, API_BASE_URL_DEV_Profiles_Thumbs, BOY_DEFAULT_PROFILE, GIRL_DEFAULT_PROFILE } from '@/src/utils/environment';
+import { API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
 import LottieView from 'lottie-react-native';
-// import { MapPin, Briefcase, Heart } from 'lucide-react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import { CheckCircle2Icon } from 'lucide-react-native';
+import { InteractionManager } from 'react-native';
 export const ProfileCard = ({ profile, onPress }: any) => {
-  console.log(profile);
   const [isLiked, setIsLiked] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  useEffect(() => {
+    // Setting a timeout of 0 or 50ms pushes the 'setIsReady' 
+    // to the next tick of the JS engine.
+    const timer = setTimeout(() => {
+      setIsReady(true);
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!isReady) {
+    return <Box className="flex-1 bg-white" />; // Empty white screen during transition
+  }
   const handleLike = async () => {
     try {
-      // Optimistic UI update
       setIsLiked(true);
-
-      const response = await profileService.sendInterest({
-        receiver_id: profile.id
-      });
-
+      const response = await profileService.sendInterest({ receiver_id: profile.id });
       if (!response.success) {
-        // Revert if server fails
         setIsLiked(false);
         Alert.alert(response.message);
       }
@@ -30,84 +39,75 @@ export const ProfileCard = ({ profile, onPress }: any) => {
       console.error("Like failed", error);
     }
   };
-  const getProfileSource = () => {
-    // Check if a remote thumb actually exists
-    if (profile.profile_thumb) {
-      return <FastImage
-        source={{
-          uri: `${API_BASE_URL_DEV_Profiles_Thumbs}/${profile.profile_thumb}`,
-          priority: FastImage.priority.high,
-          cache: FastImage.cacheControl.immutable,
-        }}
-        style={{ width: '100%', height: '100%' }}
-        resizeMode={FastImage.resizeMode.cover}
-      />
 
-    } else {
-      return <Box className="h-72 w-full bg-background-100">
-        <LottieView
-          source={require('../../assets/animations/Artboard.json')}
-          autoPlay
-          loop={false}
-          style={{ width: '100%', height: '100%', position: 'absolute' }}
-        />
-        {/* The Overlay Layer */}
-        {/* The Overlay - Positioned Middle Bottom */}
-        <Box
-          className="absolute bottom-6 self-center bg-white/70 px-6 py-2 rounded-full shadow-sm"
-          style={{ zIndex: 10 }}
-        >
-          <Text className="text-center text-typography-900 font-semibold text-sm">
-            No Profile Image
-          </Text>
-        </Box>
-      </Box>
-    }
-  }
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
-      <Box className="bg-white rounded-3xl mb-5 overflow-hidden border border-outline-100 shadow-sm">
-        {/* Main Image */}
-        <Box className="h-72 w-full bg-background-100">
-          {getProfileSource()}
-        </Box>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.95} className="mx-4 mb-6">
+      <Box className="h-[420px] w-full rounded-[32px] overflow-hidden shadow-lg bg-background-100 border border-white/20">
 
-        {/* Quick Info Overlay (optional) or Bottom Info */}
-        <VStack className="p-5 gap-3">
-          <HStack className="justify-between items-center">
-            <VStack>
-              <Heading size="xl" className="text-typography-900">
+        {/* 1. Background Image / Animation */}
+        {profile.profile_thumb ? (
+          <FastImage
+            source={{
+              uri: `${API_BASE_URL_DEV_Profiles_Thumbs}/${profile.profile_thumb}`,
+              priority: FastImage.priority.high,
+            }}
+            style={{ width: '100%', height: '100%' }}
+            resizeMode="cover"
+          />
+        ) : (
+          <Box className="flex-1 justify-center items-center bg-gray-50">
+            <LottieView
+              source={require('../../assets/animations/default_profile.json')}
+              autoPlay
+              loop
+              style={{ width: '80%', height: '80%' }}
+            />
+          </Box>
+        )}
+
+        {/* 2. Top Badges (Floating) */}
+        <HStack className="absolute top-4 left-4 right-4 justify-between items-start">
+          <Box className="bg-black/30 px-3 py-1.5 rounded-full flex-row items-center gap-1">
+            <Icon as={CheckCircle2Icon} size="xs" className="text-cyan-400" />
+            <Text className="text-white text-[10px] font-bold uppercase tracking-wider">Verified</Text>
+          </Box>
+
+          <Button
+            onPress={handleLike}
+            className={`h-12 w-12 rounded-full p-0 shadow-xl ${isLiked ? 'bg-error-500' : 'bg-white/20'}`}
+          >
+            <Icon as={Heart} className={isLiked ? 'text-white fill-white' : 'text-white'} />
+          </Button>
+        </HStack>
+
+
+
+        {/* 3. The Scrim Gradient (Darkens bottom for text readability) */}
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']}
+          className="absolute bottom-0 left-0 right-0 h-1/2 justify-end p-6"
+        >
+          <VStack space="xs">
+            <HStack className="items-center gap-2">
+              <Heading size="xl" className="text-white">
                 {profile.first_name}, {profile.age || '28'}
               </Heading>
-              <Button
-                variant="outline"
-                onPress={handleLike}
-                className={`rounded-full h-12 w-12 p-0 ${isLiked ? 'bg-error-50 border-error-200' : 'border-outline-200'}`}
-              >
-                <Icon
-                  as={Heart}
-                  className={isLiked ? 'text-error-600 fill-error-600' : 'text-typography-400'}
-                />
-              </Button>
+            </HStack>
 
+            <HStack className="items-center gap-4">
               <HStack className="items-center gap-1">
-                <Icon as={MapPin} size="xs" className="text-typography-400" />
-                <Text size="sm" className="text-typography-500">{profile.community || 'Tamil'}</Text>
+                <Icon as={MapPin} size="xs" className="text-white/70" />
+                <Text className="text-white/80 text-sm">{profile.community || 'Tamil'}</Text>
               </HStack>
-            </VStack>
-
-            <Button variant="outline" className="rounded-full border-outline-200 h-12 w-12 p-0">
-              <Icon as={Heart} className="text-error-500" />
-            </Button>
-          </HStack>
-
-          <HStack className="items-center gap-2">
-            <Icon as={Briefcase} size="sm" className="text-cyan-600" />
-            <Text size="sm" className="text-typography-700 font-medium">
-              {profile.work_sector || 'Software Engineer'}
-            </Text>
-          </HStack>
-        </VStack>
+              <HStack className="items-center gap-1">
+                <Icon as={Briefcase} size="xs" className="text-white/70" />
+                <Text className="text-white/80 text-sm truncate max-w-[150px]">
+                  {profile.work_sector || 'Software Engineer'}
+                </Text>
+              </HStack>
+            </HStack>
+          </VStack>
+        </LinearGradient>
       </Box>
     </TouchableOpacity>
   );
