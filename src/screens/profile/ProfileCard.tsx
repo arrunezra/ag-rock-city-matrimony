@@ -8,7 +8,7 @@ import profileService from '@/src/services/profileService';
 import { API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
 import LottieView from 'lottie-react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { CheckCircle2Icon } from 'lucide-react-native';
+import { CheckCircle2, CheckCircle2Icon, Star } from 'lucide-react-native';
 import { InteractionManager } from 'react-native';
 export const ProfileCard = ({ profile, onPress }: any) => {
   const [isLiked, setIsLiked] = useState(false);
@@ -87,7 +87,7 @@ export const ProfileCard = ({ profile, onPress }: any) => {
           colors={['transparent', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']}
           className="absolute bottom-0 left-0 right-0 h-1/2 justify-end p-6"
         >
-          <VStack space="xs">
+          {/* <VStack space="xs">
             <HStack className="items-center gap-2">
               <Heading size="xl" className="text-white">
                 {profile.first_name}, {profile.age || '28'}
@@ -106,6 +106,31 @@ export const ProfileCard = ({ profile, onPress }: any) => {
                 </Text>
               </HStack>
             </HStack>
+          </VStack> */}
+          <VStack space="md">
+            {/* Name & Age with Online Status Indicator */}
+            <HStack className="items-center space-x-3">
+              <Heading className="text-white text-3xl font-black tracking-tight">
+                {profile.first_name}, {profile.age || '28'}
+              </Heading>
+            </HStack>
+
+            {/* Info Pills (Glass Style) */}
+            <HStack space="sm" className="flex-wrap gap-2">
+              <Box className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex-row items-center space-x-1.5">
+                <Icon as={MapPin} size='lg' className="text-cyan-300" />
+                <Text className="text-white/90 text-xs font-bold">{profile.city || 'Mumbai'}</Text>
+              </Box>
+
+              <Box className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex-row items-center space-x-1.5">
+                <Icon as={Briefcase} size='md' className="text-cyan-300" />
+                <Text className="text-white/90 text-xs font-bold truncate max-w-[120px]">
+                  {profile.work_sector || 'Software Engineer'}
+                </Text>
+              </Box>
+            </HStack>
+
+
           </VStack>
         </LinearGradient>
       </Box>

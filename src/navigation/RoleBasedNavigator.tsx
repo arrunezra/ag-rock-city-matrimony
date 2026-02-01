@@ -18,6 +18,7 @@ import MyPhotos from '../screens/profile/MyPhotos';
 import PartnerPreferences from '../screens/profile/PartnerPreferences';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ProfileDetailScreen from '../screens/profile/ProfileDetailScreen';
+import ProfileEditScreen from '../screens/profile/EditProfileScreen';
 
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
@@ -32,6 +33,7 @@ const MemberStackRouter = () => (
 
         {/* The Detail screen is pushed on top of the tabs */}
         <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
+        <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
     </Stack.Navigator>
 );
 const MemberTabs = () => (

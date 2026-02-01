@@ -11,12 +11,12 @@ import { Image } from '@/components/ui/image';
 import { useTheme } from '@/components/ui/ThemeProvider/ThemeProvider';
 import { HStack } from '@/components/ui/hstack';
 import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
-import { Select, SelectBackdrop, SelectContent, SelectIcon, SelectInput, SelectItem, SelectPortal, SelectTrigger } from '@/components/ui/select';
+import { Select, SelectBackdrop, SelectContent, SelectDragIndicator, SelectDragIndicatorWrapper, SelectIcon, SelectInput, SelectItem, SelectPortal, SelectTrigger } from '@/components/ui/select';
 import { Heading } from '@/components/ui/heading';
 import { Spinner } from '@/components/ui/spinner';
 import { Divider } from '@/components/ui/divider';
 import { Badge, BadgeText } from '@/components/ui/badge';
-import { Toast, ToastTitle, useToast } from '@/components/ui/toast';
+import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { Avatar, AvatarFallbackText, AvatarImage } from '@/components/ui/avatar';
 import { Fab, FabIcon, FabLabel } from '@/components/ui/fab';
 import { Modal, ModalBackdrop, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
@@ -26,6 +26,7 @@ import { Checkbox, CheckboxGroup, CheckboxIcon, CheckboxIndicator, CheckboxLabel
 import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from '@/components/ui/alert-dialog';
 import { Actionsheet, ActionsheetBackdrop, ActionsheetContent, ActionsheetDragIndicator, ActionsheetDragIndicatorWrapper, ActionsheetIcon, ActionsheetItem, ActionsheetItemText } from '@/components/ui/select/select-actionsheet';
 import { Menu, MenuItem, MenuItemLabel } from '@/components/ui/menu';
+import { Textarea, TextareaInput } from '@/components/ui/textarea';
 
 
 export {
@@ -106,6 +107,9 @@ export {
     Menu,
     MenuItem,
     MenuItemLabel,
-
-
+    ToastDescription,
+    Textarea,
+    TextareaInput,
+    SelectDragIndicatorWrapper,
+    SelectDragIndicator
 };

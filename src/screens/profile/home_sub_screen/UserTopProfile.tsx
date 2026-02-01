@@ -4,7 +4,7 @@ import { Pressable } from 'react-native';
 import { AddIcon, CheckIcon, EditIcon, Icon, StarIcon } from '@/components/ui/icon';
 import { API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
 
-const UserTopProfile = ({ profile, onEdit, onUpgrade }: any) => {
+const UserTopProfile = ({ profile, onEdit, onAddPhoto }: any) => {
     const profileImage = API_BASE_URL_DEV_Profiles_Thumbs + '/' + profile?.profileThumb;
     return (
         <VStack className="px-4 py-6 bg-white gap-6">
@@ -21,7 +21,7 @@ const UserTopProfile = ({ profile, onEdit, onUpgrade }: any) => {
                             }}
                         />
                         <Pressable
-                            onPress={onEdit}
+                            onPress={onAddPhoto}
                             className="absolute bottom-0 right-0 bg-cyan-500 p-1.5 rounded-full border-2 border-white shadow-sm active:opacity-80"
                         >
                             <Icon as={AddIcon} color="white" size="xs" />
