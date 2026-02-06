@@ -1,13 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ScrollView, Image, Pressable, Platform, LayoutAnimation, Dimensions, FlatList, Modal, Alert } from 'react-native';
+import { ScrollView, Image, Pressable, Platform, LayoutAnimation, Dimensions, FlatList, Modal, Alert, View } from 'react-native';
 import { Box, VStack, HStack, Heading, Text, BadgeText, Divider, Button, ButtonText, Avatar, AvatarFallbackText, AvatarImage, Actionsheet, ActionsheetBackdrop, ActionsheetDragIndicatorWrapper, ActionsheetDragIndicator, ActionsheetContent, ActionsheetItem, ActionsheetIcon, ActionsheetItemText, } from '@/src/components/common/GluestackUI';
 import { ArrowLeftRightIcon, Badge, BanIcon, BriefcaseIcon, BuildingIcon, CameraIcon, CrownIcon, FlagIcon, GraduationCapIcon, HeartIcon, HomeIcon, Icon, MapPinIcon, MoreVerticalIcon, SchoolIcon, UserIcon, UsersIcon, UtensilsIcon } from '@/src/components/common/IconUI';
 import { API_BASE_URL_DEV_Profiles_Images, API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
 import FastImage from "@d11/react-native-fast-image";
 import LottieView from 'lottie-react-native';
 import { CheckCircleIcon, ChevronDownIcon, LockIcon, MailIcon, PhoneIcon, CheckIcon, CloseIcon, ArrowUpIcon, AddIcon, ChevronUpIcon, ShareIcon, } from '@/components/ui/icon';
-import { UIManager } from 'react-native';
-import Zoom from 'react-native-zoom-reanimated';
+import Gallery from 'react-native-awesome-gallery';
 import LinearGradient from 'react-native-linear-gradient';
 import { MotiView } from 'moti';
 import { AnimatePresence } from 'moti';
@@ -15,7 +14,8 @@ import { ProfileSkeleton } from '@/src/components/common/ProfileSkeleton';
 
 
 export default function ProfileDetailScreen({ route }: any) {
-    // const { profileData } = route.params; // Data passed from the list
+    const { profile } = route.params; // Data passed from the list
+    const [profileImage, setProfileImage] = useState(profile.profile_pic);
     const [isExpanded, setIsExpanded] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
     const windowWidth = Dimensions.get('window').width;
@@ -251,48 +251,57 @@ export default function ProfileDetailScreen({ route }: any) {
 
 
                 {/* 4. Full-Screen Zoomable Gallery Modal */}
-                <Modal visible={isModalVisible} transparent={false} animationType="fade">
+                <Modal
+                    visible={isModalVisible}
+                    transparent={false}
+                    animationType="fade"
+                    onRequestClose={() => setIsModalVisible(false)}
+                >
                     <Box className="flex-1 bg-black">
+                        {/* 1. Immersive UI Overlay */}
                         <Box
-                            style={{ zIndex: 9999, elevation: 10 }} // Force it to the absolute top
+                            style={{ zIndex: 9999, elevation: 10 }}
                             className="absolute top-12 left-0 right-0 flex-row justify-between items-center px-6"
                         >
-                            <Text className="text-white font-bold">{activeIndex + 1} / {images.length}</Text>
+                            <Box className="bg-black/40 px-4 py-1.5 rounded-full border border-white/10">
+                                <Text className="text-white font-bold text-sm">
+                                    {activeIndex + 1} / {images.length}
+                                </Text>
+                            </Box>
 
                             <Pressable
                                 onPress={() => {
                                     setIsModalVisible(false);
-                                    setActiveIndex(0); //If enable gallery swipe reset index to 0
+                                    setActiveIndex(0);
                                 }}
-                                // Add hitslop to make the touch area larger
-                                hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-                                className="bg-white/20 p-3 rounded-full"
+                                hitSlop={20}
+                                className="bg-white/20 p-2.5 rounded-full active:scale-90"
                             >
                                 <Icon as={CloseIcon} color="white" size="xl" />
                             </Pressable>
                         </Box>
 
-                        <FlatList
-                            ref={galleryRef}
+                        {/* 2. Pure Gallery Component (Handles Swiping & Zooming) */}
+                        <Gallery
                             data={images}
-                            horizontal
-                            pagingEnabled
-                            initialScrollIndex={activeIndex}
-                            onMomentumScrollEnd={(e) => setActiveIndex(Math.round(e.nativeEvent.contentOffset.x / windowWidth))}
-                            getItemLayout={(_, index) => ({ length: windowWidth, offset: windowWidth * index, index })}
-                            renderItem={({ item, index }) => (
-                                <Box style={{ width: windowWidth }} className="flex-1 justify-center items-center">
-                                    <Zoom
-                                        enableGallerySwipe={true}
-                                        parentScrollRef={galleryRef}
-                                    >
-                                        <FastImage
-                                            source={{ uri: item.uri }}
-                                            style={{ width: windowWidth, height: '100%' }}
-                                            resizeMode="contain"
-                                        />
-                                    </Zoom>
-                                </Box>
+                            initialIndex={activeIndex}
+                            onIndexChange={setActiveIndex}
+                            onSwipeToClose={() => setIsModalVisible(false)}
+
+                            // Features you requested 
+                            pinchEnabled={true}       // Enables Zoom
+                            doubleTapEnabled={true}  // Double tap to Zoom
+
+                            // Required for stability
+                            keyExtractor={(_, index) => `img-${index}`}
+                            renderItem={({ item }) => (
+                                <View style={{ width: windowWidth, height: '100%', justifyContent: 'center' }}>
+                                    <FastImage
+                                        source={{ uri: item.uri }}
+                                        style={{ width: '100%', height: '100%' }}
+                                        resizeMode="contain"
+                                    />
+                                </View>
                             )}
                         />
                     </Box>

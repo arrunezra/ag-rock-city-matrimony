@@ -6,6 +6,7 @@ import { API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
 
 const UserTopProfile = ({ profile, onEdit, onAddPhoto }: any) => {
     const profileImage = API_BASE_URL_DEV_Profiles_Thumbs + '/' + profile?.profileThumb;
+    console.log('profileImage', profileImage);
     return (
         <VStack className="px-4 py-6 bg-white gap-6">
             {/* 1. Header Info: Avatar + Identity */}

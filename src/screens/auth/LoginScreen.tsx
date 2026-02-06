@@ -143,7 +143,9 @@ export default function LoginScreen({ navigation }: any) {
                   <CheckboxLabel className="text-sm text-typography-500">Remember Me</CheckboxLabel>
                 </Checkbox>
 
-                <Link onPress={() => Alert.alert('Forgot Password', 'Feature coming soon!')}>
+                <Link onPress={() => navigation.navigate('forgotpwd', {
+                  identifier: email
+                })}>
                   <LinkText size='md' className="text-primary-500 text-sm no-underline">
                     Forgot Password?
                   </LinkText>
@@ -176,6 +178,26 @@ export default function LoginScreen({ navigation }: any) {
                   Theme Settings
                 </LinkText>
               </Link>
+
+              <Link onPress={() => navigation.navigate('profilepwdupdate', {
+                userid: "",
+                mobile: "",
+                email: "",
+                name: "",
+              })}>
+                <LinkText className="text-primary-500 font-semibold no-underline">
+                  Update Profile Password
+                </LinkText>
+              </Link>
+
+              <Link onPress={() => navigation.navigate('updatepwd', {
+                identifier: ""
+              })}>
+                <LinkText className="text-primary-500 font-semibold no-underline">
+                  Reset Password
+                </LinkText>
+              </Link>
+
             </VStack>
           </Box>
         </Center>

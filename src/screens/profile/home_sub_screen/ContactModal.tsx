@@ -1,9 +1,13 @@
 import { CloseIcon, Icon } from '@/components/ui/icon';
 import { InputIcon, InputSlot } from '@/components/ui/input';
-import { Box, Button, ButtonText, FormControl, FormControlLabel, FormControlLabelText, Heading, HStack, Input, InputField, Modal, ModalBackdrop, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, Spinner, Text, VStack } from '@/src/components/common/GluestackUI';
+import {
+    Box, Button, ButtonText, FormControl, FormControlLabel, FormControlLabelText, Heading,
+    HStack, Input, InputField, Modal, ModalBackdrop, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, Spinner, Text, VStack
+} from '@/src/components/common/GluestackUI';
 import { Mail, Phone, ShieldCheck } from '@/src/components/common/IconUI';
 import React, { useRef } from 'react';
 import { ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { AnimateError } from '../../common/AnimateError';
 
 
 
@@ -87,9 +91,10 @@ const ContactModal = ({
                                             onChangeText={(v) => updateForm('email', v)}
                                         />
                                     </Input>
-                                    {validationTriggered && !formData.email && (
-                                        <Text className="text-xs text-error-600 mt-2 ml-1">Email is required</Text>
-                                    )}
+
+                                    <AnimateError isVisible={validationTriggered && (!formData.email)}>
+                                        {"Email is required"}
+                                    </AnimateError>
                                 </FormControl>
 
                                 {/* Phone Number Input */}
@@ -109,9 +114,10 @@ const ContactModal = ({
                                             onChangeText={(v) => updateForm('phone', v)}
                                         />
                                     </Input>
-                                    {validationTriggered && !formData.phone && (
-                                        <Text className="text-xs text-error-600 mt-2 ml-1">Phone is required</Text>
-                                    )}
+
+                                    <AnimateError isVisible={validationTriggered && (!formData.phone)}>
+                                        {"Phone is required"}
+                                    </AnimateError>
                                 </FormControl>
 
                             </VStack>

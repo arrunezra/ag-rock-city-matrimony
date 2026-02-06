@@ -51,7 +51,26 @@ import {
     ChevronDown,
     Filter,
     Search,
-    ChevronRight
+    ChevronRight,
+    Accessibility,
+    Activity,
+    Languages,
+    Network,
+    UserRound,
+    UserSquare,
+    Landmark,
+    Building2,
+    UserCog,
+    Eye,
+    EyeOff,
+    Lock,
+    CalendarDays,
+    UserCheck,
+    Fingerprint,
+    BookOpen,
+    Building,
+    Save,
+    Hash
 } from 'lucide-react-native';
 
 
@@ -130,6 +149,26 @@ export {
     ChevronDown,
     Filter,
     Search,
-    ChevronRight
+    ChevronRight,
+    Accessibility,
+    Activity,
+    Languages,
+    Network,
+    UserRound,
+    UserSquare,
+    Landmark,
+    Building2,
+    UserCog,
+    Eye,
+    EyeOff,
+    Lock,
+    CalendarDays,
+    UserCheck,
+    Fingerprint,
+    BookOpen,
+    Building,
+    Save,
+    Hash
+
 
 };

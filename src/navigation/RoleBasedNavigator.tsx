@@ -19,6 +19,10 @@ import PartnerPreferences from '../screens/profile/PartnerPreferences';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ProfileDetailScreen from '../screens/profile/ProfileDetailScreen';
 import ProfileEditScreen from '../screens/profile/EditProfileScreen';
+import StaffDashboard from '../screens/staff/StaffDashboard';
+import StaffManagement from '../screens/staff/StaffManagement';
+import StaffDetailsScreen from '../screens/staff/StaffDetailScreen';
+import StaffRegistration from '../screens/staff/StaffRegistration';
 
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
@@ -27,7 +31,7 @@ const Stack = createNativeStackNavigator();
 
 //#region Member Router
 const MemberStackRouter = () => (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false }}>
         {/* The Tabs stay as the main entry point */}
         <Stack.Screen name="Tabs" component={MemberTabs} />
 
@@ -38,6 +42,7 @@ const MemberStackRouter = () => (
 );
 const MemberTabs = () => (
     <Tab.Navigator
+        initialRouteName="Matches"
         screenOptions={({ route }) => ({
             headerShown: false,
             tabBarHideOnKeyboard: true,
@@ -83,6 +88,24 @@ const MemberTabs = () => (
 //#endregion
 
 //#region Admin Router
+
+const AdminStackRouter = () => (
+    <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false }}>
+        {/* The Tabs stay as the main entry point */}
+        <Stack.Screen name="Tabs" component={AdminTabs} />
+
+        {/* The Detail screen is pushed on top of the tabs */}
+        <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
+        <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
+        <Stack.Screen name="StaffDetail" component={StaffDetailsScreen} />
+        <Stack.Screen name="Staffmanager" component={StaffManagement} />
+        <Stack.Screen name="StaffDashboard" component={StaffDashboard} />
+        <Stack.Screen name="StaffScreen" component={StaffScreen} />
+        <Stack.Screen name="StaffRegistration" component={StaffRegistration} />
+    </Stack.Navigator>
+);
+
+
 const AdminTabs = () => (
     <Tab.Navigator
         screenOptions={({ route }) => ({
@@ -126,6 +149,63 @@ const AdminTabs = () => (
 );
 //#endregion
 
+//#region Staff Router
+const StaffStackRouter = () => (
+    <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false }}>
+        {/* The Tabs stay as the main entry point */}
+        <Stack.Screen name="Tabs" component={StaffTabs} />
+
+        {/* The Detail screen is pushed on top of the tabs */}
+        <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
+        <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
+    </Stack.Navigator>
+);
+//#endregion
+
+//#region Staff Router  
+const StaffTabs = () => (
+    <Tab.Navigator
+        screenOptions={({ route }) => ({
+            headerShown: false,
+            tabBarHideOnKeyboard: true,
+            tabBarActiveTintColor: "#16a34a", // Emerald/Green 600
+            tabBarInactiveTintColor: "#6b7280", // Gray 500
+            tabBarIcon: ({ color, size }) => {
+                let iconAsset;
+
+                if (route.name === "Dashboard") {
+                    iconAsset = HomeIcon;
+                } else if (route.name === "Profile") {
+                    iconAsset = HeartIcon;
+                } else if (route.name === "Inbox") {
+                    iconAsset = MessageCircleIcon;
+                }
+                // Gluestack v3 Icon component
+                return (
+                    <Icon
+                        as={iconAsset}
+                        color={color}
+                        size="lg"
+                    />
+                );
+            },
+            tabBarLabelStyle: {
+                fontSize: 12,
+                paddingBottom: 5,
+            },
+            tabBarStyle: {
+                height: 65,
+                paddingTop: 5,
+            },
+        })}
+    >
+        <Tab.Screen name="Dashboard" component={StaffDashboard} options={{ title: 'Dashboard' }} />
+        <Tab.Screen name="Profile" component={ProfileSummary} options={{ title: 'Profile' }} />
+        <Tab.Screen name="Inbox" component={InboxScreen} options={{ title: 'Inbox' }} />
+    </Tab.Navigator>
+);
+//#endregion    
+
 // --- MAIN DRAWER (The Wrapper) ---
 export function RoleBasedNavigator({ userRole, user, logout }: { userRole: string, user: any, logout: any }) {
     return (
@@ -157,8 +237,10 @@ export function RoleBasedNavigator({ userRole, user, logout }: { userRole: strin
             {/* The first screen in the drawer is usually the Tab Navigator */}
             {userRole === 'member' ? (
                 <Drawer.Screen name="Main" component={MemberStackRouter} options={{ title: 'My Shaadi' }} />
+            ) : userRole === 'admin' ? (
+                <Drawer.Screen name="Main" component={AdminStackRouter} options={{ title: 'Admin Panel' }} />
             ) : (
-                <Drawer.Screen name="Main" component={AdminTabs} options={{ title: 'Admin Panel' }} />
+                <Drawer.Screen name="Main" component={StaffStackRouter} options={{ title: 'Staff Panel' }} />
             )}
 
             {/* Role-Specific Secondary Screens inside Drawer */}

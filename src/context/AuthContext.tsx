@@ -17,6 +17,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState({
+    name: 'Aaric',
+    profile_thumb: 'default.jpg', // Initial value
+    profile_pic: 'default.jpg', // Initial value
+  });
   const userRole = user?.role || null;
   useEffect(() => {
     checkAuthStatus();
@@ -100,7 +105,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return { success: false, message: error.message };
     }
   };
-
 
 
   const updateUser = async (updatedData: any) => {

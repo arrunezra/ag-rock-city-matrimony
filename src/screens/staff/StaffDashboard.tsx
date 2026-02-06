@@ -1,11 +1,10 @@
-import { View, Text } from 'react-native'
-import React from 'react'
-import { Box, Link, LinkText } from '@/src/components/common/GluestackUI'
+import { Box, Link, LinkText } from "@/src/components/common/GluestackUI";
+import { Text, View } from "react-native";
 
-const AdminDashboard = ({ navigation }: any) => {
+const StaffDashboard = ({ navigation }: any) => {
     return (
         <View>
-            <Text>Admin Dashboard</Text>
+            <Text>StaffDashboard</Text>
             <Box className="flex flex-col gap-6">
                 <Link onPress={() => navigation.navigate('StaffScreen')}>
                     <LinkText className="text-primary-500 font-semibold no-underline">
@@ -28,9 +27,10 @@ const AdminDashboard = ({ navigation }: any) => {
                         StaffRegistration
                     </LinkText>
                 </Link>
+
             </Box>
         </View>
-    )
-}
+    );
+};
 
-export default AdminDashboard
+export default StaffDashboard;

@@ -9,7 +9,7 @@ export interface User {
   position?: string;
   joinDate?: string;
   status?: string;
-  profilethumb?: string;
+  profileThumb?: string;
   profilePic?: string;
   firstName?: string;
   lastName?: string;
@@ -29,5 +29,5 @@ export interface AuthContextType {
   updateUser: (updatedData: User) => Promise<void>;
   login: (credentials: any) => Promise<{ success: boolean; message?: any }>;
   signup: (userData: any) => Promise<{ success: boolean; message?: any }>;
-  logout: () => Promise<{success: boolean; message?: any}>;
+  logout: () => Promise<{success: boolean; message?: any}>; 
 }

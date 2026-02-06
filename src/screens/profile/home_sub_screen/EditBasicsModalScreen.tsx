@@ -5,15 +5,23 @@ import {
     ModalBody, ModalFooter, Heading, VStack, HStack,
     Text, Input, InputField, Button, ButtonText, Spinner,
     FormControl, FormControlLabel, FormControlLabelText,
-    Box
+    Box,
+    Select,
+    SelectTrigger,
+    SelectInput,
+    SelectPortal,
+    SelectBackdrop,
+    SelectContent,
+    SelectItem
 } from '@/src/components/common/GluestackUI';
 import api from '@/src/api/api';
 import { CloseIcon, Icon } from '@/components/ui/icon';
-import { Calendar, Droplets, Info, Users, X } from '@/src/components/common/IconUI';
+import { Calendar, Droplets, Heart, Info, Ruler, Trash2, Users, X } from '@/src/components/common/IconUI';
 import { InputIcon, InputSlot } from '@/components/ui/input';
 import { Dropdown } from 'react-native-element-dropdown';
+import { HEIGHT_DATA, MARITAL_STATUS } from '@/src/utils/utils';
 
-const EditBasicsModalScreen = ({ isOpen, onClose, user, onSaveSuccess }: any) => {
+const EditBasicsModalScreen = ({ isOpen, onClose, user, onSaveSuccess, handleChildrenCountChange, removeChild, updateKidDetail }: any) => {
     const [isSaving, setIsSaving] = useState(false);
     const [validationTriggered, setValidationTriggered] = useState(false);
     const BLOOD_GROUPS = [
@@ -199,6 +207,111 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, onSaveSuccess }: any) =>
                                         renderLeftIcon={() => <Icon as={Droplets} size="sm" className="mr-2 text-red-500" />}
                                     />
                                 </FormControl>
+
+                                {/* Height */}
+                                <FormControl isInvalid={validationTriggered && !formData.height}>
+                                    <FormControlLabel><FormControlLabelText size="sm" className="font-bold">Height</FormControlLabelText></FormControlLabel>
+                                    <Dropdown
+                                        style={[styles.dropdown, (validationTriggered && !formData.height) && { borderColor: '#EF4444' }]}
+                                        data={HEIGHT_DATA}
+                                        labelField="label"
+                                        valueField="value"
+                                        placeholder="Select Height"
+                                        value={formData.height}
+                                        onChange={item => updateForm('height', item.value)}
+                                        renderLeftIcon={() => <Icon as={Ruler} size="sm" className="mr-2 text-cyan-500" />}
+                                    />
+                                </FormControl>
+
+                                {/* Marital Status */}
+                                <FormControl isInvalid={validationTriggered && !formData.maritalStatus}>
+                                    <FormControlLabel><FormControlLabelText size="sm" className="font-bold">Marital Status</FormControlLabelText></FormControlLabel>
+                                    <Dropdown
+                                        style={[styles.dropdown, (validationTriggered && !formData.maritalStatus) && { borderColor: '#EF4444' }]}
+                                        data={MARITAL_STATUS}
+                                        labelField="label"
+                                        valueField="value"
+                                        placeholder="Select Marital Status"
+                                        value={formData.maritalStatus}
+                                        onChange={item => {
+                                            updateForm('maritalStatus', item.value);
+                                            if (item.value === 'Never Married') {
+                                                updateForm('hasChildren', 'No');
+                                                updateForm('kids', '');
+                                            }
+                                        }}
+                                        renderLeftIcon={() => <Icon as={Heart} size="sm" className="mr-2 text-cyan-500" />}
+                                    />
+                                </FormControl>
+
+                                {/* Kids Conditional Section */}
+                                {formData.maritalStatus !== 'Never Married' && formData.maritalStatus !== '' && (
+                                    <VStack space="md" className="bg-slate-50 p-5 rounded-[24px] border border-slate-100">
+                                        <Heading size="sm" className="text-cyan-800">Children Information</Heading>
+
+                                        <HStack space="lg">
+                                            {['No', 'Yes'].map((opt) => (
+                                                <TouchableOpacity
+                                                    key={opt}
+                                                    onPress={() => updateForm('hasChildren', opt)}
+                                                    className="flex-row items-center space-x-2"
+                                                >
+                                                    <Box className={`w-5 h-5 rounded-full border-2 items-center justify-center ${formData.hasChildren === opt ? 'border-cyan-600' : 'border-slate-300'}`}>
+                                                        {formData.hasChildren === opt && <Box className="w-2.5 h-2.5 rounded-full bg-cyan-600" />}
+                                                    </Box>
+                                                    <Text className="font-medium text-slate-700">{opt}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </HStack>
+
+                                        {formData.hasChildren === 'Yes' && (
+                                            <VStack space="md" className="mt-2">
+                                                <FormControl>
+                                                    <Input className="h-12 bg-white rounded-xl">
+                                                        <InputField
+                                                            placeholder="How many children?"
+                                                            keyboardType="numeric"
+                                                            value={formData.childrenCount}
+                                                            onChangeText={handleChildrenCountChange}
+                                                        />
+                                                    </Input>
+                                                </FormControl>
+
+                                                {formData.kids.map((kid: any, index: number) => (
+                                                    <Box key={index} className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                                                        <HStack className="mb-3 justify-between center">
+                                                            <Text className="font-bold text-cyan-600">Child {index + 1}</Text>
+                                                            <TouchableOpacity onPress={() => removeChild(index)}>
+                                                                <Icon as={Trash2} size="xs" className="text-red-400" />
+                                                            </TouchableOpacity>
+                                                        </HStack>
+
+                                                        <HStack space="md">
+                                                            <Input className="flex-1 h-10 bg-slate-50 border-0 rounded-lg">
+                                                                <InputField
+                                                                    placeholder="Age"
+                                                                    keyboardType="numeric"
+                                                                    value={kid.age}
+                                                                    onChangeText={(v) => updateKidDetail(index, 'age', v)}
+                                                                />
+                                                            </Input>
+                                                            <Box className="flex-1">
+                                                                <Select onValueChange={(v) => updateKidDetail(index, 'gender', v)} selectedValue={kid.gender}>
+                                                                    <SelectTrigger className="h-10 bg-slate-50 border-0 rounded-lg">
+                                                                        <SelectInput placeholder="Gender" />
+                                                                    </SelectTrigger>
+                                                                    <SelectPortal><SelectBackdrop /><SelectContent>
+                                                                        <SelectItem label="Boy" value="Boy" /><SelectItem label="Girl" value="Girl" />
+                                                                    </SelectContent></SelectPortal>
+                                                                </Select>
+                                                            </Box>
+                                                        </HStack>
+                                                    </Box>
+                                                ))}
+                                            </VStack>
+                                        )}
+                                    </VStack>
+                                )}
                             </VStack>
                         </VStack>
                     </ScrollView>

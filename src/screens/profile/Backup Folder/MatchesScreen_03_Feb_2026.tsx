@@ -1,16 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { FlatList, ActivityIndicator, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { Box, Spinner, Center, HStack, Text } from '@/src/components/common/GluestackUI';
-import api from '@/src/api/api';
-import { ProfileCard } from './ProfileCard';
 import { useNavigation } from '@react-navigation/native';
 import { profileService } from '@/src/services/profileService';
-import LottieView from 'lottie-react-native';
-import NotFoundScreen from '../common/NotFoundScreen';
-import FailedScreen from '../common/FailedScreen';
-import { SkeletonItem } from '../common/SkeletonItem';
-import { SearchActionsheet } from './home_sub_screen/SearchActionsheet';
-import { ProfileCardSkeleton } from '../common/ProfileCardSkeleton';
+import { ProfileCardSkeleton } from '../../common/ProfileCardSkeleton';
+import { ProfileCard } from '../ProfileCard';
+import NotFoundScreen from '../../common/NotFoundScreen';
+import { SearchActionsheet } from '../home_sub_screen/SearchActionsheet';
+
 
 const MatchesScreen = () => {
     const navigation = useNavigation<any>();
@@ -142,8 +139,8 @@ const MatchesScreen = () => {
     return (
 
         <Box className="flex-1 bg-background-50">
-            {/* 1. Header / Tabs (Height determined by content) */}
-            <Box className="pt-4 bg-white border-b border-outline-50">
+            {/* 1. Header / Tabs stay at the top */}
+            <Box className="pt-4 bg-white">
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <HStack className="gap-2 pb-4 px-4">
                         {['New', 'My Match', 'More Match'].map((filter: any) => (
@@ -162,7 +159,7 @@ const MatchesScreen = () => {
                 </ScrollView>
             </Box>
 
-            {/* 2. Content Area (Fills the entire remaining screen) */}
+            {/* 2. FlatList takes the rest of the screen */}
             <Box className="flex-1">
                 {renderContent()}
             </Box>

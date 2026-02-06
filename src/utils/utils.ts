@@ -44,7 +44,16 @@ export const COMMUNITIES = [
   { label: "Kannada", value: "Kannada" },
   { label: "Hindi", value: "Hindi" },
 ];
-
+export const MOTHER_TONGUE_DATA = [
+    { label: 'Hindi', value: 'Hindi' },
+    { label: 'English', value: 'English' },
+    { label: 'Punjabi', value: 'Punjabi' },
+    { label: 'Marathi', value: 'Marathi' },
+    { label: 'Bengali', value: 'Bengali' },
+    { label: 'Gujarati', value: 'Gujarati' },
+    { label: 'Tamil', value: 'Tamil' },
+    { label: 'Telugu', value: 'Telugu' },
+];
 export const INCOME_RANGES = [
   { label: "3L - 5L", value: "3L - 5L" },
   { label: "5L - 10L", value: "5L - 10L" },
