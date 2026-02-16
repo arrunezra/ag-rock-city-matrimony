@@ -15,6 +15,7 @@ interface FailedScreenProps {
 
 
 interface FailedScreenProps {
+    isVisible?: boolean;
     title?: string;
     description?: string;
     onRetry?: () => void;
@@ -23,6 +24,7 @@ interface FailedScreenProps {
 }
 
 export default function FailedScreen({
+    isVisible,
     title = "Oops! Something went wrong",
     description = '',//"We're having trouble connecting to the server. Please check your internet and try again.",
     onRetry,
@@ -33,19 +35,24 @@ export default function FailedScreen({
     const slideAnim = useRef(new Animated.Value(20)).current;
 
     useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 500,
-                useNativeDriver: true,
-            }),
-            Animated.spring(slideAnim, {
-                toValue: 0,
-                friction: 8,
-                useNativeDriver: true,
-            }),
-        ]).start();
-    }, []);
+        if (isVisible) {
+            Animated.parallel([
+                Animated.timing(fadeAnim, {
+                    toValue: 1,
+                    duration: 500,
+                    useNativeDriver: true,
+                }),
+                Animated.spring(slideAnim, {
+                    toValue: 0,
+                    friction: 8,
+                    useNativeDriver: true,
+                }),
+            ]).start();
+        } else {
+            fadeAnim.setValue(0);
+        }
+    }, [isVisible]);
+    if (!isVisible) return null;
 
     return (
         <Box className="flex-1 absolute inset-0 z-[100]">

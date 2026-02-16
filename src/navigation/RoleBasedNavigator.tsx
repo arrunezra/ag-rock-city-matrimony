@@ -20,9 +20,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ProfileDetailScreen from '../screens/profile/ProfileDetailScreen';
 import ProfileEditScreen from '../screens/profile/EditProfileScreen';
 import StaffDashboard from '../screens/staff/StaffDashboard';
-import StaffManagement from '../screens/staff/StaffManagement';
-import StaffDetailsScreen from '../screens/staff/StaffDetailScreen';
-import StaffRegistration from '../screens/staff/StaffRegistration';
+import AdminStackRouter from './AdminStackRouter';
+import ChurchDashboard from '../screens/Church/ChurchDashboard';
 
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
@@ -89,21 +88,26 @@ const MemberTabs = () => (
 
 //#region Admin Router
 
-const AdminStackRouter = () => (
-    <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false }}>
-        {/* The Tabs stay as the main entry point */}
-        <Stack.Screen name="Tabs" component={AdminTabs} />
+// const AdminStackRouter = () => (
+//     <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false }}>
+//         {/* The Tabs stay as the main entry point */}
+//         <Stack.Screen name="Tabs" component={AdminTabs} />
 
-        {/* The Detail screen is pushed on top of the tabs */}
-        <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
-        <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
-        <Stack.Screen name="StaffDetail" component={StaffDetailsScreen} />
-        <Stack.Screen name="Staffmanager" component={StaffManagement} />
-        <Stack.Screen name="StaffDashboard" component={StaffDashboard} />
-        <Stack.Screen name="StaffScreen" component={StaffScreen} />
-        <Stack.Screen name="StaffRegistration" component={StaffRegistration} />
-    </Stack.Navigator>
-);
+//         {/* The Detail screen is pushed on top of the tabs */}
+//         <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
+//         <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
+//         <Stack.Screen name="StaffDetail" component={StaffDetailsScreen} />
+//         <Stack.Screen name="Staffmanager" component={StaffManagement} />
+//         <Stack.Screen name="StaffDashboard" component={StaffDashboard} />
+//         <Stack.Screen name="StaffScreen" component={StaffScreen} />
+//         <Stack.Screen name="StaffRegistration" component={StaffRegistration} />
+//         <Stack.Screen name="ChurchManagement" component={ChurchManagement} />
+//         <Stack.Screen name="ChurchSummary" component={ChurchSummaryScreen} />
+//         <Stack.Screen name="ChurchDashboard" component={ChurchDashboard} />
+
+
+//     </Stack.Navigator>
+// );
 
 
 const AdminTabs = () => (
@@ -253,11 +257,18 @@ export function RoleBasedNavigator({ userRole, user, logout }: { userRole: strin
                 </>
             )}
 
-            {(userRole === 'admin' || userRole === 'staff') && (
+            {(userRole === 'admin') && (
                 <>
                     <Drawer.Screen name="StaffManage" component={StaffScreen} />
-                    <Drawer.Screen name="ChurchConfig" component={ChurchSummaryScreen} />
+                    <Drawer.Screen name="ChurchDashboard" component={ChurchDashboard} options={{ title: 'Church Dashboard ' }} />
+
+                </>
+            )}
+            {(userRole === 'staff') && (
+                <>
+                    <Drawer.Screen name="StaffManage" component={StaffScreen} />
                     <Drawer.Screen name="BaptismRecords" component={BaptismScreen} />
+
                 </>
             )}
         </Drawer.Navigator>

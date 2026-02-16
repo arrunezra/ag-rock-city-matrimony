@@ -4,7 +4,6 @@ import CustomDrawer from '../components/common/CustomDrawer';
 import LandingScreen from '../screens/main/LandingScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import StaffScreen from '../screens/staff/StaffScreen';
-import WizardScreen from '../screens/profile/WizardScreen';
 import ProfileAccess from '../screens/profile/ProfileAccess';
 import ProfileDetailScreen from '../screens/profile/ProfileDetailScreen';
 import TabNavigator from './TabNavigator';
@@ -84,14 +83,6 @@ export default function DrawerNavigator() {
         }}
       />
       <Drawer.Screen
-        name="WizardScreen"
-        component={WizardScreen}
-        options={{
-          title: 'Wizard',
-          drawerLabel: 'Wizard',
-        }}
-      />
-      <Drawer.Screen
         name="ProfileAccess"
         component={ProfileAccess}
         options={{
@@ -116,22 +107,7 @@ export default function DrawerNavigator() {
           title: 'Settings'
         }}
       />
-      <Drawer.Screen
-        name="ChurchDashboard"
-        component={ChurchDashboard}
-        options={{
-          drawerItemStyle: { display: 'none' }, // Hides from menu
-          title: 'Church Dashboard'
-        }}
-      />
-      <Drawer.Screen
-        name="Church"
-        component={ChurchManagement}
-        options={{
-          drawerItemStyle: { display: 'none' }, // Hides from menu
-          title: 'Church Management'
-        }}
-      />
+
     </Drawer.Navigator>
   );
 }

@@ -70,7 +70,8 @@ import {
     BookOpen,
     Building,
     Save,
-    Hash
+    Hash,
+    ChevronLeft
 } from 'lucide-react-native';
 
 
@@ -168,7 +169,8 @@ export {
     BookOpen,
     Building,
     Save,
-    Hash
+    Hash,
+    ChevronLeft
 
 
 };

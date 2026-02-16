@@ -107,19 +107,11 @@ const SetPasswordScreen = ({ navigation, route }: any) => {
       confirmPassword: ''
     });
     setLoading(true);
-    // Add your logic here
     setTimeout(() => {
       setIsSuccess(true);
-      // Wait 2 seconds then navigate
       setLoading(false);
       setTimeout(() => {
         setIsSuccess(false);
-        // navigation.dispatch(
-        //   CommonActions.reset({
-        //     index: 0,
-        //     routes: [{ name: 'Login' }],
-        //   })
-        // );
       }, 3000);
 
     }, 1000);

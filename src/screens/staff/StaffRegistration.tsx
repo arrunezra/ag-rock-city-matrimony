@@ -4,7 +4,8 @@ import {
     VStack, HStack, Text, Input, InputField, InputSlot,
     Box, Button, ButtonText,
     Heading,
-    FormControl
+    FormControl,
+    ButtonIcon
 } from '@/src/components/common/GluestackUI';
 import BottomSheet, { BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import DateTimePicker from '@react-native-community/datetimepicker'; // Used as the engine
@@ -16,6 +17,7 @@ import profileService from '@/src/services/profileService';
 import { Dropdown } from 'react-native-element-dropdown';
 import { STATES } from '@/src/utils/utils';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { ArrowRight } from 'lucide-react-native';
 
 const StaffRegistration = () => {
     const [formData, setFormData] = useState({
@@ -160,23 +162,53 @@ const StaffRegistration = () => {
         setFormData(prev => ({ ...prev, joiningDateLabel: formatted }));
         closeDatePicker();
     };
+    const [currentStep, setCurrentStep] = useState(1);
 
-    const handleSave = () => {
-        // 1. Call the validate function
-        const isFormValid = validate();
+    const handleNext = () => {
+        let newErrors: any = {};
 
-        // 2. Check the result
-        if (isFormValid) {
-            // Success: Proceed with submission
-            console.log("Submit Data:", formData);
-            // alert("Registration Successful!");
-            // Your API call logic here
-        } else {
-            // Failure: The validate function has already updated the 'errors' state
-            console.log("Validation Failed", errors);
-            // Optional: Show a toast message or alert
+        // Validate only Step 1 fields
+        if (!formData.firstName) newErrors.firstName = "First name required";
+        if (!formData.lastName) newErrors.lastName = "Last name required";
+        if (!formData.department) newErrors.department = "Department required";
+        if (!formData.joiningDateLabel) newErrors.joiningDate = "Joining date required";
+
+        setErrors(newErrors);
+
+        // If no errors for Step 1, move to Step 2
+        if (Object.keys(newErrors).length === 0) {
+            setCurrentStep(2);
         }
     };
+
+    const prevStep = () => {
+        setErrors({});
+        setCurrentStep(1);
+    }
+    const handleFinalSubmit = () => {
+        let newErrors: any = {};
+
+        // Validate Step 2 fields
+        if (!formData.mobileNo) {
+            newErrors.mobileNo = "Mobile number required";
+        } else if (!formData.mobileNo.match(/^[0-9]{10}$/)) {
+            newErrors.mobileNo = "Must be a 10-digit number";
+        }
+
+        if (!formData.state) newErrors.state = "State selection required";
+        if (!formData.city) newErrors.city = "City selection required";
+        if (!formData.address || formData.address.trim().length < 5) {
+            newErrors.address = "Full address required";
+        }
+
+        setErrors(newErrors);
+
+        if (Object.keys(newErrors).length === 0) {
+            //handleSave(); // Your actual API call
+        }
+    };
+
+
 
 
     return (
@@ -189,244 +221,215 @@ const StaffRegistration = () => {
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
             >
                 <ScrollView
-                    className="flex-1"
+                    className="flex-1 bg-slate-50"
                     showsVerticalScrollIndicator={false}
-                    // Let the ScrollView handle the inset logic on Android
                     automaticallyAdjustKeyboardInsets={true}
-                    // Ensure the content can be scrolled past the bottom button
-                    contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}
+                    contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
                 >
-                    <VStack className="p-6 gap-8 pb-8">
+                    <VStack className="p-6 gap-6">
+
+                        {/* --- Header & Progress --- */}
                         <VStack space="xs">
-                            <Heading size="2xl" className="text-slate-900">Staff Registration</Heading>
-                            <Text size="sm" className="text-slate-500">Enter official credentials.</Text>
+                            <HStack className="justify-between items-center">
+                                <Heading size="2xl" className="text-slate-900">Staff Registration</Heading>
+                                <Text className="text-cyan-600 font-bold">Step {currentStep} of 2</Text>
+                            </HStack>
+                            <Text size="sm" className="text-slate-500">
+                                {currentStep === 1 ? "Enter official credentials." : "Enter contact and location details."}
+                            </Text>
+                            {/* Simple Progress Bar */}
+                            <HStack className="h-1.5 w-full bg-slate-200 rounded-full mt-2 overflow-hidden">
+                                <VStack className={`h-full bg-cyan-500 ${currentStep === 1 ? 'w-1/2' : 'w-full'}`} />
+                            </HStack>
                         </VStack>
 
-                        <VStack className="gap-6">
-                            {/* --- Section 1: Official Identity --- */}
-                            <VStack className="gap-4">
-                                <HStack className="items-center space-x-2 border-b border-slate-200 pb-2">
-                                    <Icon as={Hash} size="sm" className="text-cyan-600" />
-                                    <Text className="font-bold text-slate-700 uppercase tracking-wider text-xs">Official Identity</Text>
-                                </HStack>
-
-                                <HStack space="md">
-                                    {/* FIRST NAME */}
-                                    <FormControl className="flex-1" isInvalid={!!errors.firstName}>
-                                        <Input className="h-14 rounded-2xl bg-white border-slate-200 shadow-sm shadow-slate-100">
-                                            <InputField
-                                                placeholder="First Name"
-                                                value={formData.firstName}
-                                                onChangeText={(v) => updateForm('firstName', v)}
-                                            />
-                                        </Input>
-                                        <AnimateError isVisible={errors.firstName}>
-                                            {errors.firstName}
-                                        </AnimateError>
-                                    </FormControl>
-
-                                    {/* LAST NAME */}
-                                    <FormControl className="flex-1" isInvalid={!!errors.lastName}>
-                                        <Input className="h-14 rounded-2xl bg-white border-slate-200 shadow-sm shadow-slate-100">
-                                            <InputField
-                                                placeholder="Last Name"
-                                                value={formData.lastName}
-                                                onChangeText={(v) => updateForm('lastName', v)}
-                                            />
-                                        </Input>
-                                        <AnimateError isVisible={errors.lastName}>
-                                            {errors.lastName}
-                                        </AnimateError>
-                                    </FormControl>
-                                </HStack>
-                            </VStack>
-
-                            {/* --- Section 2: Role & Department --- */}
-                            <VStack className="gap-4">
-                                <HStack className="items-center space-x-2 border-b border-slate-200 pb-2">
-                                    <Icon as={Briefcase} size="sm" className="text-cyan-600" />
-                                    <Text className="font-bold text-slate-700 uppercase tracking-wider text-xs">Work Details</Text>
-                                </HStack>
-
-                                {/* DEPARTMENT */}
-                                <FormControl isInvalid={!!errors.department}>
-                                    <Input className="h-14 rounded-2xl bg-white border-slate-200 shadow-sm shadow-slate-100">
-                                        <InputSlot className="pl-4"><Icon as={Building2} size="sm" className="text-slate-400" /></InputSlot>
-                                        <InputField
-                                            placeholder="Department"
-                                            value={formData.department}
-                                            onChangeText={(v) => updateForm('department', v)}
-                                        />
-                                    </Input>
-                                    <AnimateError isVisible={errors.department}>
-                                        {errors.department}
-                                    </AnimateError>
-                                </FormControl>
-
-                                {/* JOINING DATE */}
-                                <FormControl isInvalid={!!errors.joiningDate}>
-                                    <Pressable onPress={openDatePicker}>
-                                        <HStack
-                                            className={`h-14 px-4 items-center justify-between bg-white rounded-2xl border shadow-sm shadow-slate-100 ${errors.joiningDate ? 'border-red-500' : 'border-slate-200'}`}
-                                        >
-                                            <HStack space="md" className="items-center">
-                                                <Icon as={Calendar} size="sm" className={formData.joiningDateLabel ? "text-cyan-600" : "text-slate-400"} />
-                                                <Text className={formData.joiningDateLabel ? "text-slate-900 font-medium" : "text-slate-400"}>
-                                                    {formData.joiningDateLabel || "Select Joining Date"}
-                                                </Text>
-                                            </HStack>
-                                            <Icon as={ChevronRight} size="xs" className="text-slate-300" />
+                        <VStack className="gap-8">
+                            {currentStep === 1 ? (
+                                <VStack className="gap-8 animate-in fade-in duration-500">
+                                    {/* --- Section 1: Official Identity --- */}
+                                    <VStack className="gap-4">
+                                        <HStack className="items-center border-b border-slate-200 pb-2" space="sm">
+                                            <Icon as={Hash} size="sm" className="text-cyan-600" />
+                                            <Text className="font-bold text-slate-700 uppercase tracking-wider text-xs">Official Identity</Text>
                                         </HStack>
-                                    </Pressable>
-                                    <AnimateError isVisible={errors.joiningDate}>
-                                        {errors.joiningDate}
-                                    </AnimateError>
-                                </FormControl>
-                            </VStack>
 
-                            {/* --- Section 3: Communication & Location --- */}
-                            <VStack className="gap-4">
-                                {/* HEADER */}
-                                <HStack className="items-center space-x-2 border-b border-slate-200 pb-2">
-                                    <Icon as={Phone} size="sm" className="text-cyan-600" />
-                                    <Text className="font-bold text-slate-700 uppercase tracking-wider text-xs">
-                                        Communication & Location
-                                    </Text>
-                                </HStack>
+                                        <HStack space="md">
+                                            <FormControl className="flex-1" isInvalid={!!errors.firstName}>
+                                                <Input className="h-14 rounded-2xl bg-white border-slate-200 shadow-sm shadow-slate-100">
+                                                    <InputField
+                                                        className="pl-4"
+                                                        placeholder="First Name"
+                                                        value={formData.firstName}
+                                                        onChangeText={(v) => updateForm('firstName', v)}
+                                                    />
+                                                </Input>
+                                                <AnimateError isVisible={errors.firstName}>{errors.firstName}</AnimateError>
+                                            </FormControl>
 
-                                {/* MOBILE NUMBER */}
-                                <FormControl isInvalid={!!errors.mobileNo}>
-                                    <Input className="h-14 rounded-2xl bg-white border-slate-200 shadow-sm shadow-slate-100">
-                                        <InputSlot className="pl-4">
-                                            <Icon as={Phone} size="sm" className="text-slate-400" />
-                                        </InputSlot>
-                                        <InputField
-                                            placeholder="Mobile Number"
-                                            keyboardType="phone-pad"
-                                            value={formData.mobileNo}
-                                            onChangeText={(v) => updateForm('mobileNo', v)}
-                                        />
-                                    </Input>
-                                    {errors.mobileNo && (
-                                        <Text className="text-xs text-red-500 pl-2 mt-1">
-                                            {errors.mobileNo}
-                                        </Text>
-                                    )}
-                                </FormControl>
 
-                                {/* ALT MOBILE */}
-                                <FormControl isInvalid={!!errors.altMobileNo}>
-                                    <Input className="h-14 rounded-2xl bg-white border-slate-200 shadow-sm shadow-slate-100">
-                                        <InputSlot className="pl-4">
-                                            <Icon as={Phone} size="sm" className="text-slate-400" />
-                                        </InputSlot>
-                                        <InputField
-                                            placeholder="Alternative Mobile Number"
-                                            keyboardType="phone-pad"
-                                            value={formData.altMobileNo}
-                                            onChangeText={(v) => updateForm('altMobileNo', v)}
-                                        />
-                                    </Input>
-                                    <AnimateError isVisible={errors.altMobileNo}>
-                                        {errors.altMobileNo}
-                                    </AnimateError>
-                                </FormControl>
+                                        </HStack>
+                                        <HStack space="md">
 
-                                {/* ADDRESS FIELD */}
-                                <FormControl isInvalid={!!errors.address}>
-                                    <VStack space="xs" className="w-full">
-                                        <Input className="min-h-[100px] rounded-2xl bg-white border-slate-200 shadow-sm shadow-slate-100 items-start py-3">
-                                            <InputSlot className="pl-4 pt-1">
-                                                <Icon as={MapPin} size="sm" className="text-slate-400" />
-                                            </InputSlot>
-                                            <InputField
-                                                multiline={true}
-                                                numberOfLines={4}
-                                                placeholder="Complete Residential Address"
-                                                value={formData.address}
-                                                onChangeText={(v) => updateForm('address', v)}
-                                                className="text-sm pt-1"
-                                                textAlignVertical="top"
-                                            />
-                                        </Input>
-                                        <AnimateError isVisible={errors.address}>
-                                            {errors.address}
-                                        </AnimateError>
+                                            <FormControl className="flex-1" isInvalid={!!errors.lastName}>
+                                                <Input className="h-14 rounded-2xl bg-white border-slate-200 shadow-sm shadow-slate-100">
+                                                    <InputField
+                                                        className="pl-4"
+                                                        placeholder="Last Name"
+                                                        value={formData.lastName}
+                                                        onChangeText={(v) => updateForm('lastName', v)}
+                                                    />
+                                                </Input>
+                                                <AnimateError isVisible={errors.lastName}>{errors.lastName}</AnimateError>
+                                            </FormControl>
+                                        </HStack>
                                     </VStack>
-                                </FormControl>
 
-                                {/* STATE DROPDOWN */}
-                                <FormControl isInvalid={!!errors.state}>
-                                    <Dropdown
-                                        style={[
-                                            styles.dropdown,
-                                            isFocus && { borderColor: '#0891b2' },
-                                            errors.state && { borderColor: '#EF4444' }
-                                        ]}
-                                        data={STATES || []}
-                                        labelField="StateName"
-                                        valueField="StateCode"
-                                        placeholder="Select State"
-                                        selectedTextStyle={styles.selectedText}
-                                        placeholderStyle={styles.placeholder}
-                                        value={formData.state}
-                                        onFocus={() => setIsFocus(true)}
-                                        onBlur={() => setIsFocus(false)}
-                                        onChange={item => {
-                                            updateForm('state', item.StateCode);
-                                            updateForm('city', '');
-                                            fetchCities(item.StateCode);
-                                        }}
-                                        renderLeftIcon={() => (
-                                            <Icon as={MapPin} size="sm" className="mr-2 text-cyan-600" />
+                                    {/* --- Section 2: Work Details --- */}
+                                    <VStack className="gap-4">
+                                        <HStack className="items-center border-b border-slate-200 pb-2" space="sm">
+                                            <Icon as={Briefcase} size="sm" className="text-cyan-600" />
+                                            <Text className="font-bold text-slate-700 uppercase tracking-wider text-xs">Work Details</Text>
+                                        </HStack>
+
+                                        <FormControl isInvalid={!!errors.department}>
+                                            <Input className="h-14 rounded-2xl bg-white border-slate-200 shadow-sm shadow-slate-100">
+                                                <InputSlot className="pl-4"><Icon as={Building2} size="sm" className="text-slate-400" /></InputSlot>
+                                                <InputField
+                                                    placeholder="Department"
+                                                    value={formData.department}
+                                                    onChangeText={(v) => updateForm('department', v)}
+                                                />
+                                            </Input>
+                                            <AnimateError isVisible={errors.department}>{errors.department}</AnimateError>
+                                        </FormControl>
+
+                                        <FormControl isInvalid={!!errors.joiningDate}>
+                                            <Pressable onPress={openDatePicker}>
+                                                <HStack className={`h-14 px-4 items-center justify-between bg-white rounded-2xl border shadow-sm shadow-slate-100 ${errors.joiningDate ? 'border-red-500' : 'border-slate-200'}`}>
+                                                    <HStack space="md" className="items-center">
+                                                        <Icon as={Calendar} size="sm" className={formData.joiningDateLabel ? "text-cyan-600" : "text-slate-400"} />
+                                                        <Text className={formData.joiningDateLabel ? "text-slate-900 font-medium" : "text-slate-400"}>
+                                                            {formData.joiningDateLabel || "Select Joining Date"}
+                                                        </Text>
+                                                    </HStack>
+                                                    <Icon as={ChevronRight} size="xs" className="text-slate-300" />
+                                                </HStack>
+                                            </Pressable>
+                                            <AnimateError isVisible={errors.joiningDate}>{errors.joiningDate}</AnimateError>
+                                        </FormControl>
+                                    </VStack>
+                                </VStack>
+                            ) : (
+                                <VStack className="gap-8 animate-in fade-in duration-500">
+                                    {/* --- Section 3: Communication & Location --- */}
+                                    <VStack space="md" className="gap-4">
+                                        <HStack className="items-center border-b border-slate-200 pb-2" space="sm">
+                                            <Icon as={Phone} size="sm" className="text-cyan-600" />
+                                            <Text className="font-bold text-slate-700 uppercase tracking-wider text-xs">Communication & Location</Text>
+                                        </HStack>
+
+                                        <FormControl isInvalid={!!errors.mobileNo}>
+                                            <Input className="h-14 rounded-2xl bg-white border-slate-200 shadow-sm shadow-slate-100">
+                                                <InputSlot className="pl-4"><Icon as={Phone} size="sm" className="text-slate-400" /></InputSlot>
+                                                <InputField
+                                                    placeholder="Mobile Number"
+                                                    keyboardType="phone-pad"
+                                                    value={formData.mobileNo}
+                                                    onChangeText={(v) => updateForm('mobileNo', v)}
+                                                />
+                                            </Input>
+                                            <AnimateError isVisible={errors.mobileNo}>{errors.mobileNo}</AnimateError>
+                                        </FormControl>
+
+                                        <FormControl isInvalid={!!errors.address}>
+                                            <Input className="h-28 rounded-2xl bg-white border-slate-200 shadow-sm shadow-slate-100 items-start py-1">
+                                                <InputSlot className="pl-4 pt-4"><Icon as={MapPin} size="sm" className="text-slate-400" /></InputSlot>
+                                                <InputField
+                                                    multiline={true}
+                                                    numberOfLines={4}
+                                                    placeholder="Complete Residential Address"
+                                                    value={formData.address}
+                                                    onChangeText={(v) => updateForm('address', v)}
+                                                    className="text-sm flex-1 pt-3"
+                                                    textAlignVertical="top"
+                                                />
+                                            </Input>
+                                            <AnimateError isVisible={errors.address}>{errors.address}</AnimateError>
+                                        </FormControl>
+
+                                        <FormControl isInvalid={!!errors.state}>
+                                            <Dropdown
+                                                style={[styles.dropdown, { height: 56, borderRadius: 16, backgroundColor: 'white' }, isFocus && { borderColor: '#0891b2' }, errors.state && { borderColor: '#EF4444' }]}
+                                                data={STATES || []}
+                                                labelField="StateName"
+                                                valueField="StateCode"
+                                                placeholder="Select State"
+                                                value={formData.state}
+                                                onFocus={() => setIsFocus(true)}
+                                                onBlur={() => setIsFocus(false)}
+                                                onChange={item => {
+                                                    updateForm('state', item.StateCode);
+                                                    updateForm('city', '');
+                                                    fetchCities(item.StateCode);
+                                                }}
+                                                renderLeftIcon={() => <Icon as={MapPin} size="sm" className="mr-2 text-cyan-600" />}
+                                            />
+                                            <AnimateError isVisible={errors.state}>{errors.state}</AnimateError>
+                                        </FormControl>
+
+                                        {formData.state && (
+                                            <FormControl isInvalid={!!errors.city}>
+                                                <Dropdown
+                                                    style={[styles.dropdown, { height: 56, borderRadius: 16, backgroundColor: 'white' }, errors.city && { borderColor: '#EF4444' }]}
+                                                    data={cities || []}
+                                                    labelField="CityName"
+                                                    valueField="CityCode"
+                                                    placeholder={isLoading ? "Loading cities..." : "Select City"}
+                                                    value={formData.city}
+                                                    onChange={item => updateForm('city', item.CityCode)}
+                                                    renderLeftIcon={() => isLoading ?
+                                                        <ActivityIndicator size="small" color="#0891b2" className="mr-2" /> :
+                                                        <Icon as={Navigation} size="sm" className="mr-2 text-cyan-600" />
+                                                    }
+                                                />
+                                                <AnimateError isVisible={errors.city}>{errors.city}</AnimateError>
+                                            </FormControl>
                                         )}
-                                    />
-                                    <AnimateError isVisible={errors.state}>
-                                        {errors.state}
-                                    </AnimateError>
-                                </FormControl>
-
-                                {/* CITY DROPDOWN */}
-                                {formData.state && (
-                                    <FormControl isInvalid={!!errors.city}>
-                                        <Dropdown
-                                            style={[
-                                                styles.dropdown,
-                                                errors.city && { borderColor: '#EF4444' }
-                                            ]}
-                                            mode="modal"
-                                            data={cities || []}
-                                            labelField="CityName"
-                                            valueField="CityCode"
-                                            placeholder={isLoading ? "Loading cities..." : "Select City"}
-                                            selectedTextStyle={styles.selectedText}
-                                            placeholderStyle={styles.placeholder}
-                                            value={formData.city}
-                                            onChange={item => updateForm('city', item.CityCode)}
-                                            renderLeftIcon={() =>
-                                                isLoading ? (
-                                                    <ActivityIndicator size="small" color="#0891b2" className="mr-2" />
-                                                ) : (
-                                                    <Icon as={Navigation} size="sm" className="mr-2 text-cyan-600" />
-                                                )
-                                            }
-                                        />
-                                        <AnimateError isVisible={errors.city}>
-                                            {errors.city}
-                                        </AnimateError>
-                                    </FormControl>
-                                )}
-                            </VStack>
-
+                                    </VStack>
+                                </VStack>
+                            )}
                         </VStack>
+
+                        {/* --- Wizard Navigation Buttons --- */}
+
+
+
+                        <HStack space="md" className="pt-4 justify-end">
+                            {currentStep === 2 && (
+                                <Button
+                                    variant="outline"
+                                    action="secondary"
+                                    onPress={prevStep}
+                                    className="flex-1 h-14 rounded-2xl border-slate-200"
+                                >
+                                    <ButtonText className="text-slate-600">Back</ButtonText>
+                                </Button>
+                            )}
+
+                            <Button
+                                onPress={currentStep === 1 ? handleNext : handleFinalSubmit}
+                                // Change flex-2 to flex-1 so they take equal space when both are visible
+                                // Or remove flex entirely if you want the button to stay small on the right
+                                className={`${currentStep === 1 ? 'w-1/2' : 'flex-1'} h-14 rounded-2xl bg-cyan-600`}
+                            >
+                                <ButtonText>{currentStep === 1 ? "Next Step" : "Submit"}</ButtonText>
+                                <ButtonIcon as={ArrowRight} className="ml-2" />
+                            </Button>
+                        </HStack>
+
 
                     </VStack>
                 </ScrollView>
-                <Box className="p-6 bg-slate-50 border-t border-slate-100">
-                    <Button size="lg" className="h-16 rounded-2xl bg-cyan-600" onPress={handleSave}>
-                        <ButtonText className="font-bold text-white">Register Staff</ButtonText>
-                    </Button>
-                </Box>
             </KeyboardAvoidingView>
 
             {/* ANDROID NATIVE PICKER (Only shows when triggered) */}

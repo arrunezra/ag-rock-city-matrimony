@@ -34,7 +34,7 @@ export const SuccessOverlay = ({
     if (!isVisible) return null;
 
     return (
-        <Box className="absolute inset-0 z-[100]">
+        <Box className="absolute inset-0 z-[100] bg-white/50">
             <LinearGradient
                 colors={['#10b981', '#065f46', '#022c22']}
                 locations={[0, 0.6, 1]}

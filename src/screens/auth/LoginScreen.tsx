@@ -10,6 +10,7 @@ import { Image, Link, LinkText, ButtonSpinner, Center, ScrollView, Box, VStack, 
 import authService from '@/src/services/authService';
 import { useAuth } from '@/src/context/AuthContext';
 import { CheckIcon } from '@/src/components/common/IconUI';
+import { AnimateError } from '../common/AnimateError';
 
 export default function LoginScreen({ navigation }: any) {
   const { progress } = useKeyboardAnimation();
@@ -104,9 +105,10 @@ export default function LoginScreen({ navigation }: any) {
                     keyboardType="email-address"
                   />
                 </Input>
-                <FormControlError>
-                  <FormControlErrorText>{errors.email}</FormControlErrorText>
-                </FormControlError>
+                <AnimateError isVisible={errors.email}>
+                  {errors.email}
+                </AnimateError>
+
               </FormControl>
 
               {/* Password */}
@@ -123,9 +125,10 @@ export default function LoginScreen({ navigation }: any) {
                     secureTextEntry
                   />
                 </Input>
-                <FormControlError>
-                  <FormControlErrorText>{errors.password}</FormControlErrorText>
-                </FormControlError>
+                <AnimateError isVisible={errors.password}>
+                  {errors.password}
+                </AnimateError>
+
               </FormControl>
 
               {/* Remember Me & Forgot Password Row */}

@@ -75,7 +75,7 @@ export default function CustomDrawerContent(props: any) {
                     <Text className="text-center text-[10px] text-typography-500 leading-4">
                         © {currentYear} My Shaadi.{"\n"}
                         All rights reserved.{"\n"}
-                        <Text className="font-bold text-typography-400">Version 1.0.2</Text>
+                        <Text className="font-bold text-typography-400">Version 1.0.3</Text>
                     </Text>
                 </Box>
             </VStack>
