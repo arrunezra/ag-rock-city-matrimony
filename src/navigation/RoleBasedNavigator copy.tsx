@@ -26,7 +26,6 @@ import StaffManagement from '../screens/staff/StaffManagement';
 import StaffRegistration from '../screens/staff/StaffRegistration';
 import StaffDetailsScreen from '../screens/staff/StaffDetailScreen';
 import StaffStackRouter from './StaffStackRouter';
-import DynamicStackRouter from './DynamicStackRouter';
 
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
@@ -93,29 +92,43 @@ const MemberTabs = () => (
 
 
 // --- MAIN DRAWER (The Wrapper) ---
-export function RoleBasedNavigator({ userRole, user, logout }: any) {
+export function RoleBasedNavigator({ userRole, user, logout }: { userRole: string, user: any, logout: any }) {
     return (
         <Drawer.Navigator
             drawerContent={(props) => <CustomDrawerContent {...props} userRole={userRole} user={user} logout={logout} />}
+            screenOptions={({ navigation }) => ({
+                headerTitleAlign: 'left', // Matches the image layout
+                headerRight: () => (
+                    <HeaderNotification
+                        count={13} // This would come from your global state or API
+                        onPress={() => {
+                            const targetScreen = userRole === 'member' ? 'Inbox' : 'Inbox';
+                            // Path: Main (Drawer) -> Tabs (Stack) -> Inbox (Tab)
+                            navigation.navigate('Main', {
+                                screen: 'Tabs',
+                                params: { screen: targetScreen }
+                            });
+                        }}
+                    />
+                ),
+                headerStyle: {
+                    elevation: 0, // Removes shadow on Android
+                    shadowOpacity: 0, // Removes shadow on iOS
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#f4f4f5',
+                },
+            })}
         >
-            <Drawer.Screen name="Main" options={{ title: userRole === 'admin' ? 'Admin Dashboard' : userRole === 'staff' ? 'Staff Dashboard' : 'Member Dashboard' }}>
-                {() => <DynamicStackRouter userRole={userRole} logout={logout} />}
-            </Drawer.Screen>
-
-            {userRole === 'admin' && (
-                <>
-                    <Drawer.Screen
-                        name="StaffDashboard"
-                        component={StaffDashboard}
-                        options={{ title: 'Staff Overview' }}
-                    />
-                    <Drawer.Screen
-                        name="ChurchDashboard"
-                        component={ChurchDashboard}
-                        options={{ title: 'Church Overview' }}
-                    />
-                </>
+            {/* The first screen in the drawer is usually the Tab Navigator */}
+            {userRole === 'member' ? (
+                <Drawer.Screen name="Main" component={MemberStackRouter} options={{ title: 'My Shaadi' }} />
+            ) : userRole === 'admin' ? (
+                <Drawer.Screen name="Main" component={AdminStackRouter} options={{ title: 'Admin Panel' }} />
+            ) : (
+                <Drawer.Screen name="Main" component={StaffStackRouter} options={{ title: 'Staff Panel' }} />
             )}
+
+            {/* Role-Specific Secondary Screens inside Drawer */}
             {userRole === 'member' && (
                 <>
                     <Drawer.Screen name="ReceivedRequests" component={ReceivedScreen} />
@@ -125,6 +138,20 @@ export function RoleBasedNavigator({ userRole, user, logout }: any) {
                 </>
             )}
 
+            {(userRole === 'admin') && (
+                <>
+                    <Drawer.Screen name="StaffDashboard" component={StaffDashboard} options={{ title: 'Staff Dashboard' }} />
+                    <Drawer.Screen name="ChurchDashboard" component={ChurchDashboard} options={{ title: 'Church Dashboard ' }} />
+
+                </>
+            )}
+            {(userRole === 'staff') && (
+                <>
+                    <Drawer.Screen name="StaffScreen" component={StaffScreen} />
+                    <Drawer.Screen name="BaptismRecords" component={BaptismScreen} />
+
+                </>
+            )}
         </Drawer.Navigator>
     );
 }

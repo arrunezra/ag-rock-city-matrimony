@@ -24,6 +24,8 @@ import api from '@/src/api/api';
 import { SuccessOverlay } from '../common/SuccessOverlay';
 import FailedScreen from '../common/FailedScreen';
 import AnimatedFormRow from './AnimatedViewForRegistration';
+import LoadingScreen from '../common/LoadingScreen';
+import ChruchService from '@/src/services/ChruchService';
 type Props = {
     navigation: NativeStackNavigationProp<AdminStackParamList, 'ChurchManagement'>;
     route: any;
@@ -33,7 +35,7 @@ interface FormFieldSkeletonProps {
     width?: DimensionValue; // Use this specific type
 }
 const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State - Replace with your actual logic
-    console.log('route', route)
+    //console.log('route', route)
     const { profile } = route.params;
     console.log('params', profile)
     const [cities, setCities] = useState<any[]>([]);
@@ -66,6 +68,7 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
 
     const [isLoadingForCities, setIsLoadingForCities] = useState(false);
     const fetchCities = async (stateId: string, searchQuery: string | null = null) => {
+        console.log('stateId', stateId, searchQuery)
         setIsLoadingForCities(true); // Start loading
         try {
             const response = await profileService.getCities(stateId, searchQuery);
@@ -74,7 +77,7 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
         } catch (error) {
             console.error("Error fetching cities", error);
         } finally {
-            setIsLoading(false); // Stop loading
+            setIsLoadingForCities(false); // Stop loading
         }
     };
     const [isSuccess, setIsSuccess] = useState(false);
@@ -147,6 +150,9 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
         }
     };
     const handleSave = async () => {
+        // 1. Prevent double-taps
+        if (isSubmitting) return;
+
         if (validate()) {
             setIsSubmitting(true);
 
@@ -155,39 +161,49 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
                 const payload = {
                     action: isUpdate ? 'update' : 'add',
                     data: form,
-                    id: profile?.church_id // only needed for update
+                    id: profile?.church_id
                 };
-                await api.post('/church/churchmanagment.php', payload);
-                setTimeout(() => {
+                const response = await ChruchService.addUpdateChurch(payload);
+                if (response.success) {
                     setIsSuccess(true);
                     setIsSubmitting(false);
+
                     setTimeout(() => {
                         setIsSuccess(false);
-                        //navigation.navigate('ChurchManagement');
                         navigation.navigate('ChurchManagement', { refreshed: true });
-                    }, 5000);
+                    }, 2500);
+                } else {
+                    throw new Error("Backend validation failed");
+                }
 
-                }, 1000);
             } catch (error) {
-                setIsError(true);
-                setTimeout(() => {
-                    setIsError(false);
-                }, 5000);
                 console.error(error);
-            } finally {
-                setIsSubmitting(false);
+                setIsError(true);
+                setIsSubmitting(false); // Allow them to try again
             }
+            // Note: We removed 'finally' to control state transitions precisely
         }
     };
+
     useEffect(() => {
-        setIsLoading(true)
-        setTimeout(() => {
-            setIsLoading(false)
-            if (profile && profile?.church_id) {
-                setForm(profile)
+        let isMounted = true;
+        setIsLoading(true);
+
+        // Simulate fetch/prep
+        const timer = setTimeout(() => {
+            if (isMounted) {
+                setIsLoading(false);
+                if (profile?.church_id) {
+                    setForm(profile);
+                    profile?.city ? fetchCities(profile.state) : '';
+                }
             }
-        }, 2000);
-    }, []);
+        }, 800);
+
+        return () => { isMounted = false; clearTimeout(timer); };
+    }, [profile]);
+
+
     // 1. FORM FIELD SKELETON COMPONENT
     const FormFieldSkeleton = ({ height = 64, width = "100%" }: FormFieldSkeletonProps) => {
         const pulseAnim = useRef(new Animated.Value(0.4)).current;
@@ -276,7 +292,7 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
 
     // Switch to Skeleton while loading
     if (isLoading) return <ProfileSkeleton />;
-
+    if (isSubmitting) return <LoadingScreen />;
     return (
         <Box className="flex-1 bg-white">
             {/* HEADER */}
@@ -498,6 +514,7 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
                                 <Input className="h-16 rounded-2xl border-slate-200">
                                     <InputField
                                         placeholder="12345"
+                                        keyboardType="phone-pad"
                                         value={form?.postal_code}
                                         onChangeText={(v) => updateField('postal_code', v)}
                                         className="text-md font-semibold text-slate-900"
@@ -521,6 +538,7 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
                                     <InputField
                                         placeholder="+1 234 567 890"
                                         keyboardType="phone-pad"
+                                        maxLength={10}
                                         value={form.church_phone}
                                         onChangeText={(v) => updateField('church_phone', v)}
                                         className="text-md font-semibold text-slate-900"
@@ -620,8 +638,8 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
                         onPress={handleSave}
                         isDisabled={isSubmitting || !form?.church_name}
                         className={`flex-[1.5] h-16 rounded-2xl border-0 shadow-lg transition-all ${profile?.church_id
-                                ? 'bg-cyan-600 shadow-cyan-200' // Update Mode
-                                : 'bg-slate-900 shadow-slate-400' // Add Mode
+                            ? 'bg-cyan-600 shadow-cyan-200' // Update Mode
+                            : 'bg-slate-900 shadow-slate-400' // Add Mode
                             }`}
                     >
                         <HStack space="sm" className="items-center justify-center">
@@ -644,6 +662,37 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
                     </Button>
                 </HStack>
             </Box>
+
+            <SuccessOverlay
+                isVisible={isSuccess}
+                message={
+                    profile?.church_id
+                        ? "Church details updated successfully!"
+                        : "Church registered successfully!"
+                }
+                onClose={() => {
+                    setIsSuccess(false);
+                    navigation.goBack();
+                }}
+            />
+
+            <FailedScreen
+                isVisible={isError}
+                title="Operation Failed"
+                // Use the same ID logic for the error description
+                description={
+                    profile?.church_id
+                        ? "We couldn't update the church details. Please check your connection and try again."
+                        : "We couldn't register the church. Please check your connection and try again."
+                }
+                onRetry={() => {
+                    setIsError(false);
+                    handleSave(); // Assuming your submit function is called handleSave
+                }}
+                onClose={() => {
+                    setIsError(false);
+                }}
+            />
         </Box>
     );
 }

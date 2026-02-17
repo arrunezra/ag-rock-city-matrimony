@@ -13,6 +13,25 @@ export const ChruchService = {
             console.error("Error deleting church:", error);
 
         }
+    },
+    addUpdateChurch: async (data: any) => {
+        try {
+            const response = await api.post('/church/churchmanagment.php', data);
+            return response.data;
+        } catch (error) {
+            console.error("Error adding/updating church:", error);
+        }
+    },
+    getCurchBranches: async (cityCode: string) => {
+        try {
+            const response = await api.post('/church/churchmanagment.php', {
+                action: 'getChurchBranches',
+                cityCode: cityCode
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Error getting church branches:", error);
+        }
     }
 }
 

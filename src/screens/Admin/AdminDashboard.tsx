@@ -7,23 +7,35 @@ const AdminDashboard = ({ navigation }: any) => {
         <View>
             <Text>Admin Dashboard</Text>
             <Box className="flex flex-col gap-6">
-                <Link onPress={() => navigation.navigate('StaffScreen')}>
+                <Link onPress={() =>
+                    navigation.navigate('Main', {
+                        screen: 'StaffScreen'
+                    })}>
                     <LinkText className="text-primary-500 font-semibold no-underline">
                         Staff
                     </LinkText>
                 </Link>
-                <Link onPress={() => navigation.navigate('Staffmanager')}>
+                <Link onPress={() =>
+                    navigation.navigate('Main', {
+                        screen: 'Staffmanager'
+                    })}>
                     <LinkText className="text-primary-500 font-semibold no-underline">
                         Staffmanager
                     </LinkText>
                 </Link>
 
-                <Link onPress={() => navigation.navigate('StaffDetail')}>
+                <Link onPress={() =>
+                    navigation.navigate('Main', {
+                        screen: 'StaffDetail'
+                    })}>
                     <LinkText className="text-primary-500 font-semibold no-underline">
                         StaffDetail
                     </LinkText>
                 </Link>
-                <Link onPress={() => navigation.navigate('StaffRegistration')}>
+                <Link onPress={() =>
+                    navigation.navigate('Main', {
+                        screen: 'StaffRegistration'
+                    })}>
                     <LinkText className="text-primary-500 font-semibold no-underline">
                         StaffRegistration
                     </LinkText>

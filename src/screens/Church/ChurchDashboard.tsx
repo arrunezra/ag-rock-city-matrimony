@@ -43,33 +43,36 @@ export default function ChurchDashboard({ navigation }: any) {
             </VStack>
 
             {/* 1. HERO CARD: Ultra-Modern Glass Effect */}
-            <Box
-                className="bg-primary-600 p-8 rounded-[40px] shadow-2xl mb-6 relative overflow-hidden"
-                style={{ elevation: 10 }}
-            >
-                <VStack className="z-10">
-                    <HStack className="items-center" space="xs">
-                        <Box className="w-1.5 h-1.5 rounded-full bg-primary-300 animate-pulse" />
-                        <Text className="text-primary-100 font-bold uppercase tracking-widest text-[10px]">
-                            Live Registry Count
-                        </Text>
-                    </HStack>
-                    <HStack className="items-baseline" space="xs">
-                        <Heading size="4xl" className="text-white font-black text-6xl tracking-tighter">
-                            {stats?.total || 0}
-                        </Heading>
-                        <Text className="text-primary-200 font-bold text-sm">Churches</Text>
-                    </HStack>
-                </VStack>
+            <TouchableOpacity onPress={() => navigation.navigate('Main', {
+                screen: 'ChurchManagement'
+            })}>
+                <Box
+                    className="bg-primary-600 p-8 rounded-[40px] shadow-2xl mb-6 relative overflow-hidden"
+                    style={{ elevation: 10 }}
+                >
+                    <VStack className="z-10">
+                        <HStack className="items-center" space="xs">
+                            <Box className="w-1.5 h-1.5 rounded-full bg-primary-300 animate-pulse" />
+                            <Text className="text-primary-100 font-bold uppercase tracking-widest text-[10px]">
+                                Live Registry Count
+                            </Text>
+                        </HStack>
+                        <HStack className="items-baseline" space="xs">
+                            <Heading size="4xl" className="text-white font-black text-6xl tracking-tighter">
+                                {stats?.total || 0}
+                            </Heading>
+                            <Text className="text-primary-200 font-bold text-sm">Churches</Text>
+                        </HStack>
+                    </VStack>
 
-                {/* Background Decorative Element */}
-                {/* <Box className="absolute -right-10 -bottom-10 bg-white/10 w-40 h-40 rounded-full"  > 
+                    {/* Background Decorative Element */}
+                    {/* <Box className="absolute -right-10 -bottom-10 bg-white/10 w-40 h-40 rounded-full"  > 
                 </Box> */}
-                <Box className="absolute -right-4 -bottom-4 opacity-10">
-                    <Icon as={Church} size="xl" className="text-white w-24 h-24" />
+                    <Box className="absolute -right-4 -bottom-4 opacity-10">
+                        <Icon as={Church} size="xl" className="text-white w-24 h-24" />
+                    </Box>
                 </Box>
-            </Box>
-
+            </TouchableOpacity>
             {/* 2. STATUS TILES: Specific Active & Inactive Results */}
             <HStack space="md" className="mb-8 px-1">
 

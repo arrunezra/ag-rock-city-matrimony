@@ -14,14 +14,14 @@ import StaffScreen from "../screens/staff/StaffScreen";
 import StaffDashboard from "../screens/staff/StaffDashboard";
 import StaffManagement from "../screens/staff/StaffManagement";
 import StaffDetailsScreen from "../screens/staff/StaffDetailScreen";
-import React from "react";
-import { CommonStaffStackScreen } from "./StaffStackRouter";
 
 const Stack = createNativeStackNavigator<AdminStackParamList>();
 const Tab = createBottomTabNavigator();
 
 
-const AdminTabs = () => (
+
+//#region Staff Router  
+const StaffTabs = () => (
     <Tab.Navigator
         screenOptions={({ route }) => ({
             headerShown: false,
@@ -57,21 +57,28 @@ const AdminTabs = () => (
             },
         })}
     >
-        <Tab.Screen name="Dashboard" component={AdminDashboard} options={{ title: 'Dashboard' }} />
+        <Tab.Screen name="Dashboard" component={StaffDashboard} options={{ title: 'Dashboard' }} />
         <Tab.Screen name="Profile" component={ProfileSummary} options={{ title: 'Profile' }} />
         <Tab.Screen name="Inbox" component={InboxScreen} options={{ title: 'Inbox' }} />
     </Tab.Navigator>
 );
+//#endregion    
 
-const AdminStackRouter = () => (
+export const CommonStaffStackScreen = () => {
+    return (
+        <>
+            <Stack.Screen name="StaffRegistration" component={StaffRegistration} options={{ title: 'Staff Registration' }} />
+
+            <Stack.Screen name="StaffDetail" component={StaffDetailsScreen} />
+            <Stack.Screen name="Staffmanager" component={StaffManagement} />
+            <Stack.Screen name="StaffScreen" component={StaffScreen} /></>
+    )
+}
+const StaffStackRouter = () => (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Tabs" component={AdminTabs} />
-        <Stack.Group screenOptions={{ presentation: 'fullScreenModal', headerShown: false }}>
-            <Stack.Screen name="ChurchRegistration" component={ChurchRegistrationScreen} options={{ title: 'Church Registration' }} />
-        </Stack.Group>
-        <Stack.Screen name="ChurchSummary" component={ChurchSummaryScreen} options={{ title: 'Church Details' }} />
-        <Stack.Screen name="ChurchManagement" component={ChurchManagement} options={{ title: 'Church Management' }} />
+        <Stack.Screen name="Tabs" component={StaffTabs} />
+        <CommonStaffStackScreen />
     </Stack.Navigator>
 );
 
-export default AdminStackRouter
+export default StaffStackRouter

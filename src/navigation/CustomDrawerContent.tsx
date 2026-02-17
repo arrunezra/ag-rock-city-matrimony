@@ -2,16 +2,17 @@ import { DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navi
 import { Box, VStack, HStack, Avatar, AvatarImage, Text, Divider, AvatarFallbackText } from '@/src/components/common/GluestackUI';
 import { Pressable } from 'react-native';
 import { AddIcon, Icon } from '@/components/ui/icon';
-import { LogOutIcon } from '../components/common/IconUI';
+import { LogOutIcon, UsersIcon } from '../components/common/IconUI';
 import { useAuth } from '@/src/context/AuthContext';
 import { API_BASE_URL_DEV_Profiles_Thumbs } from '../utils/environment';
 import { AvatarBadge } from '@/components/ui/avatar';
+import { LayoutDashboard } from 'lucide-react-native';
 
 export default function CustomDrawerContent(props: any) {
-    const { userRole, navigation, user, logout, onEdit } = props;
+    const { state, userRole, navigation, user, logout, onEdit } = props;
     const profileImage = API_BASE_URL_DEV_Profiles_Thumbs + '/' + user?.profileThumb;
     const currentYear = new Date().getFullYear();
-
+    const activeRouteName = state.routeNames[state.index];
     return (
         <DrawerContentScrollView {...props} contentContainerStyle={{ flex: 1 }}>
             <Box className="bg-primary-600 px-4 py-10 rounded-xl mb-4">

@@ -18,6 +18,9 @@ export type AdminStackParamList = {
   StaffRegistration: undefined;
   ChurchManagement: { refreshed?: boolean }; // Standardizing the param here  
   ChurchRegistration: undefined;
+  StaffDetail: undefined;
+  StaffDashboard: undefined;
+  StaffScreen: undefined;
 
 
   // ... add others
@@ -31,3 +34,4 @@ export type RootDrawerParamList = {
   ChurchSummary: undefined; // If it's also in the drawer
   BaptismRecords: undefined;
 };
+ 

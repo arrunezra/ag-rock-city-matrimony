@@ -8,12 +8,14 @@ interface SuccessOverlayProps {
     isVisible: boolean;
     message?: string;
     redirectMessage?: string;
+    onClose?: () => void;
 }
 
 export const SuccessOverlay = ({
     isVisible,
     message = "Your password is updated",
-    redirectMessage = "Taking you back..."
+    redirectMessage = "Taking you back...",
+    onClose
 }: SuccessOverlayProps) => {
     const successScale = useRef(new Animated.Value(0)).current;
 
