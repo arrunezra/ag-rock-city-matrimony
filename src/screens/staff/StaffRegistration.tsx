@@ -7,7 +7,8 @@ import {
     FormControl,
     ButtonIcon,
     FormControlLabelText,
-    FormControlLabel
+    FormControlLabel,
+    Switch
 } from '@/src/components/common/GluestackUI';
 import BottomSheet, { BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import DateTimePicker from '@react-native-community/datetimepicker'; // Used as the engine
@@ -19,7 +20,7 @@ import profileService from '@/src/services/profileService';
 import { Dropdown } from 'react-native-element-dropdown';
 import { STATES } from '@/src/utils/utils';
 import { KeyboardAvoidingView, KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import { ArrowRight, Home, User, UserCheck } from 'lucide-react-native';
+import { ArrowRight, Home, ShieldCheck, User, UserCheck } from 'lucide-react-native';
 import { LookupContext } from '@/src/context/LookupContext';
 import ChruchService from '@/src/services/ChruchService';
 import _ from 'lodash';
@@ -28,12 +29,15 @@ import { SuccessOverlay } from '../common/SuccessOverlay';
 import { StatusAlert } from '../common/StatusAlert';
 import FailedScreen from '../common/FailedScreen';
 
-const StaffRegistration = () => {
+const StaffRegistration = ({ navigation, route }: any) => {
+    const { id, isEdit } = route.params || {};
     const { lookups } = useContext(LookupContext);
     const [formData, setFormData] = useState({
+        id: '',
+        userid: '',
         firstName: '',
         lastName: '',
-        staffId: '',
+        staff_id: '',
         department: '',
         designation: '',
         church_id: '',
@@ -48,6 +52,7 @@ const StaffRegistration = () => {
         city: null,
         selected_pastor: '',
         selected_address: '',
+        activeStatus: 'Active'
     });
     const [errors, setErrors] = useState<any>({});
     // State to prevent Android auto-reopen loop
@@ -66,11 +71,25 @@ const StaffRegistration = () => {
     const [isChurchFocus, setIsChurchFocus] = useState(false);
     const [isRoleFocus, setIsRoleFocus] = useState(false);
     const [isDesignationFocus, setIsDesignationFocus] = useState(false);
-    const [churchBranches, setChurchBranches] = useState([]);
+    const [churchBranches, setChurchBranches] = useState<any>([]);
     const [showSuccess, setShowSuccess] = useState(false);
     const [showError, setShowError] = useState(false);
     const [showFailed, setShowFailed] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+    useEffect(() => {
+        if (isEdit) {
+            fetchSingleStaffById();
+        }
+    }, [id]);
+    const fetchSingleStaffById = async () => {
+        const response = await StaffService.fetchSingleStaffById(id);
+        if (response.success) {
+            response.data.joiningDate = new Date();
+            response.data.joiningDateLabel = new Date().toISOString().split('T')[0];
+            fetchCities(response?.data?.state ?? "");
+            setFormData(response.data);
+        }
+    };
     useEffect(() => {
         getCurchBranches();
     }, [formData.city]);
@@ -87,7 +106,7 @@ const StaffRegistration = () => {
     // 2. Helper function to update form state
     const updateForm = (key: string, value: any) => {
         // 1. Update the form data as usual
-        setFormData(prev => ({ ...prev, [key]: value }));
+        setFormData((prev: any) => ({ ...prev, [key]: value }));
 
         // 2. Clear the error for this specific field if it exists
         if (errors[key]) {
@@ -117,7 +136,7 @@ const StaffRegistration = () => {
         let newErrors: any = {};
 
         // Official Identity
-        if (!formData.staffId) newErrors.staffId = "Staff ID required";
+        if (!formData.staff_id) newErrors.staff_id = "Staff ID required";
         if (!formData.firstName) newErrors.firstName = "First name required";
         if (!formData.lastName) newErrors.lastName = "Last name required";
 
@@ -234,6 +253,12 @@ const StaffRegistration = () => {
 
         // If no errors for Step 1, move to Step 2
         if (Object.keys(newErrors).length === 0) {
+            if (isEdit) {
+                const index = churchBranches.findIndex((item: any) => item.church_id === formData.church_id);
+                if (index !== -1) {
+                    setFormData(prev => ({ ...prev, selected_pastor: churchBranches[index].pastor_name, selected_address: churchBranches[index].address }));
+                }
+            }
             setCurrentStep(2);
         }
     };
@@ -253,7 +278,7 @@ const StaffRegistration = () => {
         setErrors(newErrors);
 
         if (Object.keys(newErrors).length === 0) {
-            handleSave(); // Your actual API call
+            isEdit ? handleUpdate() : handleSave(); // Your actual API call
         }
     };
     const handleSave = async () => {
@@ -287,6 +312,36 @@ const StaffRegistration = () => {
         }
     };
 
+    const handleUpdate = async () => {
+        try {
+            const data = {
+                action: 'update',
+                ...formData,
+            }
+            console.log(data);
+            const response = await StaffService.UpdateStaff(data);
+            console.log(response);
+            if (response?.success) {
+                setShowSuccess(true);
+                setTimeout(() => {
+                    setShowSuccess(false);
+                    navigation.navigate('StaffSummaryView');
+                }, 5000);
+            } else {
+                if (!response?.success) {
+                    setShowError(true);
+                    setErrorMessage(response.message || "Failed to update staff member");
+                } else {
+                    setShowFailed(true);
+                    setErrorMessage("Failed to update staff member");
+
+                }
+            }
+        } catch (error) {
+            console.error("Error updating staff:", error);
+            Alert.alert("Error", "An error occurred while updating staff member");
+        }
+    };
 
 
     return (
@@ -325,7 +380,8 @@ const StaffRegistration = () => {
                                         <FormControl className="flex-1" isInvalid={!!errors.firstName}>
                                             <Input className="h-14 rounded-2xl bg-white border-slate-200 shadow-sm shadow-slate-100">
                                                 <InputField
-                                                    className="pl-4"
+                                                    className="pl-4 text-xl"
+
                                                     placeholder="First Name"
                                                     value={formData.firstName}
                                                     onChangeText={(v) => updateForm('firstName', v)}
@@ -341,7 +397,7 @@ const StaffRegistration = () => {
                                         <FormControl className="flex-1" isInvalid={!!errors.lastName}>
                                             <Input className="h-14 rounded-2xl bg-white border-slate-200 shadow-sm shadow-slate-100">
                                                 <InputField
-                                                    className="pl-4"
+                                                    className="pl-4 text-xl"
                                                     placeholder="Last Name"
                                                     value={formData.lastName}
                                                     onChangeText={(v) => updateForm('lastName', v)}
@@ -363,6 +419,7 @@ const StaffRegistration = () => {
                                             <InputSlot className="pl-4"><Icon as={Phone} size="sm" className="text-slate-400" /></InputSlot>
                                             <InputField
                                                 maxLength={10}
+                                                className='text-xl'
                                                 placeholder="Mobile Number"
                                                 keyboardType="phone-pad"
                                                 value={formData.mobileNo}
@@ -377,6 +434,8 @@ const StaffRegistration = () => {
                                             <InputSlot className="pl-4"><Icon as={Phone} size="sm" className="text-slate-400" /></InputSlot>
                                             <InputField
                                                 maxLength={10}
+                                                className='text-xl'
+
                                                 placeholder="Alternative Mobile Number"
                                                 keyboardType="phone-pad"
                                                 value={formData.altMobileNo}
@@ -390,6 +449,7 @@ const StaffRegistration = () => {
                                         <Input className="h-14 rounded-2xl bg-white border-slate-200 shadow-sm shadow-slate-100">
                                             <InputSlot className="pl-4"><Icon as={Phone} size="sm" className="text-slate-400" /></InputSlot>
                                             <InputField
+                                                className='text-xl'
                                                 placeholder="Email"
                                                 keyboardType="email-address"
                                                 value={formData.email}
@@ -408,7 +468,7 @@ const StaffRegistration = () => {
                                                 placeholder="Complete Residential Address"
                                                 value={formData.address}
                                                 onChangeText={(v) => updateForm('address', v)}
-                                                className="text-sm flex-1 pt-3"
+                                                className="text-xl flex-1 pt-3"
                                                 textAlignVertical="top"
                                             />
                                         </Input>
@@ -537,7 +597,33 @@ const StaffRegistration = () => {
                                         />
                                         <AnimateError isVisible={errors.designation}>{errors.designation}</AnimateError>
                                     </FormControl>
+                                    {/* --- Section 4: Account Status --- */}
+                                    <VStack space="md" className="gap-4">
+                                        <HStack className="items-center border-b border-slate-200 pb-2" space="sm">
+                                            <Icon as={ShieldCheck} size="sm" className="text-cyan-600" />
+                                            <Text className="font-bold text-slate-700 uppercase tracking-wider text-xs">Account Status</Text>
+                                        </HStack>
 
+                                        <HStack className="items-center justify-between p-4 bg-white rounded-2xl border border-slate-200 shadow-sm shadow-slate-100">
+                                            <VStack>
+                                                <Text className="font-bold text-slate-700 text-lg">
+                                                    {formData.activeStatus === 'Active' ? 'Active' : 'Inactive'}
+                                                </Text>
+                                                <Text className="text-slate-400 text-sm">
+                                                    Determines if this staff can access the system
+                                                </Text>
+                                            </VStack>
+                                            <Switch
+                                                size="lg"
+                                                trackColor={{ false: '#cbd5e1', true: '#0891b2' }}
+                                                thumbColor={'#ffffff'}
+                                                value={formData.activeStatus === 'Active'}
+                                                onValueChange={(value) =>
+                                                    updateForm('activeStatus', value ? 'Active' : 'Inactive')
+                                                }
+                                            />
+                                        </HStack>
+                                    </VStack>
 
 
                                     <FormControl isInvalid={!!errors.church_id}>
@@ -601,7 +687,7 @@ const StaffRegistration = () => {
                         )}
                     </VStack>
 
-                    <HStack space="md" className="pt-4 justify-end">
+                    <HStack space="md" className="pt-2 justify-end">
                         {currentStep === 2 && (
                             <Button
                                 variant="outline"
@@ -617,7 +703,7 @@ const StaffRegistration = () => {
                             onPress={currentStep === 1 ? handleNext : handleFinalSubmit}
                             className={`${currentStep === 1 ? 'w-1/2' : 'flex-1'} h-14 rounded-2xl bg-cyan-600`}
                         >
-                            <ButtonText>{currentStep === 1 ? "Next Step" : "Submit"}</ButtonText>
+                            <ButtonText>{currentStep === 1 ? "Next Step" : isEdit ? "Update" : "Submit"}</ButtonText>
                             <ButtonIcon as={ArrowRight} className="ml-2" />
                         </Button>
                     </HStack>
@@ -676,12 +762,12 @@ const StaffRegistration = () => {
             />
             <FailedScreen
                 isVisible={showFailed}
-                description="Failed to add staff member"
+                description={isEdit ? "Failed to update staff member" : "Failed to add staff member"}
                 onClose={() => { setShowFailed(false) }}
             />
             <SuccessOverlay
                 isVisible={showSuccess}
-                message="Staff member added successfully!"
+                message={isEdit ? "Staff updated successfully!" : "Staff added successfully!"}
             />
         </View>
     );

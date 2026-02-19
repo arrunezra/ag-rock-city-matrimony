@@ -46,10 +46,13 @@ const StaffDashboard = ({ navigation }: any) => {
                 >
                     <Icon as={Users} size={'lg'} className="absolute -right-6 -bottom-6 text-white opacity-20" />
                     <HStack className="justify-between items-center">
-                        <VStack>
-                            <Text className="text-cyan-100 text-xs font-bold uppercase tracking-wider">Total Workforce</Text>
-                            <Heading size="3xl" className="text-white mt-1">{data?.summary?.total_count || 0}</Heading>
-                        </VStack>
+                        <TouchableOpacity onPress={() => navigation.navigate('Main', { screen: 'StaffSummaryView' })}>
+
+                            <VStack>
+                                <Text className="text-cyan-100 text-xs font-bold uppercase tracking-wider">Total Workforce</Text>
+                                <Heading size="3xl" className="text-white mt-1">{data?.summary?.total_count || 0}</Heading>
+                            </VStack>
+                        </TouchableOpacity>
                         <Box className="bg-white/20 p-3 rounded-2xl">
                             <Icon as={Activity} className="text-white" size="lg" />
                         </Box>
@@ -93,91 +96,108 @@ const StaffDashboard = ({ navigation }: any) => {
                     <HStack className="justify-between items-center px-1">
                         <Heading size="md" className="text-slate-800">Recent Members</Heading>
                         <TouchableOpacity onPress={() => navigation.navigate('Main', { screen: 'StaffSummaryView' })}>
-                            <Text className="text-cyan-600 font-bold">See All</Text>
+                            <Text className="text-cyan-600 font-bold">View All</Text>
                         </TouchableOpacity>
                     </HStack>
 
                     {refreshing || !data ? (
                         <DashboardSkeleton />
                     ) : (
-                        data?.recent_staff?.map((item: any, index: number) => (
-                            <MotiView
-                                key={item.staff_id}
-                                from={{ opacity: 0, scale: 0.9, translateY: 15 }}
-                                animate={{ opacity: 1, scale: 1, translateY: 0 }}
+                        <>
+                            {data?.recent_staff?.map((item: any, index: number) => (
+                                <MotiView
+                                    key={item.staff_id}
+                                    from={{ opacity: 0, scale: 0.9, translateY: 15 }}
+                                    animate={{ opacity: 1, scale: 1, translateY: 0 }}
 
-                                transition={{
-                                    type: 'timing',
-                                    duration: 450,
-                                    delay: index * 80, // Smooth staggered entrance
-                                }}
-                            >
-                                <Pressable
-                                    className="mb-3 active:opacity-95"
-                                    onPress={() => navigation.navigate("Main", {
-                                        screen: "ViewStaffinforamtion",
-                                        params: { id: item.id }
-                                    })} >
-                                    <LinearGradient
-                                        colors={['#ffffff', '#f8fafc']}
-                                        style={{
-                                            borderLeftWidth: 6,
-                                            borderLeftColor: item.activeStatus === 'Active' ? '#0891b2' : '#cbd5e1'
-                                        }}
-                                        className="p-4 rounded-[28px] border border-slate-100 flex-row items-center shadow-sm"
-                                    >
-                                        {/* Avatar Section */}
-                                        <Box className="relative">
-                                            <LinearGradient
-                                                colors={['#0d9488', '#2dd4bf']} // Teal gradient for staff
-                                                className="h-14 w-14 rounded-2xl items-center justify-center shadow-sm"
-                                            >
-                                                <Text className="font-bold text-white text-xl">{item.full_name[0]}</Text>
-                                            </LinearGradient>
-                                        </Box>
-
-                                        {/* Info Section */}
-                                        <VStack className="ml-4 flex-1">
-                                            <Text className="font-bold text-slate-800 text-base" numberOfLines={1}>
-                                                {item.full_name}
-                                            </Text>
-                                            <Text className="text-xs text-slate-500 font-medium">{item.designation_name}</Text>
-
-                                            <Box className={`mt-2 self-start px-2 py-0.5 rounded-lg ${item.activeStatus === 'Active' ? 'bg-teal-50' : 'bg-slate-100'}`}>
-                                                <Text className={`text-[10px] font-bold uppercase tracking-tight ${item.activeStatus === 'Active' ? 'text-teal-600' : 'text-slate-400'}`}>
-                                                    {item.activeStatus}
-                                                </Text>
+                                    transition={{
+                                        type: 'timing',
+                                        duration: 450,
+                                        delay: index * 80, // Smooth staggered entrance
+                                    }}
+                                >
+                                    <Pressable
+                                        className="mb-3 active:opacity-95"
+                                        onPress={() => navigation.navigate("Main", {
+                                            screen: "ViewStaffinforamtion",
+                                            params: { id: item.id, isEdit: true }
+                                        })} >
+                                        <LinearGradient
+                                            colors={['#ffffff', '#f8fafc']}
+                                            style={{
+                                                borderLeftWidth: 6,
+                                                borderLeftColor: item.activeStatus === 'Active' ? '#1b5e32' : '#dc2626'
+                                            }}
+                                            className="p-4 rounded-[28px] border border-slate-100 flex-row items-center shadow-sm"
+                                        >
+                                            {/* Avatar Section */}
+                                            <Box className="relative">
+                                                <LinearGradient
+                                                    colors={['#0d9488', '#2dd4bf']} // Teal gradient for staff
+                                                    className="h-14 w-14 rounded-2xl items-center justify-center shadow-sm"
+                                                >
+                                                    <Text className="font-bold text-white text-xl">{item.full_name[0]}</Text>
+                                                </LinearGradient>
                                             </Box>
-                                        </VStack>
 
-                                        {/* ACTION GROUP: Edit & Call */}
-                                        <HStack space="xs" className="items-center pl-2 border-l border-slate-50 gap-2">
+                                            {/* Info Section */}
+                                            <VStack className="ml-4 flex-1">
+                                                <Text className="font-bold text-slate-800 text-base" numberOfLines={1}>
+                                                    {item.full_name}
+                                                </Text>
+                                                <Text className="text-xs text-slate-500 font-medium">{item.designation_name}</Text>
 
-                                            {/* EDIT ACTION */}
-                                            <TouchableOpacity
-                                                onPress={() => navigation.navigate("Main", {
-                                                    screen: "StaffRegistration",
-                                                    params: { id: item.staff_id, isEdit: true }
-                                                })}
-                                                className="h-10 w-10 bg-emerald-50 rounded-full items-center justify-center border border-emerald-100 shadow-sm active:bg-emerald-100"                                            >
-                                                <Icon as={Edit3Icon} size="sm" className="text-slate-600" />
-                                            </TouchableOpacity>
+                                                <Box className={`mt-2 self-start px-2 py-0.5 rounded-lg ${item.activeStatus === 'Active' ? 'bg-teal-50' : 'bg-slate-100'}`}>
+                                                    <Text className={`text-[10px] font-bold uppercase tracking-tight ${item.activeStatus === 'Active' ? 'text-teal-600' : 'text-slate-400'}`}>
+                                                        {item.activeStatus}
+                                                    </Text>
+                                                </Box>
+                                            </VStack>
 
-                                            {/* CALL ACTION */}
-                                            <TouchableOpacity
-                                                onPress={() => {
-                                                    if (item.mobileNo) Linking.openURL(`tel:${item.mobileNo}`);
-                                                }}
-                                                className="h-10 w-10 bg-cyan-600 rounded-full items-center justify-center shadow-md active:bg-cyan-700"
-                                            >
-                                                <Icon as={PhoneIcon} size="sm" className="text-white" />
-                                            </TouchableOpacity>
+                                            {/* ACTION GROUP: Edit & Call */}
+                                            <HStack space="xs" className="items-center pl-2 border-l border-slate-50 gap-2">
 
-                                        </HStack>
-                                    </LinearGradient>
-                                </Pressable>
-                            </MotiView>
-                        ))
+                                                {/* EDIT ACTION */}
+                                                <TouchableOpacity
+                                                    onPress={() => navigation.navigate("Main", {
+                                                        screen: "StaffRegistration",
+                                                        params: { id: item.staff_id, isEdit: true }
+                                                    })}
+                                                    className="h-10 w-10 bg-emerald-50 rounded-full items-center justify-center border border-emerald-100 shadow-sm active:bg-emerald-100"                                            >
+                                                    <Icon as={Edit3Icon} size="sm" className="text-slate-600" />
+                                                </TouchableOpacity>
+
+                                                {/* CALL ACTION */}
+                                                <TouchableOpacity
+                                                    onPress={() => {
+                                                        if (item.mobileNo) Linking.openURL(`tel:${item.mobileNo}`);
+                                                    }}
+                                                    className="h-10 w-10 bg-cyan-600 rounded-full items-center justify-center shadow-md active:bg-cyan-700"
+                                                >
+                                                    <Icon as={PhoneIcon} size="sm" className="text-white" />
+                                                </TouchableOpacity>
+
+                                            </HStack>
+                                        </LinearGradient>
+                                    </Pressable>
+                                </MotiView>
+                            ))
+                            }
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate("DMSUpload")}
+                                className="flex-row items-center justify-center py-4 bg-white rounded-2xl border border-slate-200 shadow-sm active:bg-slate-50"
+                            >
+                                <Text className="text-cyan-600 font-bold mr-2">Upload Documents</Text>
+                                <Icon as={ChevronRight} size="sm" className="text-cyan-600" />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate("DMSSummary")}
+                                className="flex-row items-center justify-center py-4 bg-white rounded-2xl border border-slate-200 shadow-sm active:bg-slate-50"
+                            >
+                                <Text className="text-cyan-600 font-bold mr-2">View Documents</Text>
+                                <Icon as={ChevronRight} size="sm" className="text-cyan-600" />
+                            </TouchableOpacity>
+                        </>
                     )}
                 </VStack>
 

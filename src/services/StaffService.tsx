@@ -57,6 +57,28 @@ export const StaffService = {
             }
             return { success: false, message: "Network connection failed" };
         }
+    },
+    fetchSingleStaffById: async (id: string) => {
+        try {
+            const response = await api.get(`/staff/staffdetails.php?action=byid&id=${id}`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                return error.response.data;
+            }
+            return { success: false, message: "Network connection failed" };
+        }
+    },
+    UpdateStaff: async (data: any) => {
+        try {
+            const response = await api.put('/staff/staffdetails.php', data);
+            return response.data;
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                return error.response.data;
+            }
+            return { success: false, message: "Network connection failed" };
+        }
     }
 
 }

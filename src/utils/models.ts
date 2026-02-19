@@ -13,6 +13,7 @@ export interface User {
   profilePic?: string;
   firstName?: string;
   lastName?: string;
+  userid?:string;
 }
 
 export interface AuthResponse {

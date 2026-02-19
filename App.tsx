@@ -9,7 +9,7 @@
 
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
-import { Pressable, StatusBar, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, Pressable, StatusBar, StyleSheet, Text, useColorScheme, View } from 'react-native';
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -27,14 +27,23 @@ import { LookupProvider } from './src/context/LookupContext';
 
 function App() {
   const [isAllPermissionGranted, setIsAllPermissionGranted] = useState(false);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     const checkPermission = async () => {
       const storagePermission = await requestPermission(PermissionTypes.STORAGE);
       const cameraPermission = await requestPermission(PermissionTypes.CAMERA);
       setIsAllPermissionGranted(storagePermission && cameraPermission);
+      setLoading(false);
     };
     checkPermission();
   }, [])
+  if (loading) {
+    return (
+      <View  >
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
   return (
 
     // <GluestackUIProvider mode="dark">
@@ -70,9 +79,10 @@ function App() {
 
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40, backgroundColor: '#fff' },
+  errorText: { fontSize: 18, textAlign: 'center', color: '#1A1A1A', marginBottom: 24, fontWeight: '500' },
+  button: { backgroundColor: '#007AFF', paddingVertical: 14, paddingHorizontal: 32, borderRadius: 16 },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' }
 });
 
 export default App;

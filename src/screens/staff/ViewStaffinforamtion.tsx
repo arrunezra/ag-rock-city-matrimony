@@ -49,7 +49,7 @@ const ViewStaffinforamtion = ({ navigation, route }: any) => {
     const { id } = route.params; // Get the ID from navigation
     console.log('ViewStaffinforamtion id=', id);
     const [formData, setFormData] = useState({
-        id: '',
+        id: id,
         firstName: '',
         lastName: '',
         staffId: '',
@@ -235,7 +235,7 @@ const ViewStaffinforamtion = ({ navigation, route }: any) => {
                         activeOpacity={0.9}
                         onPress={() => navigation.navigate("Main", {
                             screen: "StaffRegistration",
-                            params: { id: formData.id, isEdit: true }
+                            params: { id: id, isEdit: true }
                         })}
                         // Added rounded-full and overflow-hidden here
                         className="h-16 w-16 rounded-full overflow-hidden shadow-2xl shadow-cyan-500/50"

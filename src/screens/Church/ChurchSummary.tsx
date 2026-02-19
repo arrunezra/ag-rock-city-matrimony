@@ -22,11 +22,11 @@ import StaffImageCropView from '@/src/components/common/StaffImageCropView';
 import { AdminStackParamList } from '@/src/types/navigation';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
-import AnimatedListItem from './AnimattedSummary';
+import AnimatedListItem, { ChurchSkeleton } from './AnimattedSummary';
 import { Edit3, Settings2, XIcon } from 'lucide-react-native';
 import { ChruchService } from '@/src/services/ChruchService';
-type Props = NativeStackScreenProps<AdminStackParamList, 'ChurchManagement'>;
-export default function ChurchManagement({ route, navigation }: any) {
+type Props = NativeStackScreenProps<AdminStackParamList, 'ChurchSummary'>;
+export default function ChurchSummary({ route, navigation }: any) {
     const [list, setList] = useState<any[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -254,35 +254,7 @@ export default function ChurchManagement({ route, navigation }: any) {
             setUploading(false);
         }
     };
-    const ChurchSkeleton = () => {
-        const pulseAnim = useRef(new Animated.Value(0.4)).current;
 
-        useEffect(() => {
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-                    Animated.timing(pulseAnim, { toValue: 0.4, duration: 800, useNativeDriver: true }),
-                ])
-            ).start();
-        }, []);
-
-        return (
-            <Animated.View style={{ opacity: pulseAnim }} className="mx-4 mb-3 rounded-2xl bg-white border border-outline-50 h-24 overflow-hidden">
-                <HStack className="items-stretch h-full">
-                    <Box className="w-1.5 bg-slate-200" />
-                    <HStack space="md" className="flex-1 p-4 items-center">
-                        <Box className="w-12 h-12 rounded-full bg-slate-100" />
-                        <VStack space="xs" className="flex-1">
-                            <Box className="w-3/4 h-4 bg-slate-100 rounded" />
-                            <Box className="w-1/2 h-3 bg-slate-100 rounded" />
-                            <Box className="w-1/4 h-3 bg-slate-100 rounded" />
-                        </VStack>
-                        <Box className="w-10 h-10 rounded-full bg-slate-50" />
-                    </HStack>
-                </HStack>
-            </Animated.View>
-        );
-    };
     const deleteChurch = async (id: string) => {
         try {
             var response = await ChruchService.deleteChurchByID(id);
@@ -354,26 +326,7 @@ export default function ChurchManagement({ route, navigation }: any) {
                     {/* 4. HORIZONTAL QUICK-FILTER CHIPS */}
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
                         <HStack space="xs" className="px-1">
-                            {/* 1. RESET / "ALL" CHIP */}
-                            {/* <TouchableOpacity
-                                onPress={() => {
-                                    setSearchTerm('');
-                                    // Clear everything to show all
-                                    setFilters({ church_name: '', denomination: '', active_status: '' });
-                                }}
-                                // Highlight "All" if no status filters are active
-                                className={`px-4 py-2.5 rounded-2xl border transition-all active:scale-95 ${filters.active_status === ''
-                                        ? 'bg-slate-900 border-slate-900 shadow-md shadow-slate-400'
-                                        : 'bg-slate-100 border-slate-200'
-                                    }`}
-                            >
-                                <Text className={`text-[10px] font-black uppercase tracking-tight ${filters.active_status === '' ? 'text-white' : 'text-slate-500'
-                                    }`}>
-                                    All
-                                </Text>
-                            </TouchableOpacity> */}
 
-                            {/* 2. SINGLE-SELECT STATUS CHIPS */}
                             {['Active', 'Inactive'].map((filter) => {
                                 // Strictly check if this specific filter is the active one
                                 const isActive = filters.active_status === filter;

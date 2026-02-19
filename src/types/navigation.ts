@@ -13,10 +13,9 @@ export type AdminStackParamList = {
   ProfileDetail: { userId: string };
   ProfileEdit: undefined;
   Staffmanager: undefined;
-  ChurchDashboard: undefined; // Fixed spelling here
-  ChurchSummary: undefined;
+  ChurchDashboard: undefined; // Fixed spelling here 
   StaffRegistration: undefined;
-  ChurchManagement: { refreshed?: boolean }; // Standardizing the param here  
+  ChurchSummary: { refreshed?: boolean }; // Standardizing the param here  
   ChurchRegistration: undefined;
   StaffDetail: undefined;
   StaffDashboard: undefined;

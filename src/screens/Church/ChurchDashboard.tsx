@@ -1,11 +1,12 @@
 import React, { Activity, useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, FlatList, Linking, Pressable, RefreshControl, ScrollView, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Animated, Easing, FlatList, Linking, Pressable, RefreshControl, ScrollView, TouchableOpacity } from 'react-native';
 import { Box, VStack, HStack, Text, Heading, Spinner, Divider, Center, Link, LinkText, ButtonText, Button, Avatar, AvatarFallbackText, AvatarImage } from '@/src/components/common/GluestackUI';
 import api from '@/src/api/api';
 import { Icon, Globe, MapPin, ChevronLeft } from '@/src/components/common/IconUI';
-import { ChevronRight, Church, Phone, ShieldCheck, User2Icon } from 'lucide-react-native';
+import { ChevronRight, Church, Edit3, Phone, ShieldCheck, User2Icon } from 'lucide-react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AdminStackParamList } from '@/src/types/navigation';
+import AnimatedListItem, { ChurchSkeleton } from './AnimattedSummary';
 
 export default function ChurchDashboard({ navigation }: any) {
     const [stats, setStats] = useState<any>(null);
@@ -44,7 +45,7 @@ export default function ChurchDashboard({ navigation }: any) {
 
             {/* 1. HERO CARD: Ultra-Modern Glass Effect */}
             <TouchableOpacity onPress={() => navigation.navigate('Main', {
-                screen: 'ChurchManagement'
+                screen: 'ChurchSummary'
             })}>
                 <Box
                     className="bg-primary-600 p-8 rounded-[40px] shadow-2xl mb-6 relative overflow-hidden"
@@ -156,13 +157,15 @@ export default function ChurchDashboard({ navigation }: any) {
             <HStack className="justify-between items-center mb-5 px-2">
                 <VStack>
                     <Heading size="md" className="text-primary-900 font-black tracking-tight">Recent Activity</Heading>
-                    <Text size="xs" className="text-typography-400 font-bold uppercase tracking-tighter">Last 10 records</Text>
+                    <Text size="xs" className="text-typography-400 font-bold uppercase tracking-tighter">Last 5 records</Text>
                 </VStack>
                 <TouchableOpacity
-                    onPress={() =>
+                    onPress={() => {
                         navigation.navigate('Main', {
-                            screen: 'ChurchManagement'
-                        })}
+                            screen: 'ChurchSummary'
+                        })
+                    }
+                    }
                     className="bg-primary-50 px-4 py-2 rounded-full border border-primary-100 active:scale-95"
                 >
                     <HStack space="xs" className="items-center">
@@ -266,22 +269,111 @@ export default function ChurchDashboard({ navigation }: any) {
                     {[1, 2, 3, 4, 5].map((i) => <SkeletonItem key={i} />)}
                 </VStack>
             ) : (
-                <FlatList
-                    data={stats?.recent_churches || []}
-                    keyExtractor={(item) => item.id.toString()}
+                <> <FlatList
+                    data={loading ? [1, 2, 3, 4, 5] : stats?.recent_churches}
+                    keyExtractor={(item, index) => (loading ? `skeleton-${index}` : item.id.toString())}
+                    contentContainerStyle={{ paddingVertical: 16, paddingBottom: 100 }}
                     ListHeaderComponent={Header}
-                    contentContainerStyle={{ paddingBottom: 100 }}
                     refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0891b2" />
-                    }
-                    renderItem={({ item, index }) => (
-                        <AnimatedCard
-                            item={item}
-                            index={index}
-                            handleOpenPreview={handleOpenPreview}
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={["#4F46E5"]}
                         />
-                    )}
-                />
+                    }
+
+
+                    renderItem={({ item, index }) => {
+                        if (loading) return <ChurchSkeleton />;
+
+                        return (
+                            <AnimatedListItem key={item.id} index={index % 10}>
+                                <Box className="mx-4 mb-4 overflow-hidden rounded-3xl bg-white border border-outline-100 shadow-sm">
+                                    <HStack className="items-stretch">
+                                        {/* 1. STATUS ACCENT */}
+                                        <Box className={`w-2 ${item.active_status === 'Active' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+
+                                        <VStack className="flex-1 p-5" space="lg">
+                                            <HStack className="justify-between items-start">
+                                                <HStack space="md" className="flex-1">
+                                                    {/* 2. AVATAR & IDENTITY */}
+                                                    <Avatar size="lg" className="bg-primary-300 rounded-2xl border-2 border-white shadow-sm">
+                                                        <AvatarImage source={{ uri: item.profile_image }} />
+                                                        <AvatarFallbackText className="font-bold text-primary-800">{item.church_name}</AvatarFallbackText>
+                                                    </Avatar>
+
+                                                    <VStack className="flex-1 justify-center">
+                                                        <Text className="text-lg font-black text-typography-900 leading-tight">
+                                                            {item.church_name}
+                                                        </Text>
+                                                        <Text size="sm" className="text-typography-500 font-medium">
+                                                            {item.pastor_name}
+                                                        </Text>
+                                                    </VStack>
+                                                </HStack>
+
+                                                {/* 3. QUICK UTILITY ICONS */}
+                                                <HStack space="xs">
+                                                    <TouchableOpacity
+                                                        className="w-10 h-10 rounded-full bg-cyan-50 items-center justify-center border border-cyan-100 active:bg-cyan-100"
+                                                        onPress={() => Linking.openURL(`tel:${item.church_phone}`)}
+                                                    >
+                                                        <Icon as={Phone} size="sm" className="text-cyan-600" />
+                                                    </TouchableOpacity>
+
+
+                                                </HStack>
+                                            </HStack>
+
+                                            {/* 4. METADATA TAGS */}
+                                            <HStack space="sm" className="items-center">
+                                                <Box className="bg-slate-100 px-3 py-1 rounded-full flex-row items-center">
+                                                    <Icon as={MapPin} size="xs" className="mr-1 text-slate-500" />
+                                                    <Text className="text-[10px] font-bold text-slate-600 uppercase tracking-tight">{item.city}</Text>
+                                                </Box>
+                                                <Box className="bg-primary-50 px-3 py-1 rounded-full flex-row items-center">
+                                                    <Icon as={Globe} size="xs" className="mr-1 text-primary-600" />
+                                                    <Text className="text-[10px] font-bold text-primary-600 uppercase tracking-tight">{item.denomination}</Text>
+                                                </Box>
+                                            </HStack>
+
+                                            {/* 5. PRIMARY ACTION */}
+                                            {/* 5. PRIMARY ACTION - 2026 REFINEMENT */}
+                                            <HStack className="items-center justify-between mt-2">
+                                                {/* Secondary Info/Status */}
+                                                <VStack>
+                                                    <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Last Modified</Text>
+                                                    <Text className="text-xs font-semibold text-slate-600">Feb 13, 2026</Text>
+                                                </VStack>
+
+                                                {/* The New Action Button */}
+                                                <Button
+                                                    onPress={() => { navigation.navigate("Main", { screen: 'ChurchRegistration', params: { profile: item } }); }}
+                                                    className="h-11 px-6 rounded-2xl bg-primary-600 shadow-lg shadow-primary-200 active:scale-95 transition-all"
+                                                    style={{
+                                                        elevation: 8,
+                                                        shadowColor: '#1c916aff',
+                                                        shadowOffset: { width: 0, height: 4 },
+                                                        shadowOpacity: 0.3,
+                                                        shadowRadius: 8,
+                                                    }}
+                                                >
+                                                    <HStack space="xs" className="items-center">
+                                                        <Icon as={Edit3} size="xs" className="text-white" />
+                                                        <ButtonText className="text-xs font-black text-white uppercase tracking-widest">
+                                                            Manage
+                                                        </ButtonText>
+                                                    </HStack>
+                                                </Button>
+                                            </HStack>
+                                        </VStack>
+                                    </HStack>
+                                </Box>
+                            </AnimatedListItem>
+                        );
+                    }}
+                /></>
+
             )}
         </Box>
     );

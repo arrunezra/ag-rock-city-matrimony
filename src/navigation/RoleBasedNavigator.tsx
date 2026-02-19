@@ -3,30 +3,13 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import ProfileHomeScreen from '../screens/profile/ProfileHomeScreen';
 import MatchesScreen from '../screens/profile/MatchesScreen';
 import InboxScreen from '../screens/profile/InboxScreen';
-import AdminDashboard from '../screens/Admin/AdminDashboard';
-import ProfileSummary from '../screens/profile/ProfileSummary';
-import StaffScreen from '../screens/staff/StaffScreen';
-import ReceivedScreen from '../screens/profile/ReceivedScreen';
-import AcceptedScreen from '../screens/profile/AcceptedScreen';
-import BaptismScreen from '../screens/Document/BaptismScreen';
-import ChurchSummaryScreen from '../screens/Church/ChurchSummaryScreen';
 import React from 'react';
 import CustomDrawerContent from './CustomDrawerContent';
-import { HeaderNotification } from '../components/common/HeaderNotification';
 import { HeartIcon, HomeIcon, Icon, MessageCircleIcon } from '../components/common/IconUI';
-import MyPhotos from '../screens/profile/MyPhotos';
-import PartnerPreferences from '../screens/profile/PartnerPreferences';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ProfileDetailScreen from '../screens/profile/ProfileDetailScreen';
-import ProfileEditScreen from '../screens/profile/EditProfileScreen';
-import StaffDashboard from '../screens/staff/StaffDashboard';
-import AdminStackRouter from './AdminStackRouter';
-import ChurchDashboard from '../screens/Church/ChurchDashboard';
-import StaffManagement from '../screens/staff/StaffManagement';
-import StaffRegistration from '../screens/staff/StaffRegistration';
-import StaffDetailsScreen from '../screens/staff/StaffDetailScreen';
-import StaffStackRouter from './StaffStackRouter';
-import DynamicStackRouter from './DynamicStackRouter';
+import DynamicStackRouter, { ROLE_DRAWER_CONFIG } from './DynamicStackRouter';
+import ProfileEditScreen from '../screens/profile/ProfileEditScreen';
 
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
@@ -102,28 +85,9 @@ export function RoleBasedNavigator({ userRole, user, logout }: any) {
                 {() => <DynamicStackRouter userRole={userRole} logout={logout} />}
             </Drawer.Screen>
 
-            {userRole === 'admin' && (
-                <>
-                    <Drawer.Screen
-                        name="StaffDashboard"
-                        component={StaffDashboard}
-                        options={{ title: 'Staff Overview' }}
-                    />
-                    <Drawer.Screen
-                        name="ChurchDashboard"
-                        component={ChurchDashboard}
-                        options={{ title: 'Church Overview' }}
-                    />
-                </>
-            )}
-            {userRole === 'member' && (
-                <>
-                    <Drawer.Screen name="ReceivedRequests" component={ReceivedScreen} />
-                    <Drawer.Screen name="AcceptedRequests" component={AcceptedScreen} />
-                    <Drawer.Screen name="MyPhotos" component={MyPhotos} options={{ title: 'My Photos' }} />
-                    <Drawer.Screen name="PartnerPreferences" component={PartnerPreferences} options={{ title: 'Partner Preferences' }} />
-                </>
-            )}
+            {ROLE_DRAWER_CONFIG[userRole]?.map(({ name, component, options }) => (
+                <Drawer.Screen key={name} name={name} component={component} options={options} />
+            ))}
 
         </Drawer.Navigator>
     );

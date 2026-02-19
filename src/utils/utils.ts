@@ -1,3 +1,4 @@
+
 export const getProfileCompletionData = (user: any) => {
     const sections = [
         { 
@@ -436,3 +437,5 @@ export const HOBBIES = [
   'Fashion',
   'Fitness',  
 ];
+
+

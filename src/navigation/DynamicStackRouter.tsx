@@ -8,17 +8,45 @@ import InboxScreen from "../screens/profile/InboxScreen";
 import StaffDashboard from "../screens/staff/StaffDashboard";
 import StaffRegistration from "../screens/staff/StaffRegistration";
 import StaffDetailsScreen from "../screens/staff/StaffDetailScreen";
-import StaffManagement from "../screens/staff/StaffManagement";
 import ChurchRegistrationScreen from "../screens/Church/ChurchRegistrationScreen";
 import { Box, Button, Center, Heading, Spinner, Text, VStack } from "../components/common/GluestackUI";
 import ProfileHomeScreen from "../screens/profile/ProfileHomeScreen";
 import MatchesScreen from "../screens/profile/MatchesScreen";
 import ViewStaffinforamtion from "../screens/staff/ViewStaffinforamtion";
 import StaffSummaryView from "../screens/staff/SummaryView";
+import PartnerPreferences from "../screens/profile/PartnerPreferences";
+import MyPhotos from "../screens/profile/MyPhotos";
+import AcceptedScreen from "../screens/profile/AcceptedScreen";
+import ReceivedScreen from "../screens/profile/ReceivedScreen";
+import ChurchDashboard from "../screens/Church/ChurchDashboard";
+import ChurchSummary from "../screens/Church/ChurchSummary";
+import BaptismScreen from "../screens/Document/BaptismScreen";
+import ProfileDetailScreen from "../screens/profile/ProfileDetailScreen";
+import ProfileEditScreen from "../screens/profile/ProfileEditScreen";
+import DMSUploadScreen from "../screens/DMS/DMSUploadScreen";
+import DMSSummaryScreen from "../screens/DMS/DMSSummaryScreen";
+import UserDocumentUpload from "../screens/members/UserDocumentUpload";
 
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+export const ROLE_DRAWER_CONFIG: Record<string, any[]> = {
+  admin: [
+    { name: "StaffDashboard", component: StaffDashboard, options: { title: "Staff Overview" } },
+    { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Overview" } },
+  ],
+  member: [
+    { name: "ReceivedRequests", component: ReceivedScreen },
+    { name: "AcceptedRequests", component: AcceptedScreen },
+    { name: "MyPhotos", component: MyPhotos, options: { title: "My Photos" } },
+    { name: "PartnerPreferences", component: PartnerPreferences, options: { title: "Partner Preferences" } },
+    { name: "UserDocumentUpload", component: UserDocumentUpload, options: { title: "My Documents" } },
+
+  ],
+  staff: [
+    { name: "BaptismRecords", component: BaptismScreen, options: { title: "Baptism Records" } },
+  ],
+};
 
 // 1. Define the Tab Configuration
 const TAB_CONFIG = {
@@ -47,18 +75,24 @@ const SHARED_STACKS = (role: string) => (
       <>
         <Stack.Screen name="StaffRegistration" component={StaffRegistration} />
         <Stack.Screen name="StaffDetail" component={StaffDetailsScreen} />
-        <Stack.Screen name="Staffmanager" component={StaffManagement} />
         <Stack.Screen name="ViewStaffinforamtion" component={ViewStaffinforamtion} />
         <Stack.Screen name="StaffSummaryView" component={StaffSummaryView} />
+        <Stack.Screen name="DMSUpload" component={DMSUploadScreen} />
+        <Stack.Screen name="DMSSummary" component={DMSSummaryScreen} />
+
       </>
     )}
     {/* Admin Only Modals */}
     {role === 'admin' && (
-      <Stack.Screen
-        name="ChurchRegistration"
-        component={ChurchRegistrationScreen}
-        options={{ presentation: 'fullScreenModal' }}
-      />
+      <><Stack.Screen name="ChurchRegistration" component={ChurchRegistrationScreen} options={{ presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="ChurchSummary" component={ChurchSummary} options={{ title: 'Church Summary' }} /></>
+    )}
+    {role === 'member' && (
+      <>
+        <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
+        <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
+
+      </>
     )}
   </Stack.Group>
 );
@@ -67,9 +101,10 @@ const SHARED_STACKS = (role: string) => (
 const DynamicTabs = ({ route }: any) => {
   const { role } = route.params;
   const tabs = TAB_CONFIG[role as keyof typeof TAB_CONFIG] || TAB_CONFIG.staff;
-
+  const firstTabName = role === 'member' ? 'Matches' : tabs[0]?.name;
   return (
     <Tab.Navigator
+      initialRouteName={firstTabName}
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: "#16a34a",
