@@ -71,7 +71,9 @@ import {
     Building,
     Save,
     Hash,
-    ChevronLeft
+    ChevronLeft,
+    CheckCircle,
+    AlertCircle
 } from 'lucide-react-native';
 
 
@@ -170,7 +172,9 @@ export {
     Building,
     Save,
     Hash,
-    ChevronLeft
+    ChevronLeft,
+    CheckCircle,
+    AlertCircle
 
 
 };

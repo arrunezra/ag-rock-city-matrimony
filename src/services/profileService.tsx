@@ -39,6 +39,39 @@ export const profileService = {
     const response = await api.post('/profile/validate_mobileno.php', credentials);
     return response.data;
   },
+  getDashboardData: async () => {
+    try {
+      const response = await api.get('/profile/get_dashboard.php');
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        return error.response.data;
+      }
+      return { success: false, message: "Network connection failed" };
+    }
+  },
+  fetchProfileDetailsByID: async (id: any) => {
+    try {
+      const response = await api.get(`/profile/get_profile_details_by_id.php?id=${id}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        return error.response.data;
+      }
+      return { success: false, message: "Network connection failed" };
+    }
+  },
+  verifyorStatusUpdate: async (id: any, status: any, aciton: string) => {
+    try {
+      const response = await api.get(`/profile/Verifiy_profile.php?id=${id}&status=${status}&action=${aciton}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        return error.response.data;
+      }
+      return { success: false, message: "Network connection failed" };
+    }
+  },
 };
 
 export default profileService;

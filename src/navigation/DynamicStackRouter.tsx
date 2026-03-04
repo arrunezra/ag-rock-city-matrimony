@@ -89,11 +89,12 @@ const SHARED_STACKS = (role: string) => (
     )}
     {role === 'member' && (
       <>
-        <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
         <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
 
       </>
     )}
+    <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
+
   </Stack.Group>
 );
 

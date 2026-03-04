@@ -1,5 +1,6 @@
 import { ImageFormat, Skia } from "@shopify/react-native-skia";
 import { Buffer } from 'buffer';
+import { FileArchive, FileImage, FileSpreadsheet, FileText ,File} from "lucide-react-native";
 
 export const compressWithSkia = async (pickerResult: any) => {
   try { 
@@ -45,3 +46,4 @@ export const compressWithSkia = async (pickerResult: any) => {
     return null;
   }
 };
+

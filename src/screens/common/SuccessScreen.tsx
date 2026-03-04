@@ -1,38 +1,56 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
+import { Animated, Easing } from 'react-native';
 import LottieView from 'lottie-react-native';
-import { Box, VStack, Heading, Text, Button, ButtonText } from '@/src/components/common/GluestackUI';
+import { Box, Center, HStack, Text, VStack } from '@/src/components/common/GluestackUI';
 
-export default function SuccessScreen({ onDone }: { onDone: () => void }) {
+export default function LoadingScreen() {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+
+
   return (
-    <Box className="flex-1 bg-white justify-center px-6">
-      <VStack className="items-center gap-6">
-        {/* Lottie Animation */}
-        <Box className="w-64 h-64">
-          <LottieView
-            source={require('../../assets/animations/success.json')}
-            autoPlay
-            loop={false}
-            style={{ width: '100%', height: '100%' }}
-          />
-        </Box>
+    <Box className="absolute inset-0 z-[200] flex-1 bg-black/40">
 
-        <VStack className="items-center gap-2">
-          <Heading size="2xl" className="text-center text-typography-900">
-            All Set!
-          </Heading>
-          <Text className="text-center text-typography-500 text-lg">
-            Your profile has been created. Your perfect match is just a click away.
-          </Text>
-        </VStack>
+      <Center className="flex-1">
 
-        <Button 
-          size="lg" 
-          className="bg-cyan-500 rounded-full w-full h-14 mt-8" 
-          onPress={onDone}
+        {/* Main Modal Container */}
+        <Box
+          className="bg-background-0 p-10 rounded-[40px] shadow-2xl border border-outline-100"
+          style={styles.modalShadow}
         >
-          <ButtonText className="font-bold text-xl">Go to Home</ButtonText>
-        </Button>
-      </VStack>
+          <VStack className="items-center gap-6">
+
+            {/* Lottie Animation Section */}
+            <Box className="relative items-center justify-center">
+              <Box className="bg-background-50 p-5 rounded-full shadow-sm border border-outline-50">
+                <LottieView
+                  source={require('../../assets/animations/success.json')}
+                  autoPlay
+                  loop={false}
+                  style={{ width: 40, height: 40 }}
+                />
+              </Box>
+            </Box>
+
+
+
+          </VStack>
+        </Box>
+      </Center>
+
     </Box>
   );
 }
+
+const styles = {
+  modalShadow: {
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+};

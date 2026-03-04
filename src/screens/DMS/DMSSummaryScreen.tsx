@@ -18,23 +18,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '@/src/api/api';
 import { API_BASE_URL_DEV_DMS } from '@/src/utils/environment';
 import { useAuth } from '@/src/context/AuthContext';
+import LoadingScreen from '../common/LoadingScreen';
+import { getFileIconConfig } from '@/src/utils/common';
 
-// --- 1. Dynamic Icon Helper ---
-const getFileIconConfig = (ext: string = '') => {
-    const extension = ext.toLowerCase();
-    switch (extension) {
-        case 'pdf':
-            return { Icon: FileText, bgClass: 'bg-red-50', iconColor: '#DC2626' };
-        case 'xlsx': case 'xls': case 'csv':
-            return { Icon: FileSpreadsheet, bgClass: 'bg-green-50', iconColor: '#16A34A' };
-        case 'zip': case 'rar':
-            return { Icon: FileArchive, bgClass: 'bg-purple-50', iconColor: '#9333EA' };
-        case 'jpg': case 'jpeg': case 'png':
-            return { Icon: FileImage, bgClass: 'bg-blue-50', iconColor: '#2563EB' };
-        default:
-            return { Icon: File, bgClass: 'bg-slate-50', iconColor: '#475569' };
-    }
-};
+
 
 const DMSSummaryScreen = () => {
 
@@ -44,7 +31,7 @@ const DMSSummaryScreen = () => {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
-
+    const [defaultLoading, setDefaultLoading] = useState(false);
     // --- 2. Optimized Fetch Logic ---
     // We pass currentSearch as a parameter to avoid closure issues with searchQuery state
     const fetchFiles = useCallback(async (pageNum = 1, isSearching = false, currentSearch = searchQuery) => {
@@ -96,15 +83,23 @@ const DMSSummaryScreen = () => {
 
     // --- 3. Functional Logic (Preview & Replace) ---
     const handlePreview = async (file: any) => {
+        setDefaultLoading(true)
         console.log('handlePreview file=', file);
         const sourceUrl = `${API_BASE_URL_DEV_DMS}/${file.file_name}`;
         const localPath = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${file.original_name}`;
+        console.log('sourceUrl', sourceUrl)
 
+        console.log('localPath', localPath)
+        // const exists = await ReactNativeBlobUtil.fs.exists(localPath);
+        //  if (exists) {
+        //     Alert.alert('Yes')
+        // } else Alert.alert('No')
         try {
             const res = await ReactNativeBlobUtil.config({
                 path: localPath,
                 fileCache: true,
             }).fetch('GET', sourceUrl);
+            setDefaultLoading(false)
 
             if (Platform.OS === 'ios') {
                 ReactNativeBlobUtil.ios.previewDocument(res.path());
@@ -113,6 +108,8 @@ const DMSSummaryScreen = () => {
             }
         } catch (err) {
             Alert.alert("Error", "Could not open this file.");
+            setDefaultLoading(false)
+
         }
     };
 
@@ -250,6 +247,7 @@ const DMSSummaryScreen = () => {
                     <ActivityIndicator size="large" color="#007AFF" />
                 </View>
             )}
+            {defaultLoading && <LoadingScreen />}
         </View>
     );
 };
