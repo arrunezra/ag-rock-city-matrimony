@@ -103,7 +103,10 @@ export default function HomeScreen() {
         keyExtractor={(item, index) => `${item.id}-${index}`}
         renderItem={({ item }) => (
           <Box className="px-4">
-            <ProfileCard profile={item} onPress={() => navigation.navigate('ProfileDetail', { profile: item })} />
+            <ProfileCard profile={item} onPress={() => {
+              console.log('ProfileCard', item)
+              navigation.navigate('ProfileDetail', { id: item.id })
+            }} />
           </Box>
         )}
         ListEmptyComponent={!loading ? <NotFoundScreen /> : null}

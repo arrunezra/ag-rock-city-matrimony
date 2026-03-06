@@ -10,7 +10,7 @@ export const compressWithSkia = async (pickerResult: any) => {
     const data = await Skia.Data.fromURI(path);
     const skImage = Skia.Image.MakeImageFromEncoded(data); // Changed name to skImage
 
-    if (!skImage) throw new Error("Failed to decode image");
+    if (!skImage) throw new Error("Failed to decode image"); 
 
     // Dynamic Quality Logic
     const sizeInMB = pickerResult.size / (1024 * 1024);

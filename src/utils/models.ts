@@ -14,6 +14,8 @@ export interface User {
   firstName?: string;
   lastName?: string;
   userid?:string;
+  profile_id?:string;
+  isVerified?:string;
 }
 
 export interface AuthResponse {

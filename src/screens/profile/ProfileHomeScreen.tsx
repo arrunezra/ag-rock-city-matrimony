@@ -16,9 +16,7 @@ const ProfileHomeScreen = () => {
                 return (
                     <UserTopProfile
                         profile={user}
-                        // Triggered by the Plus Icon on Avatar
-                        onAddPhoto={() => navigation.navigate('PhotoUploadScreen')}
-                        // Triggered by the "Edit Profile" Button
+                        onAddPhoto={() => navigation.navigate('ShowProfileGallery')}
                         onEdit={() => navigation.navigate('ProfileEdit', { profile: user })}
                     />
                 );

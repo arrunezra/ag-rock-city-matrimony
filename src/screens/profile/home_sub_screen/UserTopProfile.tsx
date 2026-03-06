@@ -6,29 +6,25 @@ import { API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
 
 const UserTopProfile = ({ profile, onEdit, onAddPhoto }: any) => {
     const profileImage = API_BASE_URL_DEV_Profiles_Thumbs + '/' + profile?.profileThumb;
-    console.log('profileImage', profileImage);
     return (
         <VStack className="px-4 py-6 bg-white gap-6">
-            {/* 1. Header Info: Avatar + Identity */}
             <HStack space="md" className="items-center">
-                {/* Avatar with Overlay Plus/Edit Button */}
-                {/* Avatar with Overlay */}
                 <Box className="relative">
-                    <Avatar size="xl" className="border-2 border-outline-100 bg-background-200 " >
-                        <AvatarFallbackText> {profile?.firstName} {profile?.lastName}</AvatarFallbackText>
-                        <AvatarImage
-                            source={{
-                                uri: profileImage,
-                            }}
-                        />
-                        <Pressable
-                            onPress={onAddPhoto}
-                            className="absolute bottom-0 right-0 bg-cyan-500 p-1.5 rounded-full border-2 border-white shadow-sm active:opacity-80"
-                        >
-                            <Icon as={AddIcon} color="white" size="xs" />
-                        </Pressable>
-                    </Avatar>
-
+                    <Pressable onPress={onAddPhoto}>
+                        <Avatar size="xl" className="border-2 border-outline-100 bg-background-200 " >
+                            <AvatarFallbackText> {profile?.firstName} {profile?.lastName}</AvatarFallbackText>
+                            <AvatarImage
+                                source={{
+                                    uri: profileImage,
+                                }}
+                            />
+                            <Box
+                                className="absolute bottom-0 right-0 bg-cyan-500 p-1.5 rounded-full border-2 border-white shadow-sm active:opacity-80"
+                            >
+                                <Icon as={AddIcon} color="white" size="xs" />
+                            </Box>
+                        </Avatar>
+                    </Pressable>
                 </Box>
 
                 {/* User Identity */}
@@ -37,7 +33,6 @@ const UserTopProfile = ({ profile, onEdit, onAddPhoto }: any) => {
                         <Heading size="lg" className="text-typography-900">
                             {profile?.firstName} {profile?.lastName}
                         </Heading>
-                        {/* Verified/Blue Tick */}
                         <Box className="bg-blue-500 rounded-full p-0.5">
                             <Icon as={CheckIcon} size="2xs" color="white" />
                         </Box>
@@ -51,7 +46,6 @@ const UserTopProfile = ({ profile, onEdit, onAddPhoto }: any) => {
                 </VStack>
             </HStack>
 
-            {/* 2. Primary Action Buttons */}
             <HStack space="md" className="w-full">
                 <Pressable
                     onPress={onEdit}

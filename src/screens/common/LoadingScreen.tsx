@@ -2,55 +2,60 @@ import React from 'react';
 import {
   Box,
   Center,
+  Text,
   VStack
 } from '@/src/components/common/GluestackUI';
 import LottieView from 'lottie-react-native';
+import { MotiView } from 'moti';
+import { StyleSheet } from 'react-native';
+
 
 export default function LoadingScreen() {
-
   return (
-    <Box className="absolute inset-0 z-[200] flex-1 bg-black/40">
-
+    // 2026 Look: Use backdrop blur instead of just a flat color
+    <Box className="absolute inset-0 z-[200] flex-1 bg-white">
       <Center className="flex-1">
 
-        {/* Main Modal Container */}
-        <Box
-          className="bg-background-0 p-10 rounded-[40px] shadow-2xl border border-outline-100"
-          style={styles.modalShadow}
+        {/* Animated Entrance for the Loader */}
+        <MotiView
+          from={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'timing', duration: 300 }}
         >
-          <VStack className="items-center gap-6">
+          <Box className="absolute inset-0 z-[200] flex-1 bg-white/10 backdrop-blur-md">
+            <Center className="flex-1">
 
-            {/* Lottie Animation Section */}
-            <Box className="relative items-center justify-center">
-              <Box className="bg-background-50 p-5 rounded-full shadow-sm border border-outline-50">
-                <LottieView
-                  source={require('../../assets/lottieview/loading.json')}
-                  autoPlay
-                  loop={false}
-                  style={{ width: 40, height: 40 }}
-                />
-              </Box>
-            </Box>
+              {/* Lottie Animation - No box, just centered focus */}
+              <LottieView
+                source={require('../../assets/lottieview/loading.json')}
+                autoPlay
+                loop={true}
+                // Slightly larger for better visual weight since it's now alone
+                style={{ width: 150, height: 150 }}
+                resizeMode="contain"
+              />
 
-
-
-          </VStack>
-        </Box>
+            </Center>
+          </Box>
+        </MotiView>
       </Center>
-
     </Box>
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
+  glassEffect: {
+    // Standard 2026 glassmorphism palette
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  },
   modalShadow: {
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 10,
+      height: 12,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    elevation: 15,
   },
-};
+});

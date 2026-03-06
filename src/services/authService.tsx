@@ -1,24 +1,22 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../api/api";
 
- 
+
 export const authService = {
   login: async (credentials: any) => {
-    console.log('credentials',credentials)
     const response = await api.post('/auth/login.php', credentials);
-    console.log(response);
     return response.data;
   },
-  
+
   signup: async (userData: any) => {
     const response = await api.post('/users/register.php', userData);
     return response.data;
   },
-  
- logout: async () => {
+
+  logout: async () => {
     try {
       // Optional: Tell backend to invalidate the refresh token in DB
-      await api.post('/auth/logout.php'); 
+      await api.post('/auth/logout.php');
     } finally {
       // Always clear local storage
       await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'userData']);

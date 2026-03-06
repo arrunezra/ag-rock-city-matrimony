@@ -19,6 +19,7 @@ import LoadingScreen from '../common/SuccessScreen';
 export default function ProfileDetailScreen({ route }: any) {
     const { user } = useAuth();
     const { id } = route.params; // Data passed from the list
+    //console.log('id', id)
     const [isLoading, setIsLoading] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -199,7 +200,6 @@ export default function ProfileDetailScreen({ route }: any) {
     const handleToggleVerifyUser = (id: any) => {
 
         const newStatus = data?.IsVerified === 1 ? 0 : 1;
-        // Update Local State immediately for a snappy 2026 UI
         setData((prev: any) => ({
             ...prev,
             IsVerified: newStatus
@@ -250,23 +250,26 @@ export default function ProfileDetailScreen({ route }: any) {
                 {/* 1. Hero Section */}
 
                 <Box className="relative h-[450px]">
-                    {/* 1. Main Carousel  If enable this carousel then remove the below FastImage*/}
-                    {/* <FlatList
-                    data={images}
-                    horizontal
-                    pagingEnabled
-                    showsHorizontalScrollIndicator={false}
-                    onScroll={handleScroll}
-                    scrollEventThrottle={16}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item, index }) => (
-                        <FastImage
-                            source={{ uri: item.uri }}
-                            style={{ width: windowWidth, height: 450 }}
-                            resizeMode="cover"
-                        />
-                    )}
-                /> */}
+                    {/* 1. Main Carousel  If enable this carousel then remove the below FastImage
+                        2. If enable this carousel then remove the below FastImage becose this is for single image
+                        3. also LinearGradient is not allowed for carousel (z-index issue) 
+                    */}
+                    <FlatList
+                        data={images}
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        onScroll={handleScroll}
+                        scrollEventThrottle={16}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item, index }) => (
+                            <FastImage
+                                source={{ uri: item.uri }}
+                                style={{ width: windowWidth, height: 450 }}
+                                resizeMode="cover"
+                            />
+                        )}
+                    />
                     <FastImage
                         source={{ uri: API_BASE_URL_DEV_Profiles_Images + "/" + data?.profile_pic }}
                         style={{ width: windowWidth, height: 450 }}

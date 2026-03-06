@@ -26,6 +26,7 @@ import ProfileEditScreen from "../screens/profile/ProfileEditScreen";
 import DMSUploadScreen from "../screens/DMS/DMSUploadScreen";
 import DMSSummaryScreen from "../screens/DMS/DMSSummaryScreen";
 import UserDocumentUpload from "../screens/members/UserDocumentUpload";
+import ShowProfileGalleryScreen from "../screens/profile/ShowProfileGalleryScreen";
 
 
 const Stack = createNativeStackNavigator();
@@ -94,7 +95,7 @@ const SHARED_STACKS = (role: string) => (
       </>
     )}
     <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
-
+    <Stack.Screen name="ShowProfileGallery" component={ShowProfileGalleryScreen} />
   </Stack.Group>
 );
 

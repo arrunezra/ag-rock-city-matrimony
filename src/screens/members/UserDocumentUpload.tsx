@@ -68,7 +68,7 @@ const UserDocumentUpload = () => {
 
                     let currentUri = file.uri;
                     let currentSize = initialSize;
-                    let quality = 0.8;
+                    let quality = 0.9;
                     let maxWidth = 1600;
                     let pass = 1;
 

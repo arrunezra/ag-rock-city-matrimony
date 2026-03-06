@@ -2,6 +2,7 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GluestackUIProvider, ModeType, ThemeFlavor } from "../gluestack-ui-provider";
+import { useToast } from "../toast";
 
 interface ThemeContextType {
   mode: ModeType;
@@ -15,6 +16,7 @@ export const ThemeContext = createContext<ThemeContextType | undefined>(undefine
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [mode, setMode] = useState<ModeType>("light");
   const [flavor, setFlavorState] = useState<ThemeFlavor>("green");
+  const toast = useToast();
 
   useEffect(() => {
     (async () => {
@@ -22,7 +24,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
         AsyncStorage.getItem("theme_mode"),
         AsyncStorage.getItem("theme_flavor"),
       ]);
-      
+
       if (savedMode) setMode(savedMode as ModeType);
       if (savedFlavor) setFlavorState(savedFlavor as ThemeFlavor);
     })();

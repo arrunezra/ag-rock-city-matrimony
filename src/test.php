@@ -1,61 +1,43 @@
 <?php
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: POST, GET"); // Use POST for updates in production
+header("Content-Type: application/json");
+include 'db_connection.php'; // Your PDO or MySQLi connection
 
-require_once '../config/database.php';
+// Get the posted data
+$data = json_decode(file_get_contents("php://input"), true);
+$userId = $data['user_id'];
+$imageId = $data['image_id'];
+
+if (!$userId || !$imageId) {
+    echo json_encode(["success" => false, "message" => "Missing data"]);
+    exit;
+}
 
 try {
-    $db = Database::getInstance();
-    
-    // 1. Validate Input
-    $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-    $action = $_GET['action'] ?? 'status'; // 'verify' or 'status'
-    $status = isset($_GET['status']) ? (int)$_GET['status'] : null;
+    // Start transaction
+    $pdo->beginTransaction();
 
-    if (!$id || $status === null) {
-        http_response_code(400);
-        echo json_encode(["success" => false, "message" => "Missing ID or Status"]);
-        exit;
-    }
+    // 1. Set all images for this user to NOT default (0)
+    $stmt1 = $pdo->prepare("UPDATE profile_images SET isDefault = 0 WHERE user_id = ?");
+    $stmt1->execute([$userId]);
 
-    // 2. Determine which column to update based on action
-    // We white-list the column name to prevent SQL injection
-    $column = ($action === 'verify') ? 'IsVerified' : 'IsActive';
+    // 2. Set the specific selected image to primary (1)
+    $stmt2 = $pdo->prepare("UPDATE profile_images SET isDefault = 1 WHERE id = ? AND user_id = ?");
+    $stmt2->execute([$imageId, $userId]);
 
-    // 3. Check if user exists before updating
-    $checkSql = "SELECT id FROM users WHERE id = :id LIMIT 1";
-    $checkStmt = $db->prepare($checkSql);
-    $checkStmt->execute(['id' => $id]);
-    
-    if ($checkStmt->fetch()) {
-        // 4. Perform the Update
-        // Note: Column names cannot be bound as parameters, so we use the $column variable set above
-        $updateSql = "UPDATE users SET $column = :status WHERE id = :id";
-        $updateStmt = $db->prepare($updateSql);
-        
-        $updateStmt->execute([
-            'status' => $status,
-            'id' => $id
-        ]);
+    // Commit the changes
+    $pdo->commit();
 
-        echo json_encode([
-            "success" => true, 
-            "message" => "Profile " . ($action === 'verify' ? "Verification" : "Status") . " updated successfully"
-        ]); 
-    } else {
-        http_response_code(404);
-        echo json_encode([
-            "success" => false, 
-            "message" => "User not found"
-        ]);
-    }
+    echo json_encode([
+        "success" => true, 
+        "message" => "Primary photo updated successfully"
+    ]);
 
 } catch (Exception $e) {
-    error_log($e->getMessage());
-    http_response_code(500);
+    // If anything goes wrong, undo the changes
+    $pdo->rollBack();
     echo json_encode([
         "success" => false, 
-        "message" => "Server error: " . $e->getMessage() // Remove $e->getMessage() in production
+        "message" => "Database error: " . $e->getMessage()
     ]);
 }
+?>

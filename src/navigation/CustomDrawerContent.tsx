@@ -10,7 +10,10 @@ import { LayoutDashboard } from 'lucide-react-native';
 
 export default function CustomDrawerContent(props: any) {
     const { state, userRole, navigation, user, logout, onEdit } = props;
-    const profileImage = API_BASE_URL_DEV_Profiles_Thumbs + '/' + user?.profileThumb;
+    // Add a timestamp to force the Avatar to re-render when the image changes
+    const profileImage = user?.profileThumb
+        ? `${API_BASE_URL_DEV_Profiles_Thumbs}/${user.profileThumb}?t=${new Date().getTime()}`
+        : '';
     const currentYear = new Date().getFullYear();
     const activeRouteName = state.routeNames[state.index];
     return (
@@ -18,24 +21,21 @@ export default function CustomDrawerContent(props: any) {
             <Box className="bg-primary-600 px-4 py-10 rounded-xl mb-4">
                 <HStack className="items-center gap-4">
                     <Box className="relative">
-                        <Avatar size="xl" className="border-2 border-outline-100 bg-background-200 " >
-                            <AvatarFallbackText> {user?.firstName} {user?.lastName}</AvatarFallbackText>
+                        <Avatar size="xl" className="border-2 border-outline-100 bg-background-200">
+                            <AvatarFallbackText>{user?.firstName} {user?.lastName}</AvatarFallbackText>
                             <AvatarImage
-                                source={{
-                                    uri: profileImage,
-                                }}
+                                key={`avatar-1-${profileImage}`}
+                                source={{ uri: profileImage }}
                             />
                             <Pressable
                                 onPress={onEdit}
+                                style={{ zIndex: 10 }}
                                 className="absolute bottom-0 right-0 bg-cyan-500 p-1.5 rounded-full border-2 border-white shadow-sm active:opacity-80"
                             >
                                 <Icon as={AddIcon} color="white" size="xs" />
                             </Pressable>
                         </Avatar>
-
                     </Box>
-
-
                     <VStack className="flex-1">
                         <Text className="text-white font-bold text-xl no-underline">
                             {user?.firstName + ' ' + user?.lastName || 'Guest User'}

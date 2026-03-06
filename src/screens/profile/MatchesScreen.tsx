@@ -124,7 +124,7 @@ const MatchesScreen = () => {
                     <Box className="px-4">
                         <ProfileCard
                             profile={item}
-                            onPress={() => navigation.navigate('ProfileDetail', { profile: item })}
+                            onPress={() => navigation.navigate('ProfileDetail', { id: item.id })}
                         />
                     </Box>
                 )}

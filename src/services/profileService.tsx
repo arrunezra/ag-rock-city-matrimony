@@ -72,6 +72,32 @@ export const profileService = {
       return { success: false, message: "Network connection failed" };
     }
   },
+  fetchProfileGallery: async (userid: any, profile_id: any) => {
+    try {
+      const response = await api.get(`/profile/get_profile_gallery.php?userid=${userid}&profile_id=${profile_id}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        return error.response.data;
+      }
+      return { success: false, message: "Network connection failed" };
+    }
+  },
+  setDefaultOrDeleteProfileImage: async (profile_id: any, image_id: any, action: string) => {
+    try {
+      const response = await api.post(`/profile/set_default_or_delete_profile_image.php`, {
+        action: action,
+        profile_id: profile_id,
+        image_id: image_id,
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        return error.response.data;
+      }
+      return { success: false, message: "Network connection failed" };
+    }
+  },
 };
 
 export default profileService;

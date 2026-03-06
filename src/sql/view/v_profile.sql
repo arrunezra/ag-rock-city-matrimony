@@ -23,7 +23,7 @@ ALTER VIEW V_Profile as (
         p.college,
         p.income,
         p.work_with,
-        p.WorkingAs,
+        p.Working_as,
         p.company_name,
         p.profile_pic,
         p.profile_thumb AS profile_thumb,
