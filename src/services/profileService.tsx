@@ -32,8 +32,15 @@ export const profileService = {
     return response.data;
   },
   getprofile: async (credentials: any) => {
-    const response = await api.post('/profile/getprofile.php', credentials);
-    return response.data;
+    try {
+      const response = await api.post('/profile/getprofile.php', credentials); //For summary
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        return error.response.data;
+      }
+      return { success: false, message: "Network connection failed" };
+    }
   },
   validateMobileOrEmail: async (credentials: any) => {
     const response = await api.post('/profile/validate_mobileno.php', credentials);
@@ -50,9 +57,9 @@ export const profileService = {
       return { success: false, message: "Network connection failed" };
     }
   },
-  fetchProfileDetailsByID: async (id: any) => {
+  fetchProfileDetailsByID: async (id: any, action: string) => {
     try {
-      const response = await api.get(`/profile/get_profile_details_by_id.php?id=${id}`);
+      const response = await api.get(`/profile/get_profile_details_by_id.php?id=${id}&action=${action}`); //For details with view count
       return response.data;
     } catch (error: any) {
       if (error.response && error.response.data) {
@@ -98,6 +105,18 @@ export const profileService = {
       return { success: false, message: "Network connection failed" };
     }
   },
+  updateEditProfile: async (fields: any) => {
+    try {
+      const response = await api.post('/profile/update_profile_details_by_id.php', fields); //For summary
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        return error.response.data;
+      }
+      return { success: false, message: "Network connection failed" };
+    }
+  }
+
 };
 
 export default profileService;

@@ -17,7 +17,7 @@ const ProfileHomeScreen = () => {
                     <UserTopProfile
                         profile={user}
                         onAddPhoto={() => navigation.navigate('ShowProfileGallery')}
-                        onEdit={() => navigation.navigate('ProfileEdit', { profile: user })}
+                        onEdit={() => navigation.navigate('ProfileEdit')}
                     />
                 );
             case 'PREMIUM_MATCHES':

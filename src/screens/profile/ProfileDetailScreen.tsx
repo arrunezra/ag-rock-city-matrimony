@@ -37,8 +37,7 @@ export default function ProfileDetailScreen({ route }: any) {
         setIsNotFound(false)
 
         try {
-            const res = await profileService.fetchProfileDetailsByID(id);
-            console.log('fetchProfileDetailsByID', res);
+            const res = await profileService.fetchProfileDetailsByID(id, 'view');
             if (res.success) setData(res.data);
             else {
                 if (res.success == false) {
@@ -254,7 +253,7 @@ export default function ProfileDetailScreen({ route }: any) {
                         2. If enable this carousel then remove the below FastImage becose this is for single image
                         3. also LinearGradient is not allowed for carousel (z-index issue) 
                     */}
-                    <FlatList
+                    {/* <FlatList
                         data={images}
                         horizontal
                         pagingEnabled
@@ -269,7 +268,7 @@ export default function ProfileDetailScreen({ route }: any) {
                                 resizeMode="cover"
                             />
                         )}
-                    />
+                    /> */}
                     <FastImage
                         source={{ uri: API_BASE_URL_DEV_Profiles_Images + "/" + data?.profile_pic }}
                         style={{ width: windowWidth, height: 450 }}
@@ -1168,12 +1167,12 @@ export default function ProfileDetailScreen({ route }: any) {
 
                                     {/* Main Add Details Button */}
                                     {/* <Button
-                                variant="outline"
-                                className="border-slate-200 rounded-2xl h-12 mt-2"
-                                onPress={() => handleAddDetails()}
-                            >
-                                <ButtonText className="text-slate-600 font-bold">Edit Family Details</ButtonText>
-                            </Button> */}
+                                        variant="outline"
+                                        className="border-slate-200 rounded-2xl h-12 mt-2"
+                                        onPress={() => handleAddDetails()}
+                                    >
+                                        <ButtonText className="text-slate-600 font-bold">Edit Family Details</ButtonText>
+                                    </Button> */}
                                 </VStack>
                             </VStack>
                         </Box>

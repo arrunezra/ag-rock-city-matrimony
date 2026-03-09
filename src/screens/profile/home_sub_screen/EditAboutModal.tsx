@@ -9,16 +9,19 @@ import {
     ModalFooter
 } from '@/src/components/common/GluestackUI';
 import api from '@/src/api/api';
-import { ScrollView, TouchableOpacity } from 'react-native';
+import { Alert, ScrollView, TouchableOpacity } from 'react-native';
 import { ToastDescription } from '@/components/ui/toast';
 import { ArrowLeftIcon, CloseIcon, Icon } from '@/components/ui/icon';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Lightbulb, Sparkles, X } from '@/src/components/common/IconUI';
+import { useAppToast } from '@/src/context/ToastContext';
+import profileService from '@/src/services/profileService';
 
 const EditAboutModal = ({ isOpen, onClose, content, user, title = "Personality & Expectations" }: any) => {
-    const [aboutText, setAboutText] = useState(user?.about || '');
+    console.log('EditAboutModal', user)
+    const [aboutText, setAboutText] = useState(content || '');
     const [isSaving, setIsSaving] = useState(false);
-    const toast = useToast();
+    const { showToast } = useAppToast();
 
     const MAX_CHARS = 1000;
     const MIN_CHARS = 50;
@@ -44,35 +47,24 @@ const EditAboutModal = ({ isOpen, onClose, content, user, title = "Personality &
     }, [aboutText]);
     const handleSave = async () => {
         if (aboutText.length < MIN_CHARS) {
-            toast.show({
-                placement: "top",
-                render: ({ id }) => (
-                    <Toast nativeID={id} action="error" variant="solid">
-                        <ToastTitle>Too short</ToastTitle>
-                        <ToastDescription>Please write at least 50 characters.</ToastDescription>
-                    </Toast>
-                ),
-            });
+            showToast("Too short", "Please write at least 50 characters.", "error");
             return;
         }
 
         setIsSaving(true);
         try {
-            const res = await api.post('/manage_profile.php', { about: aboutText });
-            if (res.data.success) {
-                toast.show({
-                    placement: "top",
-                    render: ({ id }) => (
-                        <Toast nativeID={id} action="success" variant="solid">
-                            <ToastTitle>Updated successfully!</ToastTitle>
-                        </Toast>
-                    ),
-                });
+            const res = await profileService.updateEditProfile({ aboutus: aboutText, id: user?.profile_id, action: 'aboutus' });
+            if (res.success) {
+                showToast("About Us", "Updated successfully!", "success");
                 AsyncStorage.removeItem(DRAFT_KEY);
                 onClose();
+            } else {
+                showToast("About Us", res?.message, "error");
+
             }
         } catch (error) {
             console.error(error);
+            showToast("About Us", "Internal server error!", "error");
         } finally {
             setIsSaving(false);
         }
@@ -128,10 +120,10 @@ const EditAboutModal = ({ isOpen, onClose, content, user, title = "Personality &
                             <VStack space="md">
                                 <Box className="relative">
                                     <Textarea
-                                        size="md"
+                                        size="lg"
                                         className={`h-64 p-4 rounded-3xl border-2 transition-all bg-white ${aboutText.length >= MIN_CHARS
-                                                ? 'border-outline-100'
-                                                : 'border-error-100'
+                                            ? 'border-outline-100'
+                                            : 'border-error-100'
                                             }`}
                                     >
                                         <TextareaInput
@@ -141,7 +133,8 @@ const EditAboutModal = ({ isOpen, onClose, content, user, title = "Personality &
                                             maxLength={MAX_CHARS}
                                             multiline
                                             textAlignVertical="top"
-                                            className="text-base leading-6 pr-8 text-typography-800"
+
+                                            className="text-lg leading-6 pr-8 text-typography-800"
                                         />
                                     </Textarea>
 
@@ -198,15 +191,16 @@ const EditAboutModal = ({ isOpen, onClose, content, user, title = "Personality &
                             onPress={handleSave}
                             isDisabled={isSaving || aboutText.length < MIN_CHARS}
                             className={`flex-1 rounded-2xl h-14 shadow-lg ${isSaving || aboutText.length < MIN_CHARS
-                                    ? 'bg-slate-200'
-                                    : 'bg-amber-500 shadow-amber-100'
+                                ? 'bg-slate-200'
+                                : 'bg-amber-500 shadow-amber-100'
                                 }`}
                         >
                             {isSaving ? (
                                 <Spinner color="white" />
                             ) : (
-                                <ButtonText className="text-white font-bold text-lg">Update Bio</ButtonText>
+                                <ButtonText className="text-white font-bold text-lg">Submit</ButtonText>
                             )}
+                            {/* <ButtonText className="text-white font-bold text-lg">Submit</ButtonText> */}
                         </Button>
                     </HStack>
                 </ModalFooter>

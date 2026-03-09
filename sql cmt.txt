@@ -1,0 +1,6 @@
+
+************* Get Coloum name ***********
+
+SELECT COLUMN_NAME AS Field
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'profile_files';

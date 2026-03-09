@@ -238,7 +238,7 @@ export default function ShowProfileGalleryScreen({ route }: any) {
                 {/* 1. Header Section */}
                 <VStack className="px-4 py-6" space="xs">
                     <Heading size="xl" className="text-slate-900">My Gallery</Heading>
-                    <Text className="text-slate-500 text-sm">{images?.count} / 5 Images Uploaded</Text>
+                    {isLoading && <Text className="text-slate-500 text-sm">{images?.count} / 5 Images Uploaded</Text>}
                 </VStack>
 
                 {/* 2. Photo Grid (2-Column Layout) */}
