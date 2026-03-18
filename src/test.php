@@ -1,43 +1,79 @@
 <?php
+// Include your logging config at the very top!
+ require_once __DIR__ . '/../error_log_config.php'; 
+
+header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
-include 'db_connection.php'; // Your PDO or MySQLi connection
+require_once '../config/database.php';
 
-// Get the posted data
-$data = json_decode(file_get_contents("php://input"), true);
-$userId = $data['user_id'];
-$imageId = $data['image_id'];
+$db = Database::getInstance();
 
-if (!$userId || !$imageId) {
-    echo json_encode(["success" => false, "message" => "Missing data"]);
+$StateCode = $_GET['statecode'] ?? '';
+$search = $_GET['search'] ?? '';
+
+if (empty($StateCode)) {
+    echo json_encode([
+        "success" => false,
+        "message" => "State code is required",
+        "data" => []
+    ]);
     exit;
 }
 
 try {
-    // Start transaction
-    $pdo->beginTransaction();
+    // 1. Base Query (Removed ORDER BY from here)
+    $query = "SELECT 
+                m.LookupMasterName, 
+                t.LookupKey as 'key', 
+                t.LookupValue as 'value', 
+                t.LookupParentKey as 'parent'
+            FROM t_mas_lookup m
+            JOIN t_tran_lookup t ON m.LookupMasterID = t.LookupMasterID
+            WHERE 
+                m.LookupMasterID IN (11) 
+                AND m.IsActive = 1  
+                AND t.is_active = 1
+                AND t.LookupParentKey = ?";
+    
+    $params = [$StateCode];
 
-    // 1. Set all images for this user to NOT default (0)
-    $stmt1 = $pdo->prepare("UPDATE profile_images SET isDefault = 0 WHERE user_id = ?");
-    $stmt1->execute([$userId]);
+    // 2. Conditional Search
+    if (!empty($search)) {
+        $query .= " AND t.LookupValue LIKE ?";
+        $params[] = "%$search%";
+    }
 
-    // 2. Set the specific selected image to primary (1)
-    $stmt2 = $pdo->prepare("UPDATE profile_images SET isDefault = 1 WHERE id = ? AND user_id = ?");
-    $stmt2->execute([$imageId, $userId]);
+    // 3. Final Ordering and Limit (Appended only once at the end)
+    $query .= " ORDER BY t.LookupValue ASC LIMIT 50";
 
-    // Commit the changes
-    $pdo->commit();
+    $stmt = $db->prepare($query);
+    $stmt->execute($params);
+    
+    $cities = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    if ($cities) {
+        echo json_encode([
+            "success" => true,
+            "message" => count($cities) . " cities found",
+            "data" => $cities
+        ]);
+    } else {
+        echo json_encode([
+            "success" => false,
+            "message" => "No records found matching your search",
+            "data" => []
+        ]);
+    }
+
+} catch (PDOException $e) {
+    // This will now automatically write to your error_logs.txt via bootstrap/config
+    error_log("City Fetch Error: " . $e->getMessage()); 
+    
+    http_response_code(500);
     echo json_encode([
-        "success" => true, 
-        "message" => "Primary photo updated successfully"
-    ]);
-
-} catch (Exception $e) {
-    // If anything goes wrong, undo the changes
-    $pdo->rollBack();
-    echo json_encode([
-        "success" => false, 
-        "message" => "Database error: " . $e->getMessage()
+        "success" => false,
+        "message" => "Database error occurred",
+        "data" => []
     ]);
 }
 ?>

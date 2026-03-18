@@ -8,6 +8,9 @@ import {
 } from '@/src/components/common/GluestackUI';
 import { Dropdown } from 'react-native-element-dropdown';
 import { Users, UserRound, UserSquare, Users2, MapPin, Briefcase, Globe, Landmark, ChevronLeftIcon, CloseIcon, Icon } from '@/src/components/common/IconUI';
+import FuturisticDropdown from '@/src/components/common/FuturisticDropdown';
+import _ from 'lodash';
+import profileService from '@/src/services/profileService';
 
 // --- Data Constants ---
 const OCCUPATION_DATA = [
@@ -40,12 +43,85 @@ const FINANCIAL_DETAILS = {
     Aspiring: ["Small business or office jobs", "Basic assets and properties", "Annual income below 10 lakhs"],
 };
 
-export const FamilyDetailsModal = ({ isOpen, onClose, formData, updateForm, onSave, isSaving }: any) => {
+export const FamilyDetailsModal = ({ isOpen, onClose, lookups, content, onRefresh, showToast, user }: any) => {
     const [currentStep, setCurrentStep] = useState(1);
+    const [formData, setFormData] = useState(_.cloneDeep(content));
+    const [validationTriggered, setValidationTriggered] = useState(false)
+    const [isSaving, setIsSaving] = useState(false);
 
+    const updateForm = (key: string, value: any) => {
+        setFormData((prev: any) => ({ ...prev, [key]: value }));
+    };
     const handleNext = () => setCurrentStep(2);
     const handleBack = () => setCurrentStep(1);
+    const validateForm = () => {
+        // 1. Basic Field Validation
+        const requiredFields = [
+            'first_name',
+            'last_name',
+            'gender',
+            'marital_status',
+            'dobDay',
+            'dobMonth',
+            'dobYear',
+            'height',
+            'blood_group'
+        ];
 
+        for (const field of requiredFields) {
+            if (!formData[field] || formData[field].toString().trim() === '') {
+                return false;
+            }
+        }
+
+
+        return true;
+    };
+    const handleSave = async () => {
+        setValidationTriggered(true);
+        let isvalid = !validateForm()
+        if (isvalid) {
+            // You can add a Toast message here if you use them
+            console.log("Validation failed");
+            return;
+        }
+        setIsSaving(true);
+        try {
+            const payload = {
+                id: user?.profile_id,
+                action: 'basicdetails',
+                first_name: formData.first_name,
+                last_name: formData.last_name,
+                // Format date if needed, e.g., "1996-06-12"
+                dob: `${formData.dobYear}-${formData.dobMonth}-${formData.dobDay}`,
+                gender: formData.gender,
+                marital_status: formData.marital_status,
+                height: formData.height,
+                weight: formData.weight || 0,
+                blood_group: formData.blood_group,
+                has_children: formData.has_children,
+                children_count: formData.children_count || 0,
+                // We send the actual array; Axios handles the JSON conversion
+                kids_details: formData.kids_details,
+                disability: formData.disability
+            };
+            console.log('payload', payload)
+            const res = await profileService.updateEditProfile(payload);
+            if (res.success) {
+                showToast("Basic Details", "Profile updated successfully!", "success");
+                // Important: If you save this locally, you might need to JSON.parse kids_details
+                if (onRefresh) await onRefresh();
+                onClose();
+            } else {
+                showToast("Update Failed", res?.message || "Check your details", "error");
+            }
+
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsSaving(false);
+        }
+    };
     return (
         <Modal isOpen={isOpen} onClose={() => { onClose(); setCurrentStep(1); }} size="full">
             <ModalBackdrop />
@@ -77,49 +153,65 @@ export const FamilyDetailsModal = ({ isOpen, onClose, formData, updateForm, onSa
                                     <Heading size="xl" className="mt-4">Family Members</Heading>
                                     <Text size="xs" className="text-center text-slate-500">Step 1 of 2: Parents & Siblings</Text>
                                 </VStack>
-
-                                <FormControl>
-                                    <FormControlLabel className="mb-2"><FormControlLabelText className="font-bold">Mother's Details</FormControlLabelText></FormControlLabel>
-                                    <Dropdown style={styles.dropdown} placeholderStyle={styles.placeholderStyle} selectedTextStyle={styles.selectedTextStyle} data={OCCUPATION_DATA} labelField="label" valueField="value" placeholder="Select occupation" value={formData.motherDetails} onChange={item => updateForm('motherDetails', item.value)} renderLeftIcon={() => <Icon as={UserRound} size="sm" className="mr-2 text-blue-500" />} />
-                                </FormControl>
-
                                 <FormControl>
                                     <FormControlLabel className="mb-2"><FormControlLabelText className="font-bold">Father's Details</FormControlLabelText></FormControlLabel>
-                                    <Dropdown style={styles.dropdown} placeholderStyle={styles.placeholderStyle} selectedTextStyle={styles.selectedTextStyle} data={OCCUPATION_DATA} labelField="label" valueField="value" placeholder="Select occupation" value={formData.fatherDetails} onChange={item => updateForm('fatherDetails', item.value)} renderLeftIcon={() => <Icon as={UserSquare} size="sm" className="mr-2 text-blue-500" />} />
+
+                                    <FuturisticDropdown
+                                        data={OCCUPATION_DATA}
+                                        value={formData.fatherDetails}
+                                        onChange={(item: any) => updateForm('fatherDetails', item.value)}
+                                        placeholder="Select father details "
+                                        icon={{ icon: UserSquare, color: 'text-blue-500' }}
+                                        search={false}
+                                        isInvalid={validationTriggered && !formData.fatherDetails}
+                                    />
                                 </FormControl>
+                                <FormControl>
+                                    <FormControlLabel className="mb-2"><FormControlLabelText className="font-bold">Mother's Details</FormControlLabelText></FormControlLabel>
+                                    <FuturisticDropdown
+                                        data={OCCUPATION_DATA}
+                                        value={formData.motherDetails}
+                                        onChange={(item: any) => updateForm('motherDetails', item.value)}
+                                        placeholder="Select mother details "
+                                        icon={{ icon: UserRound, color: 'text-blue-500' }}
+                                        search={false}
+                                        isInvalid={validationTriggered && !formData.motherDetails}
+                                    />
+                                </FormControl>
+
+
 
                                 {/* FIX: Sibling Grid with overflow/width handling */}
                                 <HStack space="md" className="w-full">
                                     <VStack className="flex-1">
-                                        <Text size="sm" className="font-bold mb-2">Sisters</Text>
-                                        <Dropdown
-                                            style={styles.dropdown}
-                                            placeholderStyle={styles.placeholderStyle}
-                                            selectedTextStyle={styles.selectedTextStyle}
-                                            data={COUNT_DATA}
-                                            labelField="label"
-                                            valueField="value"
-                                            placeholder="Select"
-                                            value={formData.noOfSisters}
-                                            onChange={item => updateForm('noOfSisters', item.value)}
-                                            renderLeftIcon={() => <Icon as={Users2} size="sm" className="mr-2 text-blue-500" />}
-                                        />
-                                    </VStack>
-                                    <VStack className="flex-1">
                                         <Text size="sm" className="font-bold mb-2">Brothers</Text>
-                                        <Dropdown
-                                            style={styles.dropdown}
-                                            placeholderStyle={styles.placeholderStyle}
-                                            selectedTextStyle={styles.selectedTextStyle}
+
+                                        <FuturisticDropdown
                                             data={COUNT_DATA}
-                                            labelField="label"
-                                            valueField="value"
-                                            placeholder="Select"
                                             value={formData.noOfBrothers}
-                                            onChange={item => updateForm('noOfBrothers', item.value)}
-                                            renderLeftIcon={() => <Icon as={Users} size="sm" className="mr-2 text-blue-500" />}
+                                            onChange={(item: any) => updateForm('noOfBrothers', item.value)}
+                                            placeholder="Select"
+                                            icon={{ icon: Users, color: 'text-blue-500' }}
+                                            search={false}
+                                            isInvalid={validationTriggered && !formData.noOfBrothers}
                                         />
                                     </VStack>
+
+                                    <VStack className="flex-1">
+                                        <Text size="sm" className="font-bold mb-2">Sisters</Text>
+                                        <FuturisticDropdown
+                                            data={COUNT_DATA}
+                                            value={formData.noOfSisters}
+                                            onChange={(item: any) => updateForm('noOfSisters', item.value)}
+                                            placeholder="Select"
+                                            icon={{ icon: Users2, color: 'text-blue-500' }}
+                                            search={false}
+                                            isInvalid={validationTriggered && !formData.noOfSisters}
+                                        />
+
+
+                                    </VStack>
+
                                 </HStack>
                             </VStack>
                         ) : (
@@ -133,24 +225,45 @@ export const FamilyDetailsModal = ({ isOpen, onClose, formData, updateForm, onSa
                                 </VStack>
 
                                 <VStack space="md">
-                                    <Dropdown style={styles.dropdown} placeholderStyle={styles.placeholderStyle} data={[]} labelField="label" valueField="value" placeholder="Country" onChange={() => { }} renderLeftIcon={() => <Icon as={Globe} size="sm" className="mr-2 text-blue-500" />} />
-                                    <Dropdown style={styles.dropdown} placeholderStyle={styles.placeholderStyle} data={[]} labelField="label" valueField="value" placeholder="State" onChange={() => { }} renderLeftIcon={() => <Icon as={MapPin} size="sm" className="mr-2 text-blue-500" />} />
-                                    <Dropdown style={styles.dropdown} placeholderStyle={styles.placeholderStyle} data={[]} labelField="label" valueField="value" placeholder="City" onChange={() => { }} renderLeftIcon={() => <Icon as={Landmark} size="sm" className="mr-2 text-blue-500" />} />
+                                    <FuturisticDropdown
+                                        data={lookups?.country}
+                                        value={formData.country}
+                                        onChange={(item: any) => updateForm('country', item.value)}
+                                        placeholder="Select"
+                                        icon={{ icon: Globe, color: 'text-blue-500' }}
+                                        search={false}
+                                        isInvalid={validationTriggered && !formData.country}
+                                    />
+                                    <FuturisticDropdown
+                                        data={lookups?.state}
+                                        value={formData.state}
+                                        onChange={(item: any) => updateForm('state', item.value)}
+                                        placeholder="Select"
+                                        icon={{ icon: MapPin, color: 'text-blue-500' }}
+                                        search={false}
+                                        isInvalid={validationTriggered && !formData.state}
+                                    />
+                                    <FuturisticDropdown
+                                        data={lookups?.city}
+                                        value={formData.city}
+                                        onChange={(item: any) => updateForm('city', item.value)}
+                                        placeholder="Select"
+                                        icon={{ icon: Landmark, color: 'text-blue-500' }}
+                                        search={false}
+                                        isInvalid={validationTriggered && !formData.city}
+                                    />
                                 </VStack>
 
                                 <FormControl>
                                     <FormControlLabel className="mb-2"><FormControlLabelText className="font-bold">Family Financial Status</FormControlLabelText></FormControlLabel>
-                                    <Dropdown
-                                        style={styles.dropdown}
-                                        placeholderStyle={styles.placeholderStyle}
-                                        selectedTextStyle={styles.selectedTextStyle}
+                                    <FuturisticDropdown
                                         data={FINANCIAL_STATUS_DATA}
-                                        labelField="label"
-                                        valueField="value"
-                                        placeholder="Select Status"
                                         value={formData.familyFinancialStatus}
-                                        onChange={item => updateForm('familyFinancialStatus', item.value)}
-                                        renderLeftIcon={() => <Icon as={Briefcase} size="sm" className="mr-2 text-blue-500" />}
+                                        onChange={(item: any) => updateForm('familyFinancialStatus', item.value)}
+                                        placeholder="Select"
+                                        icon={{ icon: Briefcase, color: 'text-blue-500' }}
+                                        search={false}
+                                        isInvalid={validationTriggered && !formData.familyFinancialStatus}
                                     />
                                 </FormControl>
 
@@ -181,7 +294,7 @@ export const FamilyDetailsModal = ({ isOpen, onClose, formData, updateForm, onSa
                             <Button variant="outline" action="secondary" onPress={handleBack} className="flex-1 rounded-2xl h-14 border-outline-300">
                                 <ButtonText className="text-typography-600 font-bold">Back</ButtonText>
                             </Button>
-                            <Button onPress={onSave} isDisabled={isSaving} className="flex-1 rounded-2xl h-14 bg-blue-600 shadow-lg shadow-blue-200">
+                            <Button onPress={handleSave} isDisabled={isSaving} className="flex-1 rounded-2xl h-14 bg-blue-600 shadow-lg shadow-blue-200">
                                 {isSaving ? <Spinner color="white" /> : <ButtonText className="text-white font-bold">Update Details</ButtonText>}
                             </Button>
                         </HStack>

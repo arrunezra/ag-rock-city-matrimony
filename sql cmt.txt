@@ -4,3 +4,25 @@
 SELECT COLUMN_NAME AS Field
 FROM INFORMATION_SCHEMA.COLUMNS 
 WHERE TABLE_NAME = 'profile_files';
+
+INSERT INTO t_mas_lookup ( 
+    LookupMasterName,
+    ParentLookupMasterID,
+    Reserved,
+    IsActive
+) VALUES 
+( 'Sub Communitiy', NULL, NULL, 1 );
+
+INSERT INTO t_tran_lookup (
+    LookupMasterID,
+    LookupKey,
+    LookupValue,
+    LookupParentKey,
+    is_active,
+    CreatedBy,
+    CreatedDate,
+    UpdatedBy,
+    UpdatedDate
+) VALUES 
+    (13, 'Anglo Indian', 'Anglo Indian', NULL, 1, 'SYSTEM', CURRENT_TIMESTAMP, 'SYSTEM', CURRENT_TIMESTAMP),
+    (13, 'Basel Mission', 'Basel Mission', NULL, 1, 'SYSTEM', CURRENT_TIMESTAMP, 'SYSTEM', CURRENT_TIMESTAMP),

@@ -64,7 +64,7 @@ const TAB_CONFIG = {
   member: [
     { name: "Home", component: ProfileHomeScreen, icon: HomeIcon, title: "Home" },
     { name: "Matches", component: MatchesScreen, icon: HeartIcon, title: "Matches" },
-    { name: "Inbox", component: InboxScreen, icon: MessageCircleIcon, title: "Inbox" },
+    { name: "Favourites", component: InboxScreen, icon: MessageCircleIcon, title: "Favourites" },
   ],
 };
 

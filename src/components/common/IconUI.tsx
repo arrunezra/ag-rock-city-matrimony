@@ -174,7 +174,7 @@ export {
     Hash,
     ChevronLeft,
     CheckCircle,
-    AlertCircle
+    AlertCircle,
 
 
 };

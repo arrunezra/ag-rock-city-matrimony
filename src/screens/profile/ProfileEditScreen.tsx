@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Alert, Dimensions, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Box, Heading, Input, InputField, Button, ButtonText, Spinner, useToast, Toast, ToastTitle, Center, Avatar, AvatarImage, Text, HStack, VStack, Modal, ModalBackdrop, ModalContent, Progress, ProgressFilledTrack } from '@/src/components/common/GluestackUI';
 import api from '@/src/api/api';
@@ -26,11 +26,15 @@ import { BlurView } from '@react-native-community/blur';
 import { UploadProgressModal } from '../common/UploadProgressModal';
 import profileService from '@/src/services/profileService';
 import { ProfileSkeleton } from '@/src/components/common/ProfileSkeleton';
+import { LookupContext } from '@/src/context/LookupContext';
+import { useAppToast } from '@/src/context/ToastContext';
 
 
 export default function ProfileEditScreen({ navigation, route }: any) {
   const { user, updateUser } = useAuth(); // Assume refreshUser updates your context
-
+  const { lookups } = useContext(LookupContext);
+  const { showToast } = useAppToast();
+  console.log('lookuos', lookups)
   //console.log('ProfileDetailScreen===', user);
   const userid = user?.userid;
   const [profileImage, setProfileImage] = useState(API_BASE_URL_DEV_Profiles_Images + '/' + user?.profilePic);
@@ -112,24 +116,14 @@ export default function ProfileEditScreen({ navigation, route }: any) {
     'Hiking',
     'Painting',
     'Dancing']);
+  const [isHardReload, setIsHardReload] = useState(false);
 
   const [showPreferencesModal, setShowPreferencesModal] = useState(false);
 
+
+
+  // 2. Standard useEffect for initial mount
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const res = await profileService.fetchProfileDetailsByID(user?.profile_id, 'edit');
-        console.log('fetchProfileDetailsByID', res.data)
-        if (res.success) {
-          const data = res.data;
-          setProfileData({
-            ...data,
-            hobbies: data.hobbies ? data.hobbies.split(',') : []
-          });
-        }
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
-    };
     loadData();
   }, []);
 
@@ -146,7 +140,40 @@ export default function ProfileEditScreen({ navigation, route }: any) {
       return () => clearTimeout(timer);
     }
   }, [totalStrength]);
+  // 1. Move loadData outside so the Modal can call it too
+  const loadData = async () => {
+    setLoading(true); // Show loader while refreshing
+    try {
+      const res = await profileService.fetchProfileDetailsByID(user?.profile_id, 'edit');
 
+      if (res.success) {
+        let data = res.data;
+
+        // Handle kids_details parsing safely
+        try {
+          if (typeof data.kids_details === 'string') {
+            data.kids_details = data.kids_details ? JSON.parse(data.kids_details) : [];
+
+          } if (!data.kids_details) {
+            data.kids_details = [];
+          }
+        } catch (parseError) {
+          console.error("Error parsing kids_details:", parseError);
+          data.kids_details = []; // Fallback to empty array on error
+        }
+
+        setProfileData({
+          ...data,
+          // Ensure hobbies is always an array for your UI
+          hobbies: typeof data.hobbies === 'string' ? data.hobbies.split(',') : (data.hobbies || [])
+        });
+      }
+    } catch (e) {
+      console.error("Fetch Profile Error:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleImagePick = async () => {
     const result = await launchImageLibrary({
       mediaType: 'photo',
@@ -668,39 +695,53 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                   </Box>
                   <VStack className="flex-1">
                     <Text size="xs" className="text-typography-500 font-medium">Marital Status</Text>
-                    <Text size="md" className="text-typography-900 font-bold">{profileData?.maritalStatus || "Never Married"}</Text>
+                    <Text size="md" className="text-typography-900 font-bold">{profileData?.marital_status || "Never Married"}</Text>
                   </VStack>
                 </HStack>
 
-                {/* Children Row - Logic for with and without children */}
-                <HStack items-center space="md">
-                  {!profileData?.hasChildren ? (
+                {/* Children Section */}
+                <VStack space="md" className="mt-2">
+                  {profileData?.has_children === "Yes" ? (
                     <>
-                      {/* Case: Has Children - Show Count & Gender split */}
-                      <HStack items-center space="md" className="flex-1">
+                      {/* Summary Header */}
+                      <HStack items-center space="md">
                         <Box className="p-2.5 rounded-xl bg-blue-50">
                           <Icon as={Baby} size='lg' className="text-blue-600" />
                         </Box>
-                        <VStack>
-                          <Text size="xs" className="text-typography-500 font-medium">Children</Text>
-                          <Text size="md" className="text-typography-900 font-bold">{profileData?.childrenCount || "1"}</Text>
+                        <VStack className="flex-1">
+                          <Text size="xs" className="text-typography-500 font-medium">Children Count</Text>
+                          <Text size="md" className="text-typography-900 font-bold">
+                            {profileData?.children_count || "0"} Children
+                          </Text>
                         </VStack>
                       </HStack>
 
-                      <HStack items-center space="md" className="flex-1">
-                        <Box className="p-2.5 rounded-xl bg-blue-50">
-                          <Icon as={User} size='lg' className="text-blue-600" />
+                      {/* Individual Child Details */}
+                      {(profileData?.kids_details).map((kid: any, index: number) => (
+                        <Box
+                          key={index}
+                          className="ml-12 p-3 rounded-xl bg-slate-50 border border-slate-100"
+                        >
+                          <HStack space="md" className="justify-between items-center">
+                            <VStack>
+                              <Text size="xs" className="text-slate-500 uppercase font-bold">Child {index + 1}</Text>
+                              <Text size="sm" className="text-typography-900 font-bold">
+                                {kid.age} Yrs • {kid.gender}
+                              </Text>
+                            </VStack>
+
+                            <Box className={`px-2 py-1 rounded-md ${kid.livingTogether === 'Yes' ? 'bg-green-100' : 'bg-amber-100'}`}>
+                              <Text className={`text-[10px] font-bold ${kid.livingTogether === 'Yes' ? 'text-green-700' : 'text-amber-700'}`}>
+                                {kid.livingTogether === 'Yes' ? "LIVING WITH ME" : "NOT LIVING WITH ME"}
+                              </Text>
+                            </Box>
+                          </HStack>
                         </Box>
-                        <VStack>
-                          <Text size="xs" className="text-typography-500 font-medium">Gender</Text>
-                          <Text size="md" className="text-typography-900 font-bold">{getDynamicChildrenValue() || "Boy"}</Text>
-                        </VStack>
-                      </HStack>
-
+                      ))}
                     </>
                   ) : (
-                    /* Case: No Children - Show single full-width entry */
-                    <HStack items-center space="md" className="flex-1">
+                    /* Case: No Children */
+                    <HStack items-center space="md">
                       <Box className="p-2.5 rounded-xl bg-blue-50">
                         <Icon as={Baby} size='lg' className="text-blue-600" />
                       </Box>
@@ -710,7 +751,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                       </VStack>
                     </HStack>
                   )}
-                </HStack>
+                </VStack>
 
 
 
@@ -719,7 +760,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
 
                 {/* Row 3: Diet & Blood Group */}
                 <HStack items-center space="md">
-                  <HStack items-center space="md" className="flex-1">
+                  {/* <HStack items-center space="md" className="flex-1">
                     <Box className="p-2.5 rounded-xl bg-blue-50">
                       <Icon as={Coffee} size='lg' className="text-blue-600" />
                     </Box>
@@ -727,7 +768,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                       <Text size="xs" className="text-typography-500 font-medium">Diet</Text>
                       <Text size="md" className="text-typography-900 font-bold">{profileData?.diet || "Veg"}</Text>
                     </VStack>
-                  </HStack>
+                  </HStack> */}
 
                   <HStack items-center space="md" className="flex-1">
                     <Box className="p-2.5 rounded-xl bg-blue-50">
@@ -738,10 +779,20 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                       <Text size="md" className="text-typography-900 font-bold">{profileData?.bloodGroup || "O+"}</Text>
                     </VStack>
                   </HStack>
+
+                  <HStack items-center space="md" className="flex-1">
+                    <Box className="p-2.5 rounded-xl bg-blue-50">
+                      <Icon as={Accessibility} size='lg' className="text-blue-600" />
+                    </Box>
+                    <VStack>
+                      <Text size="xs" className="text-typography-500 font-medium">Disability</Text>
+                      <Text size="md" className="text-typography-900 font-bold">{profileData?.disability || "None"}</Text>
+                    </VStack>
+                  </HStack>
                 </HStack>
 
                 {/* Row 5: Health & Disability */}
-                <HStack items-center space="md">
+                {/* <HStack items-center space="md">
                   <HStack items-center space="md" className="flex-1">
                     <Box className="p-2.5 rounded-xl bg-blue-50">
                       <Icon as={Activity} size='lg' className="text-blue-600" />
@@ -761,7 +812,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                       <Text size="md" className="text-typography-900 font-bold">{profileData?.disability || "None"}</Text>
                     </VStack>
                   </HStack>
-                </HStack>
+                </HStack> */}
 
 
                 {/* Verification Hint */}
@@ -781,6 +832,9 @@ export default function ProfileEditScreen({ navigation, route }: any) {
               onClose={() => setShowBasicsModal(false)}
               content={profileData}
               user={user}
+              onRefresh={loadData}
+              lookups={lookups}
+              showToast={showToast}
             />}
 
             {/* End Basics Details Card */}
@@ -865,16 +919,15 @@ export default function ProfileEditScreen({ navigation, route }: any) {
               </VStack>
             </GradientCard>
 
-            <EditReligionModal
+            {showReligionModal && <EditReligionModal
               isOpen={showReligionModal}
               onClose={() => setShowReligionModal(false)}
-              formData={profileData}
-              // updateForm={updateForm}
-              // onSave={handleSaveReligion}
-              // isSaving={isSaving}
-              // validationTriggered={validationTriggered}
-              data={{ RELIGION_DATA, COMMUNITIES, LIVINGIN }}
-            />
+              content={profileData}
+              lookups={lookups}
+              onRefresh={loadData}
+              showToast={showToast}
+              user={user}
+            />}
             {/* 4. End Religious & Community Details */}
 
             {/*  4. Contact details */}
@@ -1050,15 +1103,20 @@ export default function ProfileEditScreen({ navigation, route }: any) {
 
               </VStack>
             </GradientCard>
-            <FamilyDetailsModal
+            {showFamilyModal && <FamilyDetailsModal
               isOpen={showFamilyModal}
               onClose={() => setShowFamilyModal(false)}
-              formData={profileData}
               updateForm={updateForm}
+              content={profileData}
+              lookups={lookups}
+              onRefresh={loadData}
+              showToast={showToast}
+              user={user}
             //   onSave={handleSaveFamily}
             //   isSaving={isSaving}
             //  validationTriggered={false}
             />
+            }
             {/* End Family Details Section*/}
 
 

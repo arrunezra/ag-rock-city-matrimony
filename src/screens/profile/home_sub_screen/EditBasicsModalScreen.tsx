@@ -1,4 +1,4 @@
-import React, { useState, useRef, useContext, useEffect } from 'react';
+import React, { useState, useRef, useContext, useEffect, useMemo } from 'react';
 import { ScrollView, Platform, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
 import {
     Modal, ModalBackdrop, ModalContent, ModalHeader, ModalCloseButton,
@@ -16,24 +16,27 @@ import {
 } from '@/src/components/common/GluestackUI';
 import api from '@/src/api/api';
 import { CloseIcon, Icon } from '@/components/ui/icon';
-import { Calendar, Droplets, Heart, Info, Ruler, Trash2, User, Users, X } from '@/src/components/common/IconUI';
+import { Accessibility, Briefcase, Calendar, Droplets, Heart, Info, Ruler, Trash2, User, Users, X } from '@/src/components/common/IconUI';
 import { InputIcon, InputSlot } from '@/components/ui/input';
 import { Dropdown } from 'react-native-element-dropdown';
-import { HEIGHT_DATA, MARITAL_STATUS } from '@/src/utils/utils';
+import { BLOOD_GROUPS, HEIGHT_DATA, MARITAL_STATUS } from '@/src/utils/utils';
 import { LookupContext } from '@/src/context/LookupContext';
 import _ from 'lodash';
+import { AnimateError } from '../../common/AnimateError';
+import profileService from '@/src/services/profileService';
+import { useAppToast } from '@/src/context/ToastContext';
+import FuturisticDropdown from '@/src/components/common/FuturisticDropdown';
 
 
-const EditBasicsModalScreen = ({ isOpen, onClose, user, content, onSaveSuccess }: any) => {
+const EditBasicsModalScreen = ({ isOpen, onClose, user, content, lookups, onRefresh, showToast }: any) => {
     const [isSaving, setIsSaving] = useState(false);
-    const { lookups } = useContext(LookupContext);
+
     const [validationTriggered, setValidationTriggered] = useState(false);
-    const BLOOD_GROUPS = [
-        { label: 'A+', value: 'A+' }, { label: 'A-', value: 'A-' },
-        { label: 'B+', value: 'B+' }, { label: 'B-', value: 'B-' },
-        { label: 'O+', value: 'O+' }, { label: 'O-', value: 'O-' },
-        { label: 'AB+', value: 'AB+' }, { label: 'AB-', value: 'AB-' }
-    ];
+
+    if (typeof content?.kids_details === 'string') {
+        content.kids_details = JSON.parse(content.kids_details);
+    }
+    // console.log("content", content);
     const [formData, setFormData] = useState<any>(_.cloneDeep(content || []));
 
     const lastNameRef = useRef<any>(null);
@@ -42,6 +45,8 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, onSaveSuccess }
     const yearRef = useRef<any>(null);
     const updateForm = (key: string, value: any) => {
         setFormData((prev: any) => ({ ...prev, [key]: value }));
+        if (validationTriggered) setValidationTriggered(false)
+
     };
     useEffect(() => {
         if (content?.dob) {
@@ -60,63 +65,163 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, onSaveSuccess }
     // Logic to handle changing the number of children
     const handleChildrenCountChange = (val: string) => {
         const count = parseInt(val) || 0;
-        updateForm('childrenCount', val);
+        updateForm('children_count', val);
 
-        // Sync the kids array length with the input count
-        const currentKids = [...(formData.kids || [])];
+        const currentKids = [...(formData.kids_details || [])];
+
         if (count > currentKids.length) {
-            // Add new empty kid objects
-            const additional = Array(count - currentKids.length).fill({
+            // Create an array of the NEW items only
+            const additionalCount = count - currentKids.length;
+
+            // Use Array.from or a loop to ensure UNIQUE objects
+            const additional = Array.from({ length: additionalCount }, () => ({
                 age: '',
                 gender: '',
                 livingTogether: 'Yes'
-            });
-            updateForm('kids', [...currentKids, ...additional]);
+            }));
+
+            updateForm('kids_details', [...currentKids, ...additional]);
         } else {
             // Trim the array if count decreased
-            updateForm('kids', currentKids.slice(0, count));
+            updateForm('kids_details', currentKids.slice(0, count));
         }
     };
     const updateKidDetail = (index: number, field: string, value: string) => {
-        const updatedKids = [...formData.kids];
+        const updatedKids = [...(formData.kids_details || [])];
         updatedKids[index] = { ...updatedKids[index], [field]: value };
-        updateForm('kids', updatedKids);
+        updateForm('kids_details', updatedKids);
     };
     const removeChild = (indexToRemove: number) => {
-        const updatedKids = formData.kids.filter((_: any, index: number) => index !== indexToRemove);
+        const updatedKids = formData.kids_details.filter((_: any, index: number) => index !== indexToRemove);
 
         setFormData((prev: any) => ({
             ...prev,
-            kids: updatedKids,
+            kids_details: updatedKids,
             // Automatically update the count to match the new array length
-            childrenCount: updatedKids.length.toString()
+            children_count: updatedKids.length.toString()
         }));
     };
     // Fix: Ensure this doesn't accidentally render as a raw string inside the JSX
-    const isDateInvalid = !formData.dobDay || !formData.dobMonth || !formData.dobYear;
-    const dateErrorMessage = isDateInvalid ? "Complete Date of Birth is required" : "";
 
+
+    const isDateValid = () => {
+        const day = parseInt(formData.dobDay || '0');
+        const month = parseInt(formData.dobMonth || '0');
+        const year = formData.dobYear || '0';
+
+        if (!day || !month || year.length !== 4) return false;
+
+        const isDayValid = day >= 1 && day <= 31;
+        const isMonthValid = month >= 1 && month <= 12;
+
+        return isDayValid && isMonthValid;
+    };
+    const getAge = () => {
+        const day = parseInt(formData.dobDay);
+        const month = parseInt(formData.dobMonth);
+        const year = parseInt(formData.dobYear);
+        if (!isDateValid()) return 0;
+        const today = new Date(); // Current date in 2026
+        const birthDate = new Date(year, month - 1, day);
+
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+
+        // Adjust if birthday hasn't happened yet this year
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    };
+    const getValidYear = () => {
+        const year = parseInt(formData.dobYear);
+        const currentYear = new Date().getFullYear();
+        const eightyYearsAgo = currentYear - 80;
+        return year >= eightyYearsAgo && year <= currentYear;
+    }
+    //use memo
+    const dateErrorMessage = useMemo(() => {
+        if (!isDateValid()) return "Enter a valid DD (01-31), MM (01-12), and YYYY";
+        if (!getValidYear()) return "Enter a valid year";
+        if (getAge() < 18) return "Under age! You must be at least 18 years old.";
+        return "";
+    }, [formData.dobDay, formData.dobMonth, formData.dobYear]); // Recalculate only when date changes
+    const validateForm = () => {
+        // 1. Basic Field Validation
+        const requiredFields = [
+            'first_name',
+            'last_name',
+            'gender',
+            'marital_status',
+            'dobDay',
+            'dobMonth',
+            'dobYear',
+            'height',
+            'blood_group'
+        ];
+
+        for (const field of requiredFields) {
+            if (!formData[field] || formData[field].toString().trim() === '') {
+                return false;
+            }
+        }
+
+        // 2. Conditional Kids Validation
+        if (formData.marital_status !== 'NM' && formData.has_children === 'Yes') {
+            if (!formData?.kids_details || formData?.kids_details?.length === 0) return false;
+            // return formData.kids_details.every((kid: any) =>
+            //     kid.age && kid.gender && kid.livingTogether
+            // );
+        }
+
+        return !dateErrorMessage;
+    };
     const handleSave = async () => {
         setValidationTriggered(true);
-        if (!formData.firstName || !formData.lastName || isDateInvalid) return;
-
+        let isvalid = !validateForm()
+        if (isvalid) {
+            // You can add a Toast message here if you use them
+            console.log("Validation failed");
+            return;
+        }
         setIsSaving(true);
         try {
             const payload = {
-                ...formData,
-                dob: `${formData.dobYear}-${formData.dobMonth}-${formData.dobDay}`
+                id: user?.profile_id,
+                action: 'basicdetails',
+                first_name: formData.first_name,
+                last_name: formData.last_name,
+                // Format date if needed, e.g., "1996-06-12"
+                dob: `${formData.dobYear}-${formData.dobMonth}-${formData.dobDay}`,
+                gender: formData.gender,
+                marital_status: formData.marital_status,
+                height: formData.height,
+                weight: formData.weight || 0,
+                blood_group: formData.blood_group,
+                has_children: formData.has_children,
+                children_count: formData.children_count || 0,
+                // We send the actual array; Axios handles the JSON conversion
+                kids_details: formData.kids_details,
+                disability: formData.disability
             };
-            const res = await api.post('/manage_profile.php', payload);
-            if (res.data.success) {
-                onSaveSuccess();
+            console.log('payload', payload)
+            const res = await profileService.updateEditProfile(payload);
+            if (res.success) {
+                showToast("Basic Details", "Profile updated successfully!", "success");
+                // Important: If you save this locally, you might need to JSON.parse kids_details
+                if (onRefresh) await onRefresh();
                 onClose();
+            } else {
+                showToast("Update Failed", res?.message || "Check your details", "error");
             }
+
         } catch (e) {
             console.error(e);
         } finally {
             setIsSaving(false);
         }
     };
+
     return (
 
         <Modal isOpen={isOpen} onClose={onClose} size="full">
@@ -163,7 +268,7 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, onSaveSuccess }
 
                                     {/* 2. NAME SECTION (Split into First and Last) */}
                                     <HStack space="md" className="w-full">
-                                        <FormControl isInvalid={validationTriggered && !formData.firstName} className="flex-1">
+                                        <FormControl isInvalid={validationTriggered && !formData.first_name} className="flex-1">
                                             <FormControlLabel className="mb-2">
                                                 <FormControlLabelText size="sm" className="font-bold">First Name</FormControlLabelText>
                                             </FormControlLabel>
@@ -175,9 +280,12 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, onSaveSuccess }
                                                     onChangeText={(v) => updateForm('first_name', v)}
                                                 />
                                             </Input>
+                                            <AnimateError isVisible={validationTriggered && (!formData.first_name)}>
+                                                {"First name is required"}
+                                            </AnimateError>
                                         </FormControl>
 
-                                        <FormControl isInvalid={validationTriggered && !formData.lastName} className="flex-1">
+                                        <FormControl isInvalid={validationTriggered && !formData.last_name} className="flex-1">
                                             <FormControlLabel className="mb-2">
                                                 <FormControlLabelText size="sm" className="font-bold">Last Name</FormControlLabelText>
                                             </FormControlLabel>
@@ -188,6 +296,9 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, onSaveSuccess }
                                                     onChangeText={(v) => updateForm('last_name', v)}
                                                 />
                                             </Input>
+                                            <AnimateError isVisible={validationTriggered && (!formData.last_name)}>
+                                                {"Last name is required"}
+                                            </AnimateError>
                                         </FormControl>
                                     </HStack>
 
@@ -209,35 +320,38 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, onSaveSuccess }
                                                 </TouchableOpacity>
                                             ))}
                                         </HStack>
+                                        <AnimateError isVisible={validationTriggered && (!formData.gender)}>
+                                            {"Gender is required"}
+                                        </AnimateError>
                                     </FormControl>
 
                                     {/* 4. Marital Status Dropdown */}
-                                    <FormControl isInvalid={validationTriggered && !formData.maritalStatus}>
+                                    <FormControl isInvalid={validationTriggered && !formData.marital_status}>
                                         <FormControlLabel className="mb-2">
                                             <FormControlLabelText size="sm" className="font-bold">Marital Status</FormControlLabelText>
                                         </FormControlLabel>
-                                        <Dropdown
-                                            style={[styles.dropdown, (validationTriggered && !formData.maritalStatus) && { borderColor: '#EF4444' }]}
-                                            // data={MARITAL_STATUS}
-                                            data={lookups.marital_status || []}
-                                            labelField="label"
-                                            valueField="value"
-                                            placeholder="Select Status"
+                                        <FuturisticDropdown
+                                            data={lookups?.marital_status}
                                             value={formData.marital_status}
-                                            onChange={item => {
-                                                console.log(item);
+                                            onChange={(item: any) => {
                                                 updateForm('marital_status', item.value);
                                                 if (item.value === 'Never Married') {
-                                                    updateForm('hasChildren', 'No');
-                                                    updateForm('kids', []);
+                                                    updateForm('has_children', 'No');
+                                                    updateForm('kids_details', []);
                                                 }
                                             }}
-                                            renderLeftIcon={() => <Icon as={Heart} size="sm" className="mr-2 text-rose-500" />}
+                                            placeholder="Select"
+                                            icon={{ icon: Heart, color: 'text-rose-500' }}
+                                            search={false}
+                                            isInvalid={validationTriggered && !formData.marital_status}
                                         />
+                                        <AnimateError isVisible={validationTriggered && (!formData.marital_status)}>
+                                            {"Marital status is required"}
+                                        </AnimateError>
                                     </FormControl>
 
                                     {/* 5. Date of Birth Section */}
-                                    <FormControl isInvalid={validationTriggered && (!formData.dobDay || !formData.dobMonth || !formData.dobYear)}>
+                                    <FormControl isInvalid={validationTriggered && (!!dateErrorMessage)}>
                                         <FormControlLabel className="mb-2">
                                             <FormControlLabelText size="sm" className="font-bold">Date of Birth</FormControlLabelText>
                                         </FormControlLabel>
@@ -261,134 +375,186 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, onSaveSuccess }
                                                         className="text-center"
                                                     />
                                                 </Input>
+
                                             ))}
+
                                         </HStack>
+                                        <AnimateError isVisible={validationTriggered && (!!dateErrorMessage)}>
+                                            {dateErrorMessage}
+                                        </AnimateError>
                                     </FormControl>
 
                                     {/* 6. Physical Attributes Section */}
                                     <HStack space="md">
                                         <FormControl isInvalid={validationTriggered && !formData.height} className="flex-1">
                                             <FormControlLabel><FormControlLabelText size="sm" className="font-bold">Height</FormControlLabelText></FormControlLabel>
-                                            <Dropdown
-                                                style={styles.dropdown}
+
+                                            <FuturisticDropdown
                                                 data={HEIGHT_DATA}
-                                                labelField="label"
-                                                valueField="value"
-                                                placeholder="Height"
-                                                value={formData.height}
-                                                onChange={item => updateForm('height', item.value)}
-                                                renderLeftIcon={() => <Icon as={Ruler} size="sm" className="mr-2 text-cyan-500" />}
+                                                value={formData.blood_group}
+                                                onChange={(item: any) => updateForm('height', item.value)}
+                                                placeholder="Select"
+                                                icon={{ icon: Ruler, color: 'text-cyan-500' }}
+                                                search={false}
+                                                isInvalid={validationTriggered && !formData.blood_group}
                                             />
                                         </FormControl>
 
-                                        <FormControl isInvalid={validationTriggered && !formData.bloodGroup} className="flex-1">
+                                        <FormControl isInvalid={validationTriggered && !formData.blood_group} className="flex-1">
                                             <FormControlLabel><FormControlLabelText size="sm" className="font-bold">Blood Group</FormControlLabelText></FormControlLabel>
-                                            <Dropdown
-                                                style={styles.dropdown}
+
+                                            <FuturisticDropdown
                                                 data={BLOOD_GROUPS}
-                                                labelField="label"
-                                                valueField="value"
-                                                placeholder="Blood"
-                                                value={formData.bloodGroup}
-                                                onChange={item => updateForm('blood_group', item.value)}
-                                                renderLeftIcon={() => <Icon as={Droplets} size="sm" className="mr-2 text-red-500" />}
+                                                value={formData.blood_group}
+                                                onChange={(item: any) => updateForm('blood_group', item.value)}
+
+                                                placeholder="Select"
+                                                icon={{ icon: Droplets, color: 'text-red-500' }}
+                                                search={false}
+                                                isInvalid={validationTriggered && !formData.blood_group}
                                             />
+
+                                            <AnimateError isVisible={validationTriggered && (!formData.blood_group)}>
+                                                {"Blood group is required"}
+                                            </AnimateError>
                                         </FormControl>
                                     </HStack>
-
+                                    {/* 7. Disability Status Section */}
+                                    <FormControl isInvalid={validationTriggered && !formData.disability}>
+                                        <FormControlLabel className="mb-2">
+                                            <FormControlLabelText size="sm" className="font-bold">Disability / Specially Abled</FormControlLabelText>
+                                        </FormControlLabel>
+                                        <HStack className="gap-3">
+                                            {['None', 'Yes'].map((option) => (
+                                                <TouchableOpacity
+                                                    key={option}
+                                                    onPress={() => updateForm('disability', option)}
+                                                    className={`flex-1 h-14 rounded-2xl border-2 items-center justify-center transition-all ${formData.disability === option
+                                                        ? 'border-blue-600 bg-blue-50/50'
+                                                        : 'border-outline-100 bg-slate-50/50'
+                                                        }`}
+                                                >
+                                                    <HStack space="xs" className="items-center">
+                                                        {option === 'Yes' && (
+                                                            <Icon as={Accessibility} size="sm" className={formData.disability === option ? 'text-blue-600' : 'text-slate-400'} />
+                                                        )}
+                                                        <Text className={formData.disability === option ? 'text-blue-700 font-bold' : 'text-typography-500'}>
+                                                            {option}
+                                                        </Text>
+                                                    </HStack>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </HStack>
+                                    </FormControl>
                                     {/* 7. Kids Section (Conditional) */}
                                     {formData.maritalStatus !== 'Never Married' && formData.maritalStatus !== '' && (
                                         <VStack space="md" className="bg-blue-50/50 p-5 rounded-[28px] border border-blue-100/50 mt-2">
                                             <HStack className="justify-between items-center">
-                                                <Heading size="xs" className="text-blue-800 uppercase tracking-widest">Children</Heading>
+                                                <Heading size="xs" numberOfLines={1} className="text-blue-800 uppercase tracking-widest">Children</Heading>
                                                 <HStack space="md">
                                                     {['No', 'Yes'].map((opt) => (
                                                         <TouchableOpacity
                                                             key={opt}
-                                                            onPress={() => updateForm('hasChildren', opt)}
-                                                            className={`px-4 py-1.5 rounded-full ${formData.hasChildren === opt ? 'bg-blue-600' : 'bg-white border border-blue-100'}`}
+                                                            onPress={() => {
+                                                                if (opt === "No") {
+                                                                    updateForm('kids_details', [])
+                                                                    updateForm('children_count', '')
+                                                                }
+                                                                updateForm('has_children', opt)
+                                                            }}
+                                                            className={`px-4 py-1.5 rounded-full ${formData.has_children === opt ? 'bg-blue-600' : 'bg-white border border-blue-100'}`}
                                                         >
-                                                            <Text size="xs" className={formData.hasChildren === opt ? 'text-white font-bold' : 'text-blue-600'}>{opt}</Text>
+                                                            <Text size="xs" className={formData.has_children === opt ? 'text-white font-bold' : 'text-blue-600'}>{opt}</Text>
                                                         </TouchableOpacity>
                                                     ))}
                                                 </HStack>
                                             </HStack>
 
-                                            {formData.hasChildren === 'Yes' && (
+                                            {formData.has_children === 'Yes' && (
                                                 <VStack space="md" className="mt-3">
-                                                    <Input className="h-12 bg-white rounded-xl border-blue-100">
-                                                        <InputField
-                                                            placeholder="Number of children"
-                                                            keyboardType="numeric"
-                                                            value={formData.children_count} // Updated to children_count from your new code
-                                                            onChangeText={handleChildrenCountChange}
-                                                        />
-                                                    </Input>
+                                                    <FormControl isInvalid={validationTriggered && !formData.children_count} className="flex-1">
 
-                                                    {formData?.kids?.map((kid: any, index: number) => (
-                                                        <Box key={index} className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm shadow-slate-100 mb-2">
-                                                            {/* Header with Child Number and Trash Icon */}
-                                                            <HStack className="justify-between items-center mb-4">
-                                                                <HStack space="xs" className="items-center">
-                                                                    <Box className="w-6 h-6 rounded-full bg-cyan-100 items-center justify-center">
-                                                                        <Text className="text-[10px] font-bold text-cyan-700">{index + 1}</Text>
+                                                        <Input className="h-12 bg-white rounded-xl border-blue-100">
+                                                            <InputField
+                                                                placeholder="Number of children"
+                                                                keyboardType="numeric"
+                                                                value={formData?.children_count?.toString()} // Updated to children_count from your new code
+                                                                onChangeText={handleChildrenCountChange}
+                                                            />
+                                                        </Input>
+                                                        <AnimateError isVisible={validationTriggered && (!formData?.children_count)}>
+                                                            {"Children count is required"}
+                                                        </AnimateError>
+                                                    </FormControl>
+                                                    {(formData?.kids_details ?? []).map((kid: any, index: number) => {
+                                                        if (!kid) return null; // Safety check for null items
+                                                        return (
+                                                            <Box key={index} className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm shadow-slate-100 mb-2">
+                                                                {/* Header with Child Number and Trash Icon */}
+                                                                <HStack className="justify-between items-center mb-4">
+                                                                    <HStack space="xs" className="items-center">
+                                                                        <Box className="w-6 h-6 rounded-full bg-cyan-100 items-center justify-center">
+                                                                            <Text className="text-[10px] font-bold text-cyan-700">{index + 1}</Text>
+                                                                        </Box>
+                                                                        <Text className="font-bold text-slate-700">Child Details</Text>
+                                                                    </HStack>
+                                                                    <TouchableOpacity onPress={() => removeChild(index)} className="p-2 bg-rose-50 rounded-full">
+                                                                        <Icon as={Trash2} size='md' className="text-rose-500" />
+                                                                    </TouchableOpacity>
+                                                                </HStack>
+
+                                                                {/* Input Row: Age and Gender */}
+                                                                <HStack className="gap-3">
+                                                                    <FormControl isInvalid={validationTriggered && !formData.blood_group} className="flex-1">
+                                                                        <Input className="flex-1 h-12 rounded-xl border-slate-200">
+                                                                            <InputSlot className="pl-3">
+                                                                                <Icon as={User} size='md' className="text-slate-400" />
+                                                                            </InputSlot>
+                                                                            <InputField
+                                                                                placeholder="Age"
+                                                                                keyboardType="numeric"
+                                                                                value={kid.age}
+                                                                                onChangeText={(v) => updateKidDetail(index, 'age', v)}
+                                                                            />
+                                                                        </Input>
+                                                                    </FormControl>
+                                                                    <Box className="flex-1">
+                                                                        <Select onValueChange={(v) => updateKidDetail(index, 'gender', v)} selectedValue={kid.gender}>
+                                                                            <SelectTrigger className="h-12 rounded-xl border-slate-200">
+                                                                                <SelectInput placeholder="Gender" />
+                                                                            </SelectTrigger>
+                                                                            <SelectPortal>
+                                                                                <SelectBackdrop />
+                                                                                <SelectContent>
+                                                                                    <SelectItem label="Boy" value="Boy" />
+                                                                                    <SelectItem label="Girl" value="Girl" />
+                                                                                </SelectContent>
+                                                                            </SelectPortal>
+                                                                        </Select>
                                                                     </Box>
-                                                                    <Text className="font-bold text-slate-700">Child Details</Text>
                                                                 </HStack>
-                                                                <TouchableOpacity onPress={() => removeChild(index)} className="p-2 bg-rose-50 rounded-full">
-                                                                    <Icon as={Trash2} size='md' className="text-rose-500" />
-                                                                </TouchableOpacity>
-                                                            </HStack>
 
-                                                            {/* Input Row: Age and Gender */}
-                                                            <HStack className="gap-3">
-                                                                <Input className="flex-1 h-12 rounded-xl border-slate-200">
-                                                                    <InputSlot className="pl-3">
-                                                                        <Icon as={User} size='md' className="text-slate-400" />
-                                                                    </InputSlot>
-                                                                    <InputField
-                                                                        placeholder="Age"
-                                                                        keyboardType="numeric"
-                                                                        value={kid.age}
-                                                                        onChangeText={(v) => updateKidDetail(index, 'age', v)}
-                                                                    />
-                                                                </Input>
-                                                                <Box className="flex-1">
-                                                                    <Select onValueChange={(v) => updateKidDetail(index, 'gender', v)} selectedValue={kid.gender}>
-                                                                        <SelectTrigger className="h-12 rounded-xl border-slate-200">
-                                                                            <SelectInput placeholder="Gender" />
-                                                                        </SelectTrigger>
-                                                                        <SelectPortal>
-                                                                            <SelectBackdrop />
-                                                                            <SelectContent>
-                                                                                <SelectItem label="Boy" value="Boy" />
-                                                                                <SelectItem label="Girl" value="Girl" />
-                                                                            </SelectContent>
-                                                                        </SelectPortal>
-                                                                    </Select>
-                                                                </Box>
-                                                            </HStack>
-
-                                                            {/* Living Together Section (The missing piece) */}
-                                                            <HStack className="items-center justify-between mt-4 pt-4 border-t border-slate-50">
-                                                                <Text className="text-xs font-semibold text-slate-500">Living with you?</Text>
-                                                                <HStack className="gap-4">
-                                                                    {['Yes', 'No'].map(l => (
-                                                                        <TouchableOpacity
-                                                                            key={l}
-                                                                            onPress={() => updateKidDetail(index, 'livingTogether', l)}
-                                                                            className="flex-row items-center space-x-2 gap-2"
-                                                                        >
-                                                                            <Box className={`w-5 h-5 rounded-full border-2 items-center justify-center ${kid.livingTogether === l ? 'border-cyan-500' : 'border-slate-300'}`}>
-                                                                                {kid.livingTogether === l && <Box className="w-2.5 h-2.5 rounded-full bg-cyan-500" />}
-                                                                            </Box>
-                                                                            <Text className="text-xs font-bold text-slate-600">{l}</Text>
-                                                                        </TouchableOpacity>
-                                                                    ))}
+                                                                {/* Living Together Section (The missing piece) */}
+                                                                <HStack className="items-center justify-between mt-4 pt-4 border-t border-slate-50">
+                                                                    <Text className="text-xs font-semibold text-slate-500">Living with you?</Text>
+                                                                    <HStack className="gap-4">
+                                                                        {['Yes', 'No'].map(l => (
+                                                                            <TouchableOpacity
+                                                                                key={l}
+                                                                                onPress={() => updateKidDetail(index, 'livingTogether', l)}
+                                                                                className="flex-row items-center space-x-2 gap-2"
+                                                                            >
+                                                                                <Box className={`w-5 h-5 rounded-full border-2 items-center justify-center ${kid.livingTogether === l ? 'border-cyan-500' : 'border-slate-300'}`}>
+                                                                                    {kid.livingTogether === l && <Box className="w-2.5 h-2.5 rounded-full bg-cyan-500" />}
+                                                                                </Box>
+                                                                                <Text className="text-xs font-bold text-slate-600">{l}</Text>
+                                                                            </TouchableOpacity>
+                                                                        ))}
+                                                                    </HStack>
                                                                 </HStack>
-                                                            </HStack>
-                                                        </Box>
-                                                    ))}
+                                                            </Box>
+                                                        );
+                                                    })}
                                                 </VStack>
                                             )}
                                         </VStack>
