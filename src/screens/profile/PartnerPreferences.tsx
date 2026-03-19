@@ -18,6 +18,7 @@ const PartnerPreferences = () => {
         communities: [],
         mother_tongues: [],
         marital_status: [],
+        qualifications: [],
         income_min: '',
         education: [],
         working_with: [],

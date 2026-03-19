@@ -7,7 +7,10 @@ import {
     Calendar, Ruler, Users, Baby,
     Book, Globe, MapPin,
     ChevronRightIcon,
-    User2Icon
+    User2Icon,
+    GraduationCap,
+    Briefcase,
+    Banknote
 } from 'lucide-react-native';
 import { Icon } from '@/components/ui/icon';
 
@@ -98,6 +101,31 @@ const PartnerPreferencesView = ({ data, onEditField }: any) => {
                     />
                 </Box>
 
+                {/* --- PROFESSIONAL DETAILS --- */}
+                <Box className="mx-4 mt-4 bg-white rounded-3xl shadow-sm overflow-hidden">
+                    <SectionHeader title="Professional Details" />
+                    <PreferenceRow
+                        icon={GraduationCap}
+                        color="bg-cyan-600"
+                        label="Qualification"
+                        value={data.qualifications || "Open to All"}
+                        onPress={() => onEditField('qualification')}
+                    />
+                    <PreferenceRow
+                        icon={Briefcase}
+                        color="bg-cyan-600"
+                        label="Working with"
+                        value={data.working_with || "Open to All"}
+                        onPress={() => onEditField('working_with')}
+                    />
+                    <PreferenceRow
+                        icon={Banknote}
+                        color="bg-cyan-600"
+                        label="Annual Income"
+                        value={data.income || "Open to All"}
+                        onPress={() => onEditField('income')}
+                    />
+                </Box>
                 {/* --- LOCATION --- */}
                 <Box className="mx-4 mt-4 bg-white rounded-3xl shadow-sm overflow-hidden">
                     <SectionHeader title="Location" />

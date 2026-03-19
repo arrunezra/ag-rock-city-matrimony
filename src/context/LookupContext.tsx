@@ -20,6 +20,7 @@ interface LookupData {
     designation: LookupOption[];
     role: LookupOption[];
     church_branches: LookupOption[];
+    sub_community: LookupOption[];
 }
 
 // 3. Define the Context's return type
@@ -42,6 +43,7 @@ export const LookupContext = createContext<LookupContextType>({
         designation: [],
         role: [],
         church_branches: [],
+        sub_community: []
     },
     isReady: false,
     refreshLookups: async () => { },
@@ -59,6 +61,7 @@ export const LookupProvider = ({ children }: { children: ReactNode }) => {
         designation: [],
         role: [],
         church_branches: [],
+        sub_community: []
     });
     const [isReady, setIsReady] = useState(false);
 
