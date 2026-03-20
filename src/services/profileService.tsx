@@ -115,7 +115,29 @@ export const profileService = {
       }
       return { success: false, message: "Network connection failed" };
     }
-  }
+  },
+  PartnerPreferences: async (fields: any) => {
+    try {
+      const response = await api.post('/profile/partner_preferences.php', fields); //For summary
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        return error.response.data;
+      }
+      return { success: false, message: "Network connection failed" };
+    }
+  },
+  getPartnerPreferences: async (profile_id: any) => {
+    try {
+      const response = await api.get(`/profile/get_partner_preferences.php?profile_id=${profile_id}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        return error.response.data;
+      }
+      return { success: false, message: "Network connection failed" };
+    }
+  },
 
 };
 

@@ -34,7 +34,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
   const { user, updateUser } = useAuth(); // Assume refreshUser updates your context
   const { lookups } = useContext(LookupContext);
   const { showToast } = useAppToast();
-  console.log('lookuos', lookups)
+  //console.log('lookuos', lookups)
   //console.log('ProfileDetailScreen===', user);
   const userid = user?.userid;
   const [profileImage, setProfileImage] = useState(API_BASE_URL_DEV_Profiles_Images + '/' + user?.profilePic);

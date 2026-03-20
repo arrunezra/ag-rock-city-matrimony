@@ -22,12 +22,10 @@ import {
     SelectBackdrop,
     SelectItem
 } from "@/src/components/common/GluestackUI";
-import { Dropdown } from 'react-native-element-dropdown';
 import { CheckIcon, ChevronDownIcon, CircleIcon, CloseIcon, Icon, SearchIcon } from '@/components/ui/icon';
 import { Slider } from '@miblanchard/react-native-slider';
 import { Check, ShieldCheckIcon } from 'lucide-react-native';
 import { Radio, RadioIcon, RadioIndicator } from '@/components/ui/radio';
-import { TouchableOpacity } from 'react-native';
 
 const EditPreferenceModal = ({ isOpen, onClose, fieldType, currentData, onSave, lookups }: any) => {
     //console.log('lookups', lookups)
@@ -38,29 +36,31 @@ const EditPreferenceModal = ({ isOpen, onClose, fieldType, currentData, onSave, 
     useEffect(() => {
         if (isOpen) {
             setSearch(''); // Reset search when opening
+
             if (fieldType === 'age') {
                 setTempValue([currentData.min_age, currentData.max_age]);
-            } else if (fieldType === 'height') {
+            }
+            else if (fieldType === 'height') {
                 setTempValue([parseFloat(currentData.min_height), parseFloat(currentData.max_height)]);
-            } else if (fieldType === 'marital') {
+            }
+            else if (fieldType === 'marital') {
                 setTempValue(currentData.marital_status || []);
             }
             else if (fieldType === 'community') {
-                // Communities are an array in your data
                 setTempValue(currentData.communities || []);
-            } else if (fieldType === 'children') {
-                // Children is a string in your data
+            }
+            else if (fieldType === 'children') {
                 setTempValue(currentData.children || 'Open to All');
             }
             else if (fieldType === 'qualification') {
-                // Initialize with existing qualifications or empty array for "Open to All"
-                setTempValue(currentData?.qualifications || []);
+                setTempValue(Array.isArray(currentData?.qualifications) ? currentData.qualifications : []);
             }
+            else if (fieldType === 'mother_tongues') {
+                setTempValue(Array.isArray(currentData?.mother_tongues) ? currentData.mother_tongues : []);
+            }
+
             else if (fieldType === 'income') {
-                // Default to 'specify' if there are existing range values
-                const initialMode = (currentData.min_income || currentData.max_income)
-                    ? 'specify'
-                    : 'all';
+                const initialMode = (currentData.min_income || currentData.max_income) ? 'specify' : 'all';
                 setTempValue({
                     mode: initialMode,
                     min: currentData.min_income || 'below 1 lakh',
@@ -68,28 +68,75 @@ const EditPreferenceModal = ({ isOpen, onClose, fieldType, currentData, onSave, 
                     showHidden: currentData.show_hidden_income ?? true
                 });
             }
+            // FIX: Ensure country, state, and city are treated as arrays for the MultiSelect UI
+            else if (['country', 'state', 'city'].includes(fieldType)) {
+                const val = currentData[fieldType];
+                setTempValue(Array.isArray(val) ? val : (val ? [val] : []));
+            }
             else {
-                setTempValue(currentData);
+                // Safely default to an empty array instead of the whole currentData object
+                setTempValue([]);
             }
         }
     }, [isOpen, fieldType, currentData]);
 
     const handleApply = () => {
-        console.log('fieldType==', fieldType)
-        if (fieldType === 'age') {
-            // Check for the 3-year minimum gap mentioned in your design
-            if (tempValue[1] - tempValue[0] < 3) {
-                // You could show a toast here
-                return;
-            }
-            onSave('age', { min_age: tempValue[0], max_age: tempValue[1] });
-        } else if (fieldType === 'height') {
-            onSave('height', { min_height: tempValue[0].toString(), max_height: tempValue[1].toString() });
-        } else {
-            onSave(fieldType, tempValue);
+        let updatedData = { ...currentData };
+
+        switch (fieldType) {
+            case 'age':
+                updatedData.min_age = tempValue[0];
+                updatedData.max_age = tempValue[1];
+                break;
+
+            case 'height':
+                updatedData.min_height = tempValue[0].toString();
+                updatedData.max_height = tempValue[1].toString();
+                break;
+
+            case 'marital':
+                updatedData.marital_status = tempValue;
+                break;
+
+            case 'community':
+                updatedData.communities = tempValue;
+                break;
+
+            case 'qualification':
+                updatedData.qualifications = tempValue;
+                break;
+
+            case 'income':
+                if (tempValue.mode === 'all') {
+                    updatedData.min_income = '';
+                    updatedData.max_income = '';
+                } else {
+                    updatedData.min_income = tempValue.min;
+                    updatedData.max_income = tempValue.max;
+                }
+                updatedData.show_hidden_income = tempValue.showHidden;
+                break;
+
+            case 'country': updatedData[fieldType] = tempValue; break;
+            case 'state': updatedData[fieldType] = tempValue; break;
+            case 'city': updatedData[fieldType] = tempValue; break;
+            case 'mother_tongues': updatedData[fieldType] = tempValue; break;
+
+            case 'children':
+                // tempValue is a single string
+                console.log('children tempValue', tempValue)
+                let convertText = '';
+                if (tempValue === 'Yes, if they live separate') {
+                    convertText = "Yes";
+                } else if (tempValue === 'Open to All') {
+                    convertText = "";
+                } else convertText = tempValue;
+                updatedData.children = convertText
+                break;
         }
-
-
+        // Call your parent save function
+        onSave(updatedData);
+        onClose();
     };
     const handleCheckBoxToggle = (value: string) => {
         if (value === 'all') {
@@ -319,7 +366,7 @@ const EditPreferenceModal = ({ isOpen, onClose, fieldType, currentData, onSave, 
                                             key={index}
                                             value={opt.value}
                                             // Individual items are checked based on presence in array
-                                            isChecked={tempValue.includes(opt.value)}
+                                            isChecked={tempValue?.includes(opt.value)}
                                             onChange={() => handleCheckBoxToggle(opt.value)}
                                             aria-label={opt.label}
                                             size="lg"
@@ -377,7 +424,7 @@ const EditPreferenceModal = ({ isOpen, onClose, fieldType, currentData, onSave, 
                         {qualifications.map((item) => (
                             <Checkbox
                                 key={item.key}
-                                isChecked={tempValue.includes(item.key)}
+                                isChecked={tempValue?.includes(item.key)}
                                 onChange={() => handleCheckBoxToggle(item.key)}
                                 value={item.key}
                             >
@@ -490,25 +537,83 @@ const EditPreferenceModal = ({ isOpen, onClose, fieldType, currentData, onSave, 
         );
     };
 
+    const renderCountry = (type: string) => {
+        const isOpenToAll = tempValue?.length === 0;
+        var colloction = [];
+        if (type === 'country') colloction = lookups?.country;
+        else if (type === 'state') colloction = lookups?.state;
+        else if (type === 'city') colloction = lookups?.city;
+        else if (type === 'mother_tongues') colloction = lookups?.mother_tongue;
+
+        return (
+            <VStack space="lg" className="py-2">
+                {/* 1. Top Section - Keep these static */}
+                <Box className="flex-row flex-wrap gap-2 mb-2">
+                    <Box className={`px-4 py-1.5 rounded-full border ${isOpenToAll ? 'bg-cyan-50 border-cyan-500' : 'bg-slate-50 border-slate-200'}`}>
+                        <Text size="xs" className={isOpenToAll ? 'text-cyan-600 font-bold' : 'text-slate-500'}>
+                            Open to All
+                        </Text>
+                    </Box>
+                </Box>
+
+                <Text size="sm" className="text-slate-400 font-bold mb-2">Preferences</Text>
+
+                {/* 2. Scrollable Section - Wrap the list here */}
+                <ScrollView className="max-h-[400px]" showsVerticalScrollIndicator={false}>
+                    <VStack space="xl" className="pb-4">
+                        {/* Open to All Checkbox */}
+                        <Checkbox
+                            value="Open to All"
+                            isChecked={isOpenToAll}
+                            onChange={() => handleCheckBoxToggle('all')}
+                            size="lg"
+                            aria-label="Open to All"
+                        >
+                            <CheckboxIndicator className="rounded-md border-slate-300 data-[checked=true]:bg-cyan-600 data-[checked=true]:border-cyan-600">
+                                <CheckboxIcon as={Check} className="text-white" />
+                            </CheckboxIndicator>
+                            <CheckboxLabel className="ml-3 text-slate-700 font-medium">Open to All</CheckboxLabel>
+                        </Checkbox>
+
+                        {/* Dynamic Collection */}
+                        {colloction?.map((opt: any, index: number) => (
+                            <Checkbox
+                                key={index}
+                                value={opt.value}
+                                isChecked={tempValue?.includes(opt?.value)}
+                                onChange={() => handleCheckBoxToggle(opt?.value)}
+                                size="lg"
+                                aria-label={opt.label}
+                            >
+                                <CheckboxIndicator className="rounded-md border-slate-300 data-[checked=true]:bg-cyan-600 data-[checked=true]:border-cyan-600">
+                                    <CheckboxIcon as={Check} className="text-white" />
+                                </CheckboxIndicator>
+                                <CheckboxLabel className="ml-3 text-slate-700 font-medium">{opt.label}</CheckboxLabel>
+                            </Checkbox>
+                        ))}
+                    </VStack>
+                </ScrollView>
+            </VStack>
+        );
+    };
+
+
     // Logic to render different inputs based on the field clicked
     const renderFieldInput = () => {
         if (tempValue === null) return null;
         switch (fieldType) {
-            case 'marital':
-                return renderMaritalStatus();
-            case 'age':
-                return renderAgeSlider()
-            case 'height':
-                return renderHeight();
-            case 'children':
-                return renderChildren()
-            case 'community':
-                return renderCommunity()
+            case 'marital': return renderMaritalStatus();
+            case 'age': return renderAgeSlider();
+            case 'height': return renderHeight();
+            case 'children': return renderChildren();
+            case 'community': return renderCommunity();
             case 'qualification': return renderQualification();
-            case 'income': return renderAnnualIncome()
-            default:
-                return <Text>Loading settings...</Text>;
-
+            case 'income': return renderAnnualIncome();
+            case 'country': return renderCountry('country');
+            case 'state': return renderCountry('state');
+            case 'city': return renderCountry('city');
+            case 'mother_tongues': return renderCountry('mother_tongues');
+            default: return <Text>Loading settings...</Text>;
         }
     };
 
