@@ -49,13 +49,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const { phoneNumber, password, rememberMe } = credentials;
       const response = await authService.login({ phoneNumber, password });
-      //console.log('Login response:', response);
+      console.log('Login response:', response);
       if (response.access_token) {
         // 1. Always update memory state so user is redirected to Home immediately
         setAccessToken(response.access_token);
         setIsAuthenticated(true);
 
         if (response.user) {
+
           setUser(response.user);
         }
 

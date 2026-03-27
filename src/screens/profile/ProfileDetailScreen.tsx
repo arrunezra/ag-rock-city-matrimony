@@ -18,8 +18,8 @@ import LoadingScreen from '../common/SuccessScreen';
 
 export default function ProfileDetailScreen({ route }: any) {
     const { user } = useAuth();
-    const { id } = route.params; // Data passed from the list
-    //console.log('id', id)
+    const { profile_id } = route.params; // Data passed from the list
+    //console.log('profile_id', profile_id)
     const [isLoading, setIsLoading] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -37,7 +37,7 @@ export default function ProfileDetailScreen({ route }: any) {
         setIsNotFound(false)
 
         try {
-            const res = await profileService.fetchProfileDetailsByID(id, 'view');
+            const res = await profileService.fetchProfileDetailsByID(profile_id, 'view');
             if (res.success) setData(res.data);
             else {
                 if (res.success == false) {
@@ -115,17 +115,24 @@ export default function ProfileDetailScreen({ route }: any) {
         // Add your API call here to save the like
     };
     const handleClose = () => setShowActionsheet(false);
+    const cmToFeetInch = (cm: any) => {
+        const totalInches = cm / 2.54;
+        const feet = Math.floor(totalInches / 12);
+        const inches = Math.round(totalInches % 12);
+        return `${feet}' ${inches}"`;
+    };
     const formatHeight = (input: string): string => {
         // Parse feet and inches from formats like "4ft 5in" or "4' 5""
-        const match = input?.match(/(\d+)\s*(?:ft|')\s*(\d+)\s*(?:in|")/i);
+        // const match = input?.match(/(\d+)\s*(?:ft|')\s*(\d+)\s*(?:in|")/i);
 
-        if (match) {
-            const feet = match[1];
-            const inches = match[2];
-            return `${feet}' ${inches}"`;
-        }
+        // if (match) {
+        //     const feet = match[1];
+        //     const inches = match[2];
+        //     return `${feet}' ${inches}"`;
+        // }
+        return cmToFeetInch(input)
 
-        return 'Invalid format';
+        //return 'Invalid format';
     };
     const handleReject = (id: any) => {
 

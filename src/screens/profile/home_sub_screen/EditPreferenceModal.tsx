@@ -99,6 +99,7 @@ const EditPreferenceModal = ({ isOpen, onClose, fieldType, currentData, onSave, 
                 break;
 
             case 'community':
+
                 updatedData.communities = tempValue;
                 break;
 
@@ -117,7 +118,8 @@ const EditPreferenceModal = ({ isOpen, onClose, fieldType, currentData, onSave, 
                 updatedData.show_hidden_income = tempValue.showHidden;
                 break;
 
-            case 'country': updatedData[fieldType] = tempValue; break;
+            case 'country': updatedData[fieldType] = tempValue;
+                break;
             case 'state': updatedData[fieldType] = tempValue; break;
             case 'city': updatedData[fieldType] = tempValue; break;
             case 'mother_tongues': updatedData[fieldType] = tempValue; break;
@@ -138,20 +140,64 @@ const EditPreferenceModal = ({ isOpen, onClose, fieldType, currentData, onSave, 
         onSave(updatedData);
         onClose();
     };
-    const handleCheckBoxToggle = (value: string) => {
-        if (value === 'all') {
-            setTempValue([]); // Empty array represents "Open to All"
-            return;
-        }
+    // const handleCheckBoxToggle = (value: string) => {
+    //     if (value === 'all') {
+    //         setTempValue([]); // Empty array represents "Open to All"
+    //         return;
+    //     }
 
-        let newList = [...tempValue];
-        if (newList.includes(value)) {
-            newList = newList.filter(i => i !== value);
-        } else {
-            newList.push(value);
-        }
-        setTempValue(newList);
+    //     let newList = [...tempValue];
+    //     if (newList.includes(value)) {
+    //         newList = newList.filter(i => i !== value);
+    //     } else {
+    //         newList.push(value);
+    //     }
+    //     setTempValue(newList);
+    // };
+    const handleCheckBoxToggle = (value: string) => {
+        setTempValue((prev: any) => {
+            const currentSelected = Array.isArray(prev) ? prev : [];
+
+            // 1. User clicked "Open to All"
+            if (value === 'all' || value === 'Open to All') {
+                // Clear everything and only keep 'all' (or return [] for empty)
+                return ['all'];
+            }
+
+            // 2. User clicked a specific item (e.g., 'vmt')
+            let updatedList;
+            if (currentSelected.includes(value)) {
+                // Uncheck: Remove the item
+                updatedList = currentSelected.filter((item: string) => item !== value);
+            } else {
+                // Check: Add the item AND remove 'all' if it was there
+                updatedList = [...currentSelected.filter(item => item !== 'all'), value];
+            }
+
+            // 3. Final Check: If the list is now empty, default it back to 'all'
+            return updatedList.length === 0 ? ['all'] : updatedList;
+        });
     };
+    // const handleCheckBoxToggle = (value: string) => {
+    //     console.log('handleCheckBoxToggle', value)
+
+    //     setTempValue((prev: any) => {
+    //         // Ensure prev is an array to avoid .includes or .filter crashes
+    //         const currentSelected = Array.isArray(prev) ? prev : [];
+    //         if (value === 'all') {
+    //             // If user clicks "Open to All", clear everything else
+    //             return [];
+    //         }
+
+    //         // If user selects a specific item:
+    //         if (currentSelected.includes(value)) {
+    //             // 1. If it's already there, remove it (Uncheck)
+    //             return currentSelected.filter((item: string) => item !== value);
+    //         } else {
+    //             return [...currentSelected, value];
+    //         }
+    //     });
+    // };
 
     const renderAgeSlider = () => (
         <VStack space="xl" className="py-4">
@@ -258,8 +304,7 @@ const EditPreferenceModal = ({ isOpen, onClose, fieldType, currentData, onSave, 
         );
     }
     const renderMaritalStatus = () => {
-        const isOpenToAll = tempValue?.length === 0;
-
+        const isOpenToAll = !tempValue || tempValue.length === 0 || (tempValue.length === 1 && tempValue[0] === 'all');
         return (
             <VStack space="lg" className="py-2">
                 {/* Top Badge/Selection Display */}
@@ -276,11 +321,11 @@ const EditPreferenceModal = ({ isOpen, onClose, fieldType, currentData, onSave, 
                 <VStack space="xl">
                     {/* Open to All Checkbox */}
                     <Checkbox
-                        value="Open to All"
+                        value="all"
                         isChecked={isOpenToAll}
                         onChange={() => handleCheckBoxToggle('all')}
                         size="lg"
-                        aria-label="Open to All"
+                        aria-label="all"
                     >
                         <CheckboxIndicator className="rounded-md border-slate-300 data-[checked=true]:bg-cyan-600 data-[checked=true]:border-cyan-600">
                             <CheckboxIcon as={Check} className="text-white" />
@@ -327,6 +372,7 @@ const EditPreferenceModal = ({ isOpen, onClose, fieldType, currentData, onSave, 
         );
     };
     const renderCommunity = () => {
+        const isOpenToAll = !tempValue || tempValue.length === 0 || (tempValue.length === 1 && tempValue[0] === 'all');
 
         return (
             <VStack space="md" className="flex-1">
@@ -337,9 +383,10 @@ const EditPreferenceModal = ({ isOpen, onClose, fieldType, currentData, onSave, 
                         {/* Updated Open to All Checkbox */}
                         <Checkbox
                             value="all"
-                            // It is checked ONLY if the array is empty
-                            isChecked={tempValue.length === 0}
+                            isChecked={isOpenToAll}
                             onChange={() => handleCheckBoxToggle('all')}
+                            size="lg"
+                            aria-label="all"
                         >
                             <CheckboxIndicator className="rounded-md data-[checked=true]:bg-cyan-600 border-slate-300">
                                 <CheckboxIcon as={Check} size="lg" />
@@ -538,7 +585,9 @@ const EditPreferenceModal = ({ isOpen, onClose, fieldType, currentData, onSave, 
     };
 
     const renderCountry = (type: string) => {
-        const isOpenToAll = tempValue?.length === 0;
+        //const isOpenToAll = tempValue?.length === 0;
+        const isOpenToAll = !tempValue || tempValue.length === 0 || (tempValue.length === 1 && tempValue[0] === 'all');
+
         var colloction = [];
         if (type === 'country') colloction = lookups?.country;
         else if (type === 'state') colloction = lookups?.state;

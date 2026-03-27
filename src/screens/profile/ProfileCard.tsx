@@ -95,7 +95,7 @@ export const ProfileCard = ({ profile, onPress }: any) => {
             {/* Name & Age */}
             <VStack>
               <Heading className="text-white text-4xl font-black tracking-tight">
-                {profile.first_name}, {profile.age || '28'}
+                {profile.full_name}, {profile.age || '28'}
               </Heading>
               {/* Added a subtle location text under name for full-size context */}
               <Text className="text-white/60 text-sm font-medium">Active recently</Text>
@@ -105,13 +105,13 @@ export const ProfileCard = ({ profile, onPress }: any) => {
             <HStack space="sm" className="flex-wrap gap-2">
               <Box className="bg-white/15 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/20 flex-row items-center space-x-2">
                 <Icon as={MapPin} size="sm" className="text-cyan-300" />
-                <Text className="text-white text-sm font-bold">{profile.city || 'Mumbai'}</Text>
+                <Text className="text-white text-sm font-bold">{profile.city_name}</Text>
               </Box>
 
               <Box className="bg-white/15 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/20 flex-row items-center space-x-2">
                 <Icon as={Briefcase} size="sm" className="text-cyan-300" />
                 <Text className="text-white text-sm font-bold" numberOfLines={1}>
-                  {profile.work_sector || 'Engineer'}
+                  {profile.work_with}
                 </Text>
               </Box>
             </HStack>

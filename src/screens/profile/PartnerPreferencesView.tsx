@@ -26,11 +26,11 @@ const PreferenceRow = ({ icon: IconComponent, label, value, color, onPress }: an
         localText = value.split(',')
             .map((item: string) => item.trim())
             .filter((item: string) => item !== '');
+
     } else {
         // If it's a single string (like "27 to 35") or a number, keep it as is
-        localText = value;
+        localText = value == "all" ? 'Open to All' : value;
     }
-
     const getBadgeColors = () => {
         if (color.includes('green')) return 'bg-green-50 border-green-800 text-green-700';
         if (color.includes('orange')) return 'bg-orange-50 border-orange-800 text-orange-700';
@@ -57,7 +57,7 @@ const PreferenceRow = ({ icon: IconComponent, label, value, color, onPress }: an
                                 localText.map((item, index) => (
                                     <Box key={index} className={`px-2.5 py-0.5 rounded-full border ${badgeStyle}`}>
                                         <Text size="xs" className={`font-bold ${badgeStyle.split(' ').pop()}`}>
-                                            {item ?? "Open to All"}
+                                            {(item == "all" ? 'Open to All' : item) ?? "Open to All"}
                                         </Text>
                                     </Box>
                                 ))

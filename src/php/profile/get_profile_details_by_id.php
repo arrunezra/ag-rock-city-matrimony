@@ -22,104 +22,63 @@ try {
     }
 
     if ($action === 'edit') {
-		    $sql = "SELECT 
-						id
+		    }
+		else if ($action === 'view') {
+			
+		}
+$sql = "SELECT 
+						 profile_id
                         ,userid
                         ,first_name
                         ,last_name
+                        ,full_name
                         ,dob
+                        ,age
                         ,gender
                         ,email
                         ,phone
-                        ,alt_phone
                         ,address
                         ,city
+                        ,city_name
                         ,state
+                        ,state_name
                         ,country
-                        ,marital_status
-                        ,height
-                        ,weight
-                        ,boold_group
-                        ,health_info
-                        ,disability
+                        ,updated_at
+                        ,country_name
                         ,religion
+                        ,religion_name
                         ,community
+                        ,community_name
                         ,sub_community
-                        ,qualification
-                        ,college
-                        ,income
-                        ,work_with
-                        ,working_as
-                        ,company_name
-                        ,profile_pic
-                        ,profile_thumb
-                        ,has_children
-                        ,children_count
-                        ,kids_details
-                        ,aboutus
-                        ,hobbies
+                        ,sub_community_name
+                        ,mother_tongue
+                        ,mother_tongues_name
+                        ,is_caste_no_bar
+                        ,marital_status
+                        ,marital_status_name
                         ,family_type
                         ,father_occupation
+                        ,father_occupation_name
                         ,mother_occupation
-                        ,Noof_sibling
+                        ,mother_occupation_name
+                        ,noof_sibling
                         ,sister_count
+                        ,kids_details
                         ,brother_count
-                        ,created_at
-                        ,updated_at
-					FROM profiles 
-			    WHERE id = :id 
+                        ,has_children
+                        ,children_count
+                        ,aboutus
+                        ,hobbies
+                        ,height
+                        ,weight
+                        ,blood_group
+                        ,qualification
+                        ,income
+                        ,work_with
+                        ,company_name
+                    FROM V_Profile 
+			    WHERE profile_id = :id 
 			    LIMIT 1";
-		 //echo json_encode(["success" => false, "message" => $sql]);
-    //exit;
-		}
-		else if ($action === 'view') {
-			$sql = "SELECT 
-						id, userid, 
-						first_name, 
-						last_name, 
-						full_name, 
-						dob, 
-						gender, 
-						religion, 
-						community, 
-						sub_community, 
-						phone, 
-						email, 
-						alt_phone, 
-						address, 
-						city, 
-						state, 
-						country, 
-						marital_status, 
-						height, 
-						qualification, 
-						college, 
-						income, 
-						work_with,
-						working_as,
-						company_name, 
-						profile_pic, 
-						profile_thumb, 
-						children_count, 
-						kids_details,
-						family_type,
-						father_occupation,
-						mother_occupation,
-						Noof_sibling,
-						sister_count,
-						brother_count,
-						updated_at, 
-						state_name, 
-						city_name, 
-						IsActive, 
-						IsVerified,
-						aboutus,
-						hobbies
-					FROM V_Profile 
-			    WHERE id = :id 
-			    LIMIT 1";
-		}
-
     
 
      

@@ -6,6 +6,7 @@ export interface LookupOption {
     label: string;
     value: string;
     parent?: string | null;
+    description?: string | null;
 }
 
 // 2. Define the shape of our entire lookup state
@@ -21,6 +22,11 @@ interface LookupData {
     role: LookupOption[];
     church_branches: LookupOption[];
     sub_community: LookupOption[];
+    occupation: LookupOption[];
+    siblings: LookupOption[];
+    financial_status: LookupOption[];
+    financial_details: LookupOption[];
+    country: LookupOption[];
 }
 
 // 3. Define the Context's return type
@@ -43,7 +49,12 @@ export const LookupContext = createContext<LookupContextType>({
         designation: [],
         role: [],
         church_branches: [],
-        sub_community: []
+        sub_community: [],
+        occupation: [],
+        siblings: [],
+        financial_status: [],
+        financial_details: [],
+        country: []
     },
     isReady: false,
     refreshLookups: async () => { },
@@ -61,7 +72,12 @@ export const LookupProvider = ({ children }: { children: ReactNode }) => {
         designation: [],
         role: [],
         church_branches: [],
-        sub_community: []
+        sub_community: [],
+        occupation: [],
+        siblings: [],
+        financial_status: [],
+        financial_details: [],
+        country: []
     });
     const [isReady, setIsReady] = useState(false);
 
@@ -75,7 +91,7 @@ export const LookupProvider = ({ children }: { children: ReactNode }) => {
                 setIsReady(true);
             }
         } catch (err) {
-            console.error("Lookup Boot Error:", err);
+            console.error("Lookup Boot Error :", err);
         }
     };
 

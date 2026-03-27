@@ -23,7 +23,7 @@ const EditReligionModal = ({
     showToast,
     user
 }: any) => {
-
+    console.log('content', content);
     const [formData, setFormData] = useState<any>(_.cloneDeep(content || []));
     const [validationTriggered, setValidationTriggered] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -37,7 +37,7 @@ const EditReligionModal = ({
             'religion',
             'motherTongue',
             'community',
-            //'sub_community',
+            'sub_community',
             'isCasteNoBar'
         ];
 
@@ -61,12 +61,12 @@ const EditReligionModal = ({
         try {
             const payload = {
                 id: user?.profile_id,
-                action: 'religiondetails',
+                action: 'religion&community',
                 religion: formData.religion,
-                motherTongue: formData.motherTongue,
+                mother_tongue: formData.mother_tongue,
                 community: formData.community,
                 sub_community: formData.sub_community,
-                isCasteNoBar: formData.isCasteNoBar
+                is_caste_no_bar: formData.is_caste_no_bar
             };
             console.log('payload', payload)
             const res = await profileService.updateEditProfile(payload);
@@ -154,14 +154,14 @@ const EditReligionModal = ({
                                 </FormControlLabel>
                                 <FuturisticDropdown
                                     data={lookups?.mother_tongue}
-                                    value={formData.motherTongue}
-                                    onChange={(item: any) => updateForm('motherTongue', item.value)}
+                                    value={formData.mother_tongue}
+                                    onChange={(item: any) => updateForm('mother_tongue', item.value)}
                                     placeholder="Select Sub mother tongue"
                                     icon={{ icon: Network, color: 'text-typography-400' }}
 
-                                    isInvalid={validationTriggered && !formData.motherTongue}
+                                    isInvalid={validationTriggered && !formData.mother_tongue}
                                 />
-                                <AnimateError isVisible={validationTriggered && (!formData.motherTongue)}>
+                                <AnimateError isVisible={validationTriggered && (!formData.mother_tongue)}>
                                     {"Please select a mother tongue"}
                                 </AnimateError>
 
@@ -195,15 +195,15 @@ const EditReligionModal = ({
                                 </FormControlLabel>
                                 <FuturisticDropdown
                                     data={lookups?.sub_community}
-                                    value={formData.subCommunity}
-                                    onChange={(item: any) => updateForm('subCommunity', item.value)}
+                                    value={formData.sub_community}
+                                    onChange={(item: any) => updateForm('sub_community', item.value)}
                                     placeholder="Select Sub Community "
                                     icon={{ icon: Network, color: 'text-typography-400' }}
 
                                     search={true}
-                                    isInvalid={validationTriggered && !formData.subCommunity}
+                                    isInvalid={validationTriggered && !formData.sub_community}
                                 />
-                                <AnimateError isVisible={validationTriggered && (!formData.subCommunity)}>
+                                <AnimateError isVisible={validationTriggered && (!formData.sub_community)}>
                                     {"Please select a sub community"}
                                 </AnimateError>
                             </FormControl>
@@ -211,16 +211,16 @@ const EditReligionModal = ({
                             {/* CASTE NO BAR CHECKBOX CARD */}
                             <TouchableOpacity
                                 activeOpacity={0.8}
-                                onPress={() => updateForm('isCasteNoBar', !formData.isCasteNoBar)}
-                                className={`mt-2 p-4 rounded-2xl border-2 flex-row items-center ${formData.isCasteNoBar ? 'border-blue-500 bg-blue-50/50' : 'border-slate-100 bg-slate-50/50'
+                                onPress={() => updateForm('is_caste_no_bar', !formData.is_caste_no_bar)}
+                                className={`mt-2 p-4 rounded-2xl border-2 flex-row items-center ${formData.is_caste_no_bar ? 'border-blue-500 bg-blue-50/50' : 'border-slate-100 bg-slate-50/50'
                                     }`}
                             >
-                                <Box className={`w-6 h-6 rounded-lg items-center justify-center border-2 mr-3 ${formData.isCasteNoBar ? 'bg-blue-500 border-blue-500' : 'bg-white border-slate-200'
+                                <Box className={`w-6 h-6 rounded-lg items-center justify-center border-2 mr-3 ${formData.is_caste_no_bar ? 'bg-blue-500 border-blue-500' : 'bg-white border-slate-200'
                                     }`}>
-                                    {formData.isCasteNoBar && <Icon as={Check} size='lg' className="text-white" />}
+                                    {formData.is_caste_no_bar && <Icon as={Check} size='lg' className="text-white" />}
                                 </Box>
                                 <VStack className="flex-1">
-                                    <Text className={`text-sm font-bold ${formData.isCasteNoBar ? 'text-blue-700' : 'text-typography-900'}`}>
+                                    <Text className={`text-sm font-bold ${formData.is_caste_no_bar ? 'text-blue-700' : 'text-typography-900'}`}>
                                         Caste No Bar
                                     </Text>
                                     <Text size="xs" className="text-typography-500">

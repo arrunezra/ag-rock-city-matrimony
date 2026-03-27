@@ -1,35 +1,35 @@
 
 export const getProfileCompletionData = (user: any) => {
-    const sections = [
-        { 
-            label: 'Profile Photo', 
-            weight: 25, 
-            isDone: !!user?.profile_thumb, 
-            screen: 'PhotoUploadScreen' 
-        },
-        { 
-            label: 'About Me', 
-            weight: 25, 
-            isDone: !!user?.about && user.about.length > 10, 
-            screen: 'EditAboutScreen' 
-        },
-        { 
-            label: 'Basics & Lifestyle', 
-            weight: 25, 
-            isDone: !!user?.marital_status && !!user?.diet, 
-            screen: 'EditBasicsScreen' 
-        },
-        { 
-            label: 'Career Details', 
-            weight: 25, 
-            isDone: !!user?.work_sector, 
-            screen: 'EditCareerScreen' 
-        },
-    ];
+  const sections = [
+    {
+      label: 'Profile Photo',
+      weight: 25,
+      isDone: !!user?.profile_thumb,
+      screen: 'PhotoUploadScreen'
+    },
+    {
+      label: 'About Me',
+      weight: 25,
+      isDone: !!user?.about && user.about.length > 10,
+      screen: 'EditAboutScreen'
+    },
+    {
+      label: 'Basics & Lifestyle',
+      weight: 25,
+      isDone: !!user?.marital_status && !!user?.diet,
+      screen: 'EditBasicsScreen'
+    },
+    {
+      label: 'Career Details',
+      weight: 25,
+      isDone: !!user?.work_sector,
+      screen: 'EditCareerScreen'
+    },
+  ];
 
-    const totalStrength = sections.reduce((acc, item) => (item.isDone ? acc + item.weight : acc), 0);
-    
-    return { totalStrength, checklist: sections };
+  const totalStrength = sections.reduce((acc, item) => (item.isDone ? acc + item.weight : acc), 0);
+
+  return { totalStrength, checklist: sections };
 };
 export const RELIGION_DATA = [
   { label: "Christian", value: "Christian" },
@@ -46,14 +46,14 @@ export const COMMUNITIES = [
   { label: "Hindi", value: "Hindi" },
 ];
 export const MOTHER_TONGUE_DATA = [
-    { label: 'Hindi', value: 'Hindi' },
-    { label: 'English', value: 'English' },
-    { label: 'Punjabi', value: 'Punjabi' },
-    { label: 'Marathi', value: 'Marathi' },
-    { label: 'Bengali', value: 'Bengali' },
-    { label: 'Gujarati', value: 'Gujarati' },
-    { label: 'Tamil', value: 'Tamil' },
-    { label: 'Telugu', value: 'Telugu' },
+  { label: 'Hindi', value: 'Hindi' },
+  { label: 'English', value: 'English' },
+  { label: 'Punjabi', value: 'Punjabi' },
+  { label: 'Marathi', value: 'Marathi' },
+  { label: 'Bengali', value: 'Bengali' },
+  { label: 'Gujarati', value: 'Gujarati' },
+  { label: 'Tamil', value: 'Tamil' },
+  { label: 'Telugu', value: 'Telugu' },
 ];
 export const INCOME_RANGES = [
   { label: "3L - 5L", value: "3L - 5L" },
@@ -392,7 +392,7 @@ export const HEIGHT_DATA = Array.from({ length: 84 }, (_, i) => {
 
   return {
     label: label,
-    value: label // You can also use String(cm) if you prefer saving numbers
+    value: String(cm) // You can also use String(cm) if you prefer saving numbers
   };
 });
 
@@ -426,21 +426,21 @@ export const HOBBIES = [
   'Fishing',
   'Camping',
   'Cycling',
-  'Swimming', 
-  'Drawing', 
+  'Swimming',
+  'Drawing',
   'Collecting',
-  'Volunteering', 
+  'Volunteering',
   'Stargazing',
   'Blogging',
   'Podcasting',
   'Gaming',
   'Fashion',
-  'Fitness',  
+  'Fitness',
 ];
 
 export const BLOOD_GROUPS = [
-        { label: 'A+', value: 'A+' }, { label: 'A-', value: 'A-' },
-        { label: 'B+', value: 'B+' }, { label: 'B-', value: 'B-' },
-        { label: 'O+', value: 'O+' }, { label: 'O-', value: 'O-' },
-        { label: 'AB+', value: 'AB+' }, { label: 'AB-', value: 'AB-' }
-    ];
+  { label: 'A+', value: 'A+' }, { label: 'A-', value: 'A-' },
+  { label: 'B+', value: 'B+' }, { label: 'B-', value: 'B-' },
+  { label: 'O+', value: 'O+' }, { label: 'O-', value: 'O-' },
+  { label: 'AB+', value: 'AB+' }, { label: 'AB-', value: 'AB-' }
+];

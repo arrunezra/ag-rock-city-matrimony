@@ -26,3 +26,11 @@ INSERT INTO t_tran_lookup (
 ) VALUES 
     (13, 'Anglo Indian', 'Anglo Indian', NULL, 1, 'SYSTEM', CURRENT_TIMESTAMP, 'SYSTEM', CURRENT_TIMESTAMP),
     (13, 'Basel Mission', 'Basel Mission', NULL, 1, 'SYSTEM', CURRENT_TIMESTAMP, 'SYSTEM', CURRENT_TIMESTAMP),
+
+**********************************************
+ALTER TABLE profiles_background 
+ADD CONSTRAINT profiles_background_fk1 
+FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) 
+ON DELETE CASCADE ON UPDATE CASCADE;
+
+********************************************

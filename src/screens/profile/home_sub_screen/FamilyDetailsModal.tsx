@@ -1,73 +1,67 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import {
     Modal, ModalBackdrop, ModalContent, ModalHeader, ModalCloseButton,
     ModalBody, ModalFooter, Heading, Text, VStack, HStack, Box,
     FormControl, FormControlLabel, FormControlLabelText,
     Button, ButtonText, Spinner,
+    FormControlErrorText,
+    FormControlError,
+    InputField,
+    Input,
+    Textarea,
+    TextareaInput,
 } from '@/src/components/common/GluestackUI';
-import { Dropdown } from 'react-native-element-dropdown';
 import { Users, UserRound, UserSquare, Users2, MapPin, Briefcase, Globe, Landmark, ChevronLeftIcon, CloseIcon, Icon } from '@/src/components/common/IconUI';
 import FuturisticDropdown from '@/src/components/common/FuturisticDropdown';
-import _ from 'lodash';
+import _, { findIndex, } from 'lodash';
 import profileService from '@/src/services/profileService';
-
-// --- Data Constants ---
-const OCCUPATION_DATA = [
-    { label: 'Homemaker', value: 'Homemaker' },
-    { label: 'Retired', value: 'Retired' },
-    { label: 'Business', value: 'Business' },
-    { label: 'Service', value: 'Service' },
-    { label: 'Professional', value: 'Professional' },
-];
-
-const COUNT_DATA = [
-    { label: 'None', value: '0' },
-    { label: '1', value: '1' },
-    { label: '2', value: '2' },
-    { label: '3+', value: '3+' },
-];
-
-// --- Data Constants ---
-const FINANCIAL_STATUS_DATA = [
-    { label: 'Elite', value: 'Elite', desc: 'Large business/Top Professional, Income > 70L' },
-    { label: 'High', value: 'High', desc: 'Mid-sized business/Leadership, Income 30-70L' },
-    { label: 'Middle', value: 'Middle', desc: 'Small business/Office jobs, Income 10-30L' },
-    { label: 'Aspiring', value: 'Aspiring', desc: 'Small business/Office jobs, Income < 10L' },
-];
-
-const FINANCIAL_DETAILS = {
-    Elite: ["Family runs a large business or exceptional professional background", "Owns very high value assets & properties", "Annual income above 70 lakhs"],
-    High: ["Mid-sized business or leadership positions", "Owns property & high value assets", "Annual income 30-70 lakhs"],
-    Middle: ["Small business or office jobs", "Owns vehicle, house & assets", "Annual income 10-30 lakhs"],
-    Aspiring: ["Small business or office jobs", "Basic assets and properties", "Annual income below 10 lakhs"],
-};
+import { AnimateError } from '../../common/AnimateError';
 
 export const FamilyDetailsModal = ({ isOpen, onClose, lookups, content, onRefresh, showToast, user }: any) => {
     const [currentStep, setCurrentStep] = useState(1);
-    const [formData, setFormData] = useState(_.cloneDeep(content));
+    const [formData, setFormData] = useState<any>(_.cloneDeep(content));
     const [validationTriggered, setValidationTriggered] = useState(false)
     const [isSaving, setIsSaving] = useState(false);
 
+    const [financialDetails, setFinancialDetails] = useState<any>([]);
     const updateForm = (key: string, value: any) => {
         setFormData((prev: any) => ({ ...prev, [key]: value }));
     };
-    const handleNext = () => setCurrentStep(2);
-    const handleBack = () => setCurrentStep(1);
-    const validateForm = () => {
-        // 1. Basic Field Validation
-        const requiredFields = [
-            'first_name',
-            'last_name',
-            'gender',
-            'marital_status',
-            'dobDay',
-            'dobMonth',
-            'dobYear',
-            'height',
-            'blood_group'
-        ];
 
+    const handleNext = () => {
+        setValidationTriggered(true);
+        let isvalid = !validateForm(1)
+        if (isvalid) {
+            // You can add a Toast message here if you use them
+            showToast("Error", "Validation!", "error");
+
+            return;
+        }
+        setValidationTriggered(false);
+        setCurrentStep(2);
+
+    }
+    const handleBack = () => setCurrentStep(1);
+    const validateForm = (step: number) => {
+        // 1. Basic Field Validation
+        var requiredFields: any = [];
+        if (step == 1) {
+            requiredFields = [
+                'father_occupation',
+                'mother_occupation',
+                "brother_count",
+                'sister_count'
+            ]
+        } else {
+            requiredFields = [
+                'country',
+                'state',
+                'city',
+                'family_type',
+                'address'
+            ]
+        }
         for (const field of requiredFields) {
             if (!formData[field] || formData[field].toString().trim() === '') {
                 return false;
@@ -79,9 +73,10 @@ export const FamilyDetailsModal = ({ isOpen, onClose, lookups, content, onRefres
     };
     const handleSave = async () => {
         setValidationTriggered(true);
-        let isvalid = !validateForm()
+
+        let isvalid = !validateForm(2)
         if (isvalid) {
-            // You can add a Toast message here if you use them
+            showToast("Error", "Validation!", "error");
             console.log("Validation failed");
             return;
         }
@@ -89,21 +84,18 @@ export const FamilyDetailsModal = ({ isOpen, onClose, lookups, content, onRefres
         try {
             const payload = {
                 id: user?.profile_id,
-                action: 'basicdetails',
-                first_name: formData.first_name,
-                last_name: formData.last_name,
-                // Format date if needed, e.g., "1996-06-12"
-                dob: `${formData.dobYear}-${formData.dobMonth}-${formData.dobDay}`,
-                gender: formData.gender,
-                marital_status: formData.marital_status,
-                height: formData.height,
-                weight: formData.weight || 0,
-                blood_group: formData.blood_group,
-                has_children: formData.has_children,
-                children_count: formData.children_count || 0,
-                // We send the actual array; Axios handles the JSON conversion
-                kids_details: formData.kids_details,
-                disability: formData.disability
+                action: 'familydetails',
+                country: formData.country,
+                state: formData.state,
+                city: formData.city,
+                family_type: formData.family_type,
+                father_occupation: formData.father_occupation,
+                mother_occupation: formData.mother_occupation,
+                brother_count: formData.brother_count,
+                sister_count: formData.sister_count,
+                address: formData.address
+
+
             };
             console.log('payload', payload)
             const res = await profileService.updateEditProfile(payload);
@@ -122,6 +114,7 @@ export const FamilyDetailsModal = ({ isOpen, onClose, lookups, content, onRefres
             setIsSaving(false);
         }
     };
+
     return (
         <Modal isOpen={isOpen} onClose={() => { onClose(); setCurrentStep(1); }} size="full">
             <ModalBackdrop />
@@ -153,62 +146,81 @@ export const FamilyDetailsModal = ({ isOpen, onClose, lookups, content, onRefres
                                     <Heading size="xl" className="mt-4">Family Members</Heading>
                                     <Text size="xs" className="text-center text-slate-500">Step 1 of 2: Parents & Siblings</Text>
                                 </VStack>
-                                <FormControl>
-                                    <FormControlLabel className="mb-2"><FormControlLabelText className="font-bold">Father's Details</FormControlLabelText></FormControlLabel>
+                                <FormControl isInvalid={validationTriggered && !formData.father_occupation}>
+                                    <FormControlLabel className="mb-2">
+                                        <FormControlLabelText className="font-bold">Father's Details</FormControlLabelText>
+                                    </FormControlLabel>
 
                                     <FuturisticDropdown
-                                        data={OCCUPATION_DATA}
-                                        value={formData.fatherDetails}
-                                        onChange={(item: any) => updateForm('fatherDetails', item.value)}
+                                        data={lookups?.occupation}
+                                        value={formData.father_occupation}
+                                        onChange={(item: any) => updateForm('father_occupation', item.value)}
                                         placeholder="Select father details "
                                         icon={{ icon: UserSquare, color: 'text-blue-500' }}
                                         search={false}
-                                        isInvalid={validationTriggered && !formData.fatherDetails}
+                                        isInvalid={validationTriggered && !formData.father_occupation}
                                     />
+                                    <AnimateError isVisible={true}>
+                                        {"Select mother's father_occupation"}
+                                    </AnimateError>
+
                                 </FormControl>
-                                <FormControl>
+                                <FormControl isInvalid={validationTriggered && !formData.mother_occupation}>
                                     <FormControlLabel className="mb-2"><FormControlLabelText className="font-bold">Mother's Details</FormControlLabelText></FormControlLabel>
                                     <FuturisticDropdown
-                                        data={OCCUPATION_DATA}
-                                        value={formData.motherDetails}
-                                        onChange={(item: any) => updateForm('motherDetails', item.value)}
+                                        data={lookups?.occupation}
+                                        value={formData.mother_occupation}
+                                        onChange={(item: any) => updateForm('mother_occupation', item.value)}
                                         placeholder="Select mother details "
                                         icon={{ icon: UserRound, color: 'text-blue-500' }}
                                         search={false}
-                                        isInvalid={validationTriggered && !formData.motherDetails}
+                                        isInvalid={validationTriggered && !formData.mother_occupation}
                                     />
+                                    <AnimateError isVisible={validationTriggered && (!formData.mother_occupation)}>
+                                        {"Select mother's occupation"}
+                                    </AnimateError>
                                 </FormControl>
 
 
 
                                 {/* FIX: Sibling Grid with overflow/width handling */}
                                 <HStack space="md" className="w-full">
-                                    <VStack className="flex-1">
-                                        <Text size="sm" className="font-bold mb-2">Brothers</Text>
 
-                                        <FuturisticDropdown
-                                            data={COUNT_DATA}
-                                            value={formData.noOfBrothers}
-                                            onChange={(item: any) => updateForm('noOfBrothers', item.value)}
-                                            placeholder="Select"
-                                            icon={{ icon: Users, color: 'text-blue-500' }}
-                                            search={false}
-                                            isInvalid={validationTriggered && !formData.noOfBrothers}
-                                        />
+                                    <VStack className="flex-1">
+                                        <FormControl isInvalid={validationTriggered && !String(formData?.brother_count)}>
+                                            <FormControlLabel className="mb-2"><FormControlLabelText className="font-bold">Brother(s)</FormControlLabelText></FormControlLabel>
+                                            <FuturisticDropdown
+                                                data={lookups?.siblings}
+                                                value={String(formData.brother_count)}
+                                                onChange={(item: any) => updateForm('brother_count', item.value)}
+                                                placeholder="Select"
+                                                icon={{ icon: Users, color: 'text-blue-500' }}
+                                                search={false}
+                                                isInvalid={validationTriggered && !String(!formData.brother_count)}
+                                            />
+                                            <AnimateError isVisible={validationTriggered && (!String(formData.mother_occupation))}>
+                                                {"Brother(s) count"}
+                                            </AnimateError>
+                                        </FormControl>
+
                                     </VStack>
 
                                     <VStack className="flex-1">
-                                        <Text size="sm" className="font-bold mb-2">Sisters</Text>
-                                        <FuturisticDropdown
-                                            data={COUNT_DATA}
-                                            value={formData.noOfSisters}
-                                            onChange={(item: any) => updateForm('noOfSisters', item.value)}
-                                            placeholder="Select"
-                                            icon={{ icon: Users2, color: 'text-blue-500' }}
-                                            search={false}
-                                            isInvalid={validationTriggered && !formData.noOfSisters}
-                                        />
-
+                                        <FormControl isInvalid={validationTriggered && !formData.sister_count}>
+                                            <FormControlLabel className="mb-2"><FormControlLabelText className="font-bold">Sister(s)</FormControlLabelText></FormControlLabel>
+                                            <FuturisticDropdown
+                                                data={lookups?.siblings}
+                                                value={String(formData.sister_count)}
+                                                onChange={(item: any) => updateForm('sister_count', item.value)}
+                                                placeholder="Select"
+                                                icon={{ icon: Users2, color: 'text-blue-500' }}
+                                                search={false}
+                                                isInvalid={validationTriggered && !formData.sister_count}
+                                            />
+                                            <AnimateError isVisible={validationTriggered && (!formData.sister_count)}>
+                                                {"Sister(s) count"}
+                                            </AnimateError>
+                                        </FormControl>
 
                                     </VStack>
 
@@ -225,52 +237,105 @@ export const FamilyDetailsModal = ({ isOpen, onClose, lookups, content, onRefres
                                 </VStack>
 
                                 <VStack space="md">
-                                    <FuturisticDropdown
-                                        data={lookups?.country}
-                                        value={formData.country}
-                                        onChange={(item: any) => updateForm('country', item.value)}
-                                        placeholder="Select"
-                                        icon={{ icon: Globe, color: 'text-blue-500' }}
-                                        search={false}
-                                        isInvalid={validationTriggered && !formData.country}
-                                    />
-                                    <FuturisticDropdown
-                                        data={lookups?.state}
-                                        value={formData.state}
-                                        onChange={(item: any) => updateForm('state', item.value)}
-                                        placeholder="Select"
-                                        icon={{ icon: MapPin, color: 'text-blue-500' }}
-                                        search={false}
-                                        isInvalid={validationTriggered && !formData.state}
-                                    />
-                                    <FuturisticDropdown
-                                        data={lookups?.city}
-                                        value={formData.city}
-                                        onChange={(item: any) => updateForm('city', item.value)}
-                                        placeholder="Select"
-                                        icon={{ icon: Landmark, color: 'text-blue-500' }}
-                                        search={false}
-                                        isInvalid={validationTriggered && !formData.city}
-                                    />
+                                    <FormControl isInvalid={validationTriggered && !formData.country}>
+                                        <FormControlLabel className="mb-2"><FormControlLabelText className="font-bold">Country</FormControlLabelText></FormControlLabel>
+                                        <FuturisticDropdown
+                                            data={lookups?.country}
+                                            value={formData.country}
+                                            onChange={(item: any) => updateForm('country', item.value)}
+                                            placeholder="Select"
+                                            icon={{ icon: Globe, color: 'text-blue-500' }}
+                                            search={false}
+                                            isInvalid={validationTriggered && !formData.country}
+                                        />
+                                        <AnimateError isVisible={validationTriggered && (!formData.country)}>
+                                            {"Country is required"}
+                                        </AnimateError>
+                                    </FormControl>
+                                    <FormControl isInvalid={validationTriggered && !formData.state}>
+                                        <FuturisticDropdown
+                                            data={lookups?.state}
+                                            value={formData.state}
+                                            onChange={(item: any) => updateForm('state', item.value)}
+                                            placeholder="Select"
+                                            icon={{ icon: MapPin, color: 'text-blue-500' }}
+                                            search={false}
+                                            isInvalid={validationTriggered && !formData.state}
+                                        />
+                                        <AnimateError isVisible={validationTriggered && (!formData.state)}>
+                                            {"State is required"}
+                                        </AnimateError>
+                                    </FormControl>
+                                    <FormControl isInvalid={validationTriggered && !formData.city}>
+                                        <FuturisticDropdown
+                                            data={lookups?.city}
+                                            value={formData.city}
+                                            onChange={(item: any) => updateForm('city', item.value)}
+                                            placeholder="Select"
+                                            icon={{ icon: Landmark, color: 'text-blue-500' }}
+                                            search={false}
+                                            isInvalid={validationTriggered && !formData.city}
+                                        />
+                                        <AnimateError isVisible={validationTriggered && (!formData.city)}>
+                                            {"City is required"}
+                                        </AnimateError>
+                                    </FormControl>
+                                    <FormControl isInvalid={validationTriggered && !formData.address}>
+                                        <Textarea
+                                            size="lg"
+                                            // REMOVED transition-all to prevent Reanimated interference
+                                            className="h-32 p-4 rounded-3xl border-2 bg-white border-outline-100"
+                                        >
+                                            <TextareaInput
+                                                placeholder="Address"
+                                                autoCapitalize="none"
+                                                autoCorrect={false}
+                                                value={formData.address}
+                                                onChangeText={(text) => updateForm('address', text)}
+                                                maxLength={200}
+                                                multiline={true}
+                                                textAlignVertical="top"
+                                                className="text-lg leading-6 pr-8 text-typography-800"
+                                            />
+                                        </Textarea>
+
+                                        <AnimateError isVisible={validationTriggered && !formData.address}>
+                                            {"Address is required"}
+                                        </AnimateError>
+                                    </FormControl>
+
+
                                 </VStack>
 
-                                <FormControl>
-                                    <FormControlLabel className="mb-2"><FormControlLabelText className="font-bold">Family Financial Status</FormControlLabelText></FormControlLabel>
+                                <FormControl isInvalid={validationTriggered && !formData.family_type}>
+                                    <FormControlLabel className="mb-2">
+                                        <FormControlLabelText className="font-bold">Family Financial Status</FormControlLabelText></FormControlLabel>
                                     <FuturisticDropdown
-                                        data={FINANCIAL_STATUS_DATA}
-                                        value={formData.familyFinancialStatus}
-                                        onChange={(item: any) => updateForm('familyFinancialStatus', item.value)}
+                                        data={lookups?.financial_status}
+                                        value={formData.family_type}
+                                        onChange={(item: any) => {
+                                            updateForm('family_type', item.value)
+                                            var inDex = _.findIndex(lookups?.financial_details, (finds: any) => { return finds.value === item.value });
+
+                                            if (inDex != -1) {
+                                                setFinancialDetails(lookups?.financial_details[inDex].description?.split(','))
+                                            }
+                                        }}
                                         placeholder="Select"
                                         icon={{ icon: Briefcase, color: 'text-blue-500' }}
                                         search={false}
-                                        isInvalid={validationTriggered && !formData.familyFinancialStatus}
+                                        isInvalid={validationTriggered && !formData.family_type}
                                     />
+
+                                    <AnimateError isVisible={validationTriggered && (!formData.family_type)}>
+                                        {"Family financial status is required"}
+                                    </AnimateError>
                                 </FormControl>
 
-                                {formData.familyFinancialStatus && (
+                                {formData.family_type && (
                                     <Box className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                        <Text size="sm" className="font-bold text-blue-600 mb-2">{formData.familyFinancialStatus} Status Details:</Text>
-                                        {FINANCIAL_DETAILS[formData.familyFinancialStatus as keyof typeof FINANCIAL_DETAILS].map((note, i) => (
+                                        <Text size="sm" className="font-bold text-blue-600 mb-2">{formData.family_type} Status Details:</Text>
+                                        {financialDetails?.map((note: any, i: number) => (
                                             <HStack key={i} space="xs" className="mb-1 items-start">
                                                 <Text className="text-blue-500">•</Text>
                                                 <Text size="xs" className="text-slate-600 flex-1">{note}</Text>

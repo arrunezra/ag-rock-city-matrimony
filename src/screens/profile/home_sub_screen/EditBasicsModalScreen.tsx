@@ -33,11 +33,9 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, lookups, onRefr
 
     const [validationTriggered, setValidationTriggered] = useState(false);
 
-    if (typeof content?.kids_details === 'string') {
-        content.kids_details = JSON.parse(content.kids_details);
-    }
+
     // console.log("content", content);
-    const [formData, setFormData] = useState<any>(_.cloneDeep(content || []));
+    const [formData, setFormData] = useState<any>([]);
 
     const lastNameRef = useRef<any>(null);
     const dayRef = useRef<any>(null);
@@ -54,9 +52,20 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, lookups, onRefr
             const yyyy = year; // 1996
             const mm = String(month).padStart(2, '0'); // "06"
             const dd = String(day).padStart(2, '0'); // "12" 
-            updateForm('dobDay', dd)
-            updateForm('dobMonth', mm)
-            updateForm('dobYear', yyyy)
+            if (typeof content?.kids_details === 'string') {
+                content.kids_details = JSON.parse(content.kids_details);
+            }
+            content.height = String(content.height);
+
+            content.dobDay = dd;
+            content.dobMonth = mm;
+            content.dobYear = yyyy;
+            setFormData(_.cloneDeep(content || []))
+            console.log('content', content)
+
+            // updateForm('dobDay', dd)
+            // updateForm('dobMonth', mm) 
+            // updateForm('dobYear', yyyy)
         }
 
 
@@ -199,7 +208,7 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, lookups, onRefr
                 weight: formData.weight || 0,
                 blood_group: formData.blood_group,
                 has_children: formData.has_children,
-                children_count: formData.children_count || 0,
+                children_count: formData.has_children === 'Yes' ? formData.children_count == "0" ? 1 : formData.children_count : 0,
                 // We send the actual array; Axios handles the JSON conversion
                 kids_details: formData.kids_details,
                 disability: formData.disability
@@ -308,45 +317,20 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, lookups, onRefr
                                             <FormControlLabelText size="sm" className="font-bold">Gender</FormControlLabelText>
                                         </FormControlLabel>
                                         <HStack className="gap-3">
-                                            {['Male', 'Female'].map((option) => (
+                                            {['Male', 'Female'].map((option, index) => (
                                                 <TouchableOpacity
-                                                    key={option}
+                                                    key={index}
                                                     onPress={() => updateForm('gender', option)}
-                                                    className={`flex-1 h-14 rounded-2xl border-2 items-center justify-center transition-all ${formData.gender === option ? 'border-blue-600 bg-blue-50/50' : 'border-outline-100 bg-slate-50/50'}`}
+                                                    className={`flex-1 h-14 rounded-2xl border-2 items-center justify-center ${formData?.gender === option ? 'border-blue-600 bg-blue-50/50' : 'border-outline-100 bg-slate-50/50'}`}
                                                 >
-                                                    <Text className={formData.gender === option ? 'text-blue-700 font-bold' : 'text-typography-500'}>
+                                                    <Text className={formData?.gender === option ? 'text-blue-700 font-bold' : 'text-typography-500'}>
                                                         {option}
                                                     </Text>
                                                 </TouchableOpacity>
                                             ))}
                                         </HStack>
-                                        <AnimateError isVisible={validationTriggered && (!formData.gender)}>
+                                        <AnimateError isVisible={validationTriggered && (!formData?.gender)}>
                                             {"Gender is required"}
-                                        </AnimateError>
-                                    </FormControl>
-
-                                    {/* 4. Marital Status Dropdown */}
-                                    <FormControl isInvalid={validationTriggered && !formData.marital_status}>
-                                        <FormControlLabel className="mb-2">
-                                            <FormControlLabelText size="sm" className="font-bold">Marital Status</FormControlLabelText>
-                                        </FormControlLabel>
-                                        <FuturisticDropdown
-                                            data={lookups?.marital_status}
-                                            value={formData.marital_status}
-                                            onChange={(item: any) => {
-                                                updateForm('marital_status', item.value);
-                                                if (item.value === 'Never Married') {
-                                                    updateForm('has_children', 'No');
-                                                    updateForm('kids_details', []);
-                                                }
-                                            }}
-                                            placeholder="Select"
-                                            icon={{ icon: Heart, color: 'text-rose-500' }}
-                                            search={false}
-                                            isInvalid={validationTriggered && !formData.marital_status}
-                                        />
-                                        <AnimateError isVisible={validationTriggered && (!formData.marital_status)}>
-                                            {"Marital status is required"}
                                         </AnimateError>
                                     </FormControl>
 
@@ -391,12 +375,12 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, lookups, onRefr
 
                                             <FuturisticDropdown
                                                 data={HEIGHT_DATA}
-                                                value={formData.blood_group}
+                                                value={formData.height}
                                                 onChange={(item: any) => updateForm('height', item.value)}
-                                                placeholder="Select"
+                                                placeholder="Select "
                                                 icon={{ icon: Ruler, color: 'text-cyan-500' }}
                                                 search={false}
-                                                isInvalid={validationTriggered && !formData.blood_group}
+                                                isInvalid={validationTriggered && !formData.height}
                                             />
                                         </FormControl>
 
@@ -425,20 +409,20 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, lookups, onRefr
                                             <FormControlLabelText size="sm" className="font-bold">Disability / Specially Abled</FormControlLabelText>
                                         </FormControlLabel>
                                         <HStack className="gap-3">
-                                            {['None', 'Yes'].map((option) => (
+                                            {['None', 'Yes'].map((option, index) => (
                                                 <TouchableOpacity
-                                                    key={option}
+                                                    key={index}
                                                     onPress={() => updateForm('disability', option)}
-                                                    className={`flex-1 h-14 rounded-2xl border-2 items-center justify-center transition-all ${formData.disability === option
+                                                    className={`flex-1 h-14 rounded-2xl border-2 items-center justify-center ${formData?.disability === option
                                                         ? 'border-blue-600 bg-blue-50/50'
                                                         : 'border-outline-100 bg-slate-50/50'
                                                         }`}
                                                 >
                                                     <HStack space="xs" className="items-center">
                                                         {option === 'Yes' && (
-                                                            <Icon as={Accessibility} size="sm" className={formData.disability === option ? 'text-blue-600' : 'text-slate-400'} />
+                                                            <Icon as={Accessibility} size="sm" className={formData?.disability === option ? 'text-blue-600' : 'text-slate-400'} />
                                                         )}
-                                                        <Text className={formData.disability === option ? 'text-blue-700 font-bold' : 'text-typography-500'}>
+                                                        <Text className={formData?.disability === option ? 'text-blue-700 font-bold' : 'text-typography-500'}>
                                                             {option}
                                                         </Text>
                                                     </HStack>
@@ -446,8 +430,36 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, lookups, onRefr
                                             ))}
                                         </HStack>
                                     </FormControl>
+                                    {/* 4. Marital Status Dropdown */}
+                                    <FormControl isInvalid={validationTriggered && !formData.marital_status}>
+                                        <FormControlLabel className="mb-2">
+                                            <FormControlLabelText size="sm" className="font-bold">Marital Status</FormControlLabelText>
+                                        </FormControlLabel>
+                                        <FuturisticDropdown
+                                            data={lookups?.marital_status}
+                                            value={formData.marital_status}
+                                            onChange={(item: any) => {
+                                                console.log('marital_status', item.value)
+                                                updateForm('marital_status', item.value);
+
+                                                if (item.value === 'NM') {
+                                                    updateForm('has_children', 'No');
+                                                    updateForm('kids_details', []);
+                                                }
+
+                                            }}
+                                            placeholder="Select"
+                                            icon={{ icon: Heart, color: 'text-rose-500' }}
+                                            search={false}
+                                            isInvalid={validationTriggered && !formData.marital_status}
+                                        />
+                                        <AnimateError isVisible={validationTriggered && (!formData.marital_status)}>
+                                            {"Marital status is required"}
+                                        </AnimateError>
+                                    </FormControl>
+
                                     {/* 7. Kids Section (Conditional) */}
-                                    {formData.maritalStatus !== 'Never Married' && formData.maritalStatus !== '' && (
+                                    {formData?.maritalStatus !== 'NM' && formData?.maritalStatus !== '' && (
                                         <VStack space="md" className="bg-blue-50/50 p-5 rounded-[28px] border border-blue-100/50 mt-2">
                                             <HStack className="justify-between items-center">
                                                 <Heading size="xs" numberOfLines={1} className="text-blue-800 uppercase tracking-widest">Children</Heading>
@@ -459,6 +471,9 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, lookups, onRefr
                                                                 if (opt === "No") {
                                                                     updateForm('kids_details', [])
                                                                     updateForm('children_count', '')
+                                                                } else {
+                                                                    updateForm('children_count', 1);
+                                                                    handleChildrenCountChange('1')
                                                                 }
                                                                 updateForm('has_children', opt)
                                                             }}
@@ -478,7 +493,7 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, lookups, onRefr
                                                             <InputField
                                                                 placeholder="Number of children"
                                                                 keyboardType="numeric"
-                                                                value={formData?.children_count?.toString()} // Updated to children_count from your new code
+                                                                value={formData?.children_count === 0 ? "1" : formData?.children_count.toString()} // Updated to children_count from your new code
                                                                 onChangeText={handleChildrenCountChange}
                                                             />
                                                         </Input>

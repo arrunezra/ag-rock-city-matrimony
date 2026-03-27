@@ -8,9 +8,11 @@ import {
 } from '@/src/components/common/GluestackUI';
 import { Dropdown } from 'react-native-element-dropdown';
 import { GraduationCap, School, Briefcase, Building2, Banknote, UserCog, Icon, ChevronLeftIcon, CloseIcon } from '@/src/components/common/IconUI';
+import FuturisticDropdown from '@/src/components/common/FuturisticDropdown';
 
 export const EducationDetailsModal = ({ isOpen, onClose, formData, updateForm, onSave, isSaving }: any) => {
     const [currentStep, setCurrentStep] = useState(1);
+    const [validationTriggered, setValidationTriggered] = useState(false);
 
     const handleNext = () => setCurrentStep(2);
     const handleBack = () => setCurrentStep(1);
@@ -47,6 +49,16 @@ export const EducationDetailsModal = ({ isOpen, onClose, formData, updateForm, o
 
                                 <FormControl>
                                     <FormControlLabel className="mb-2"><FormControlLabelText className="font-bold">Highest Qualification</FormControlLabelText></FormControlLabel>
+                                    <FuturisticDropdown
+                                        data={[{ label: 'B.E / B.Tech', value: 'B.E / B.Tech' }]}
+                                        value={formData.height}
+                                        onChange={(item: any) => updateForm('qualification', item.value)}
+                                        placeholder="Select "
+                                        icon={{ icon: GraduationCap, color: 'text-cyan-500' }}
+                                        search={false}
+                                        isInvalid={validationTriggered && !formData.height}
+                                    />
+
                                     <Dropdown
                                         style={styles.dropdown}
                                         placeholderStyle={styles.placeholderStyle}

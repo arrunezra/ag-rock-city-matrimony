@@ -19,7 +19,6 @@ const FuturisticDropdown = ({
     let newDate = new Date();
     return (
         <Dropdown
-
             style={[
                 {
                     height: 56,
@@ -29,7 +28,7 @@ const FuturisticDropdown = ({
                     borderWidth: 1,
                     borderColor: '#E2E8F0',
                 },
-                isInvalid && { borderColor: '#DC2626', borderWidth: 1.5 } // <--- Red border on error
+                isInvalid && { borderColor: '#DC2626', borderWidth: 1.5 }
             ]}
             placeholderStyle={{ fontSize: 14, color: '#94A3B8' }}
             selectedTextStyle={{ fontSize: 15, color: '#1E293B', fontWeight: '500' }}
@@ -39,8 +38,8 @@ const FuturisticDropdown = ({
                 borderRadius: 12,
                 backgroundColor: '#F1F5F9',
                 marginHorizontal: 12,
-                marginTop: 12,    // <--- Space above the search bar
-                marginBottom: 12,   // <--- Space below the search bar
+                marginTop: 12,
+                marginBottom: 12,
                 paddingHorizontal: 10,
                 borderColor: '#E2E8F0',
             }}
@@ -52,10 +51,9 @@ const FuturisticDropdown = ({
                 marginHorizontal: (SCREEN_WIDTH * 0.15) / 2,
                 maxHeight: '70%',
                 overflow: 'hidden',
-                // Remove padding here if it conflicts with internal search margin
                 paddingTop: 0,
             }}
-            data={data}
+            data={data} // Ensure this data comes from the SQL query with 'type' field
             search={search}
             maxHeight={300}
             labelField="label"
@@ -63,24 +61,57 @@ const FuturisticDropdown = ({
             placeholder={placeholder}
             searchPlaceholder="Search..."
             value={value}
-            onChange={onChange}
+            // MODIFIED: Prevent selecting headers
+            onChange={(item) => {
+                if (item.type !== 'HEADER') {
+                    onChange(item);
+                }
+            }}
             mode="modal"
             backgroundColor="rgba(0,0,0,0.5)"
             flatListProps={{
-                // This ensures the first item doesn't slide under the search bar
                 contentContainerStyle: {
-                    paddingTop: 4,      // Buffer between search and list
+                    paddingTop: 4,
                     paddingBottom: 20,
                     paddingHorizontal: 4
                 },
                 showsVerticalScrollIndicator: true,
+                // Optimization: If a header is clicked, it won't trigger selection logic
+                stickyHeaderIndices: data.map((item: any, index: number) => item.type === 'HEADER' ? index : null).filter((i: any) => i !== null),
             }}
             renderLeftIcon={() => (
                 <Icon as={icon?.icon} size="sm"
                     className={`mr-2 ${isInvalid ? 'text-red-600' : icon?.color ?? 'text-slate-400'}`} />
             )}
             renderItem={(item) => {
+                const isHeader = item.type === 'HEADER';
                 const isSelected = item.value === value;
+
+                if (isHeader) {
+                    // --- SECTION HEADER VIEW ---
+                    return (
+                        <View style={{
+                            paddingHorizontal: 16,
+                            paddingVertical: 10,
+                            backgroundColor: '#F1F5F9', // Slightly darker slate for headers
+                            marginTop: 10,
+                            marginBottom: 4,
+                            borderRadius: 8,
+                            marginHorizontal: 8,
+                        }}>
+                            <Text style={{
+                                fontSize: 12,
+                                color: '#64748B',
+                                fontWeight: '800',
+                                letterSpacing: 1,
+                            }}>
+                                {item.label.toUpperCase()}
+                            </Text>
+                        </View>
+                    );
+                }
+
+                // --- STANDARD ITEM VIEW ---
                 return (
                     <View style={{
                         padding: 16,
@@ -100,7 +131,6 @@ const FuturisticDropdown = ({
                             {item.label}
                         </Text>
                         {isSelected && <Icon as={Check} size="sm" className="text-indigo-600" />}
-
                     </View>
                 );
             }}

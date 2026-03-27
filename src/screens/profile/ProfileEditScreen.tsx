@@ -85,8 +85,8 @@ export default function ProfileEditScreen({ navigation, route }: any) {
     disability: '',
     childrenGender: '',
     subCommunity: '',
-    motherDetails: '',
-    fatherDetails: '',
+    mother_occupation: '',
+    father_occupation: '',
     noOfSisters: '',
     noOfBrothers: '',
     familyLocation: '',
@@ -161,6 +161,9 @@ export default function ProfileEditScreen({ navigation, route }: any) {
           console.error("Error parsing kids_details:", parseError);
           data.kids_details = []; // Fallback to empty array on error
         }
+        data.brother_count = String(data.brother_count)
+        data.sister_count = String(data.sister_count)
+        console.log('loadData', data)
 
         setProfileData({
           ...data,
@@ -652,7 +655,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
             />
             }
 
-            {/* 2. Basics Details Card */}
+            {/* 4. Basics Details Card */}
 
             <GradientCard
               title="Basic Details"
@@ -671,7 +674,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                     </Box>
                     <VStack>
                       <Text size="xs" className="text-typography-500 font-medium">Age</Text>
-                      <Text size="md" className="text-typography-900 font-bold">{profileData?.age || "28"} Years</Text>
+                      <Text size="md" className="text-typography-900 font-bold">{profileData?.age} Years</Text>
                     </VStack>
                   </HStack>
 
@@ -681,7 +684,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                     </Box>
                     <VStack>
                       <Text size="xs" className="text-typography-500 font-medium">DOB</Text>
-                      <Text size="md" className="text-typography-900 font-bold">{profileData?.dob || "01 Jan 1996"}</Text>
+                      <Text size="md" className="text-typography-900 font-bold">{profileData?.dob}</Text>
                     </VStack>
                   </HStack>
                 </HStack>
@@ -695,13 +698,13 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                   </Box>
                   <VStack className="flex-1">
                     <Text size="xs" className="text-typography-500 font-medium">Marital Status</Text>
-                    <Text size="md" className="text-typography-900 font-bold">{profileData?.marital_status || "Never Married"}</Text>
+                    <Text size="md" className="text-typography-900 font-bold">{profileData?.marital_status_name}</Text>
                   </VStack>
                 </HStack>
 
                 {/* Children Section */}
-                <VStack space="md" className="mt-2">
-                  {profileData?.has_children === "Yes" ? (
+                {profileData?.marital_status !== 'NM' && <VStack space="md" className="mt-2">
+                  {profileData?.has_children === 'Yes' ? (
                     <>
                       {/* Summary Header */}
                       <HStack items-center space="md">
@@ -751,7 +754,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                       </VStack>
                     </HStack>
                   )}
-                </VStack>
+                </VStack>}
 
 
 
@@ -856,7 +859,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                   </Box>
                   <VStack>
                     <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Religion</Text>
-                    <Text size="md" className="text-typography-900 font-bold">{profileData?.religion || "Not Specified"}</Text>
+                    <Text size="md" className="text-typography-900 font-bold">{profileData?.religion_name || "Not Specified"}</Text>
                   </VStack>
                 </HStack>
 
@@ -869,7 +872,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                   </Box>
                   <VStack>
                     <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Mother Tongue</Text>
-                    <Text size="md" className="text-typography-900 font-bold">{profileData?.motherTongue || "Not Specified"}</Text>
+                    <Text size="md" className="text-typography-900 font-bold">{profileData?.mother_tongues_name || "Not Specified"}</Text>
                   </VStack>
                 </HStack>
 
@@ -883,12 +886,12 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                     </Box>
                     <VStack>
                       <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Community</Text>
-                      <Text size="md" className="text-typography-900 font-bold">{profileData?.community || "Not Specified"}</Text>
+                      <Text size="md" className="text-typography-900 font-bold">{profileData?.community_name || "Not Specified"}</Text>
                     </VStack>
                   </HStack>
                   <VStack className="flex-1 border-l border-slate-100 pl-4">
                     <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Sub Community</Text>
-                    <Text size="md" className="text-typography-900 font-bold">{profileData?.subCommunity || "None"}</Text>
+                    <Text size="md" className="text-typography-900 font-bold">{profileData?.sub_community_name || "None"}</Text>
                   </VStack>
                 </HStack>
 
@@ -901,8 +904,8 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                   </Box>
                   <VStack>
                     <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Preference</Text>
-                    <Text size="md" className={`font-bold ${profileData?.isCasteNoBar ? 'text-blue-600' : 'text-typography-900'}`}>
-                      {profileData?.isCasteNoBar ? "Caste No Bar" : "Specific Community Only"}
+                    <Text size="md" className={`font-bold ${profileData?.is_caste_no_bar === 1 ? 'text-blue-600' : 'text-typography-900'}`}>
+                      {profileData?.is_caste_no_bar === 1 ? "Caste No Bar" : "Specific Community Only"}
                     </Text>
                   </VStack>
                 </HStack>
@@ -911,7 +914,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                 <HStack space="xs" items-center className="bg-blue-50/50 p-3 rounded-2xl mt-2 border border-blue-100">
                   <Icon as={Info} size='sm' className="text-blue-400" />
                   <Text size="xs" className="text-blue-600 italic">
-                    {profileData?.isCasteNoBar
+                    {profileData?.is_caste_no_bar === 1
                       ? "You'll see matches from all communities."
                       : `Showing active profiles from the ${profileData?.community || 'selected'} community.`}
                   </Text>
@@ -1026,7 +1029,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                     </Box>
                     <VStack>
                       <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Mother</Text>
-                      <Text size="md" className="text-typography-900 font-bold">{profileData?.motherDetails || "Not Specified"}</Text>
+                      <Text size="md" className="text-typography-900 font-bold">{profileData?.mother_occupation_name || "Not Specified"}</Text>
                     </VStack>
                   </HStack>
 
@@ -1036,7 +1039,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                     </Box>
                     <VStack>
                       <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Father</Text>
-                      <Text size="md" className="text-typography-900 font-bold">{profileData?.fatherDetails || "Not Specified"}</Text>
+                      <Text size="md" className="text-typography-900 font-bold">{profileData?.father_occupation_name || "Not Specified"}</Text>
                     </VStack>
                   </HStack>
                 </HStack>
@@ -1051,7 +1054,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                     </Box>
                     <VStack>
                       <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Sisters</Text>
-                      <Text size="md" className="text-typography-900 font-bold">{profileData?.noOfSisters || "0"}</Text>
+                      <Text size="md" className="text-typography-900 font-bold">{profileData?.sister_count || "0"}</Text>
                     </VStack>
                   </HStack>
 
@@ -1061,7 +1064,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                     </Box>
                     <VStack>
                       <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Brothers</Text>
-                      <Text size="md" className="text-typography-900 font-bold">{profileData?.noOfBrothers || "0"}</Text>
+                      <Text size="md" className="text-typography-900 font-bold">{profileData?.brother_count || "0"}</Text>
                     </VStack>
                   </HStack>
                 </HStack>
@@ -1077,8 +1080,8 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                     <VStack>
                       <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Financial Status</Text>
                       <HStack space="xs" items-center>
-                        <Text size="md" className="text-typography-900 font-bold">{profileData?.familyFinancialStatus || "Not Specified"}</Text>
-                        {profileData?.familyFinancialStatus === 'Elite' && <Box className="w-2 h-2 rounded-full bg-amber-400" />}
+                        <Text size="md" className="text-typography-900 font-bold">{profileData?.family_type || "Not Specified"}</Text>
+                        {profileData?.family_type === 'Elite' && <Box className="w-2 h-2 rounded-full bg-amber-400" />}
                       </HStack>
                     </VStack>
                   </HStack>
@@ -1095,7 +1098,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                     <VStack className="flex-1">
                       <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Family Location</Text>
                       <Text size="md" className="text-typography-900 font-bold" numberOfLines={1} ellipsizeMode="tail">
-                        {profileData?.city ? `${profileData?.city}, ${profileData?.state}` : "Location not set"}
+                        {profileData?.city_name ? `${profileData?.city_name}, ${profileData?.state_name}` : "Location not set"}
                       </Text>
                     </VStack>
                   </HStack>
@@ -1120,142 +1123,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
             {/* End Family Details Section*/}
 
 
-            {/* 5. Location & Community */}
 
-            <GradientCard
-              title="Location & Community"
-              icon={MapPin}
-              onEdit={() => setShowLocationModal(true)}
-              // A soft rose-to-white gradient to represent social/location mapping
-              gradientColors={['#fff1f2', '#ffffff']}
-            >
-              <VStack space="lg" className="mt-2">
-
-                {/* State & City Row */}
-                <HStack items-center justify-between className="py-2">
-                  <HStack space="md" items-center>
-                    <Box className="p-2.5 rounded-xl bg-rose-50">
-                      <Icon as={MapPin} size='lg' className="text-rose-600" />
-                    </Box>
-                    <VStack>
-                      <Text size="xs" className="text-typography-500 font-medium">Location</Text>
-                      <HStack space="xs" items-center>
-                        <Text size="md" className="text-typography-900 font-bold">
-                          {profileData?.city || "Not Specified"}
-                        </Text>
-                        {profileData?.city && (
-                          <Icon as={CheckCircle2} size='lg' className="text-emerald-500" />
-                        )}
-                      </HStack>
-                    </VStack>
-                  </HStack>
-                </HStack>
-
-                <Box className="h-[1px] bg-slate-100 w-full" />
-
-                {/* Country Row */}
-                <HStack items-center justify-between className="py-2">
-                  <HStack space="md" items-center>
-                    <Box className="p-2.5 rounded-xl bg-rose-50">
-                      <Icon as={Globe} size='lg' className="text-rose-600" />
-                    </Box>
-                    <VStack>
-                      <Text size="xs" className="text-typography-500 font-medium">Country</Text>
-                      <Text size="md" className="text-typography-900 font-bold">
-                        {profileData?.country || "Not Specified"}
-                      </Text>
-                    </VStack>
-                  </HStack>
-                </HStack>
-
-                {/* Location Hint */}
-                <HStack space="xs" items-center className="bg-slate-50 p-3 rounded-2xl mt-2 border border-slate-100">
-                  <Icon as={Info} size='sm' className="text-slate-400" />
-                  <Text size="xs" className="text-slate-500 italic">
-                    {profileData?.city ? `Showing you active profiles from ${profileData?.city}.` : "Update your location to see nearby matches."}
-                  </Text>
-                </HStack>
-
-              </VStack>
-            </GradientCard>
-
-
-            <EditLocationModal
-              isOpen={showLocationModal}
-              onClose={() => setShowLocationModal(false)}
-              formData={profileData}
-            // updateForm={updateForm}
-            // STATES={STATES}
-            // cities={cities}
-            // isLoading={isLoadingCities}
-            // fetchCities={fetchCities}
-            // isCasteNoBar={isCasteNoBar}
-            // setIsCasteNoBar={setIsCasteNoBar}
-            // validationTriggered={validationTriggered}
-            // handleSave={handleSaveLocation}
-            // isSaving={isSaving}
-            />
-            {/* End Location Modal */}
-
-            {/* 6. Personal & Family */}
-            <GradientCard
-              title="Personal & Family"
-              icon={Heart}
-              onEdit={() => setShowFamilyModal(true)}
-              gradientColors={['#ecfeff', '#ffffff']} // Cyan-50 to White
-            >
-              <VStack space="lg" className="mt-2">
-                {/* Height & Marital Status Row */}
-                <HStack space="md">
-                  <DetailRow
-                    icon={Ruler}
-                    label="Height"
-                    value={profileData?.height || "Not Set"}
-                    className="flex-1"
-                  />
-                  <DetailRow
-                    icon={Heart}
-                    label="Status"
-                    value={profileData?.maritalStatus || "Not Set"}
-                    className="flex-1"
-                  />
-                </HStack>
-
-                {/* Children Summary Row */}
-                {profileData?.maritalStatus !== 'Never Married' && (
-                  <>
-                    <Box className="h-[1px] bg-slate-100 w-full" />
-                    <HStack items-center space="md" className="py-1">
-                      <Box className="p-2.5 rounded-xl bg-cyan-50">
-                        <Icon as={Baby} size='lg' className="text-cyan-600" />
-                      </Box>
-                      <VStack>
-                        <Text size="xs" className="text-typography-500 font-medium">Children</Text>
-                        <Text size="md" className="text-typography-900 font-bold">
-                          {profileData?.hasChildren
-                            ? `${profileData?.childrenCount} Child(ren) ${profileData?.kids.length > 0 ? `(${profileData?.kids.map((k: any) => k.gender).join(', ')})` : ''}`
-                            : "No Children"}
-                        </Text>
-                      </VStack>
-                    </HStack>
-                  </>
-                )}
-              </VStack>
-            </GradientCard>
-            {/* <EditFamilyModal
-          isOpen={showFamilyModal}
-          onClose={() => setShowFamilyModal(false)}
-          formData={formData}
-          updateForm={updateForm}
-          HEIGHT_DATA={HEIGHT_DATA} // Your constant array
-          MARITAL_STATUS={MARITAL_STATUS} // Your constant array
-          handleChildrenCountChange={handleChildrenCountChange}
-          updateKidDetail={updateKidDetail}
-          removeChild={removeChild}
-         validationTriggered={validationTriggered}
-         handleSave={onSaveFamilyDetails} // Your API save function
-         isSaving={isSaving}
-        /> */}
 
             {/* 7. Education and Career Section */}
 
@@ -1268,7 +1136,6 @@ export default function ProfileEditScreen({ navigation, route }: any) {
               gradientColors={['#f5f3ff', '#ffffff']} // Violet-50 to White
             >
               <VStack space="lg" className="mt-2">
-                {/* Education Section */}
                 <HStack items-center space="md">
                   <Box className="p-2.5 rounded-xl bg-violet-50">
                     <Icon as={GraduationCap} size='xl' className="text-violet-600" />
@@ -1286,7 +1153,6 @@ export default function ProfileEditScreen({ navigation, route }: any) {
 
                 <Box className="h-[1px] bg-slate-100 w-full" />
 
-                {/* Career Section */}
                 <HStack items-center space="md">
                   <Box className="p-2.5 rounded-xl bg-violet-50">
                     <Icon as={Briefcase} size='xl' className="text-violet-600" />
@@ -1304,7 +1170,6 @@ export default function ProfileEditScreen({ navigation, route }: any) {
 
                 <Box className="h-[1px] bg-slate-100 w-full" />
 
-                {/* Income Row */}
                 <HStack items-center space="md">
                   <Box className="p-2.5 rounded-xl bg-violet-50">
                     <Icon as={Banknote} size='xl' className="text-violet-600" />
@@ -1329,58 +1194,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
             // isSaving={isSaving}
             />
 
-            {/* 8. Career & Income card */}
-            <GradientCard
-              title="Career & Income"
-              icon={Briefcase}
-              onEdit={() => setShowCareerModal(true)}
-              gradientColors={['#fffbeb', '#ffffff']} // Amber-50 to White
-            >
-              <VStack space="lg" className="mt-2">
-                {/* Profession & Company */}
-                <HStack items-center space="md">
-                  <Box className="p-2.5 rounded-xl bg-amber-50">
-                    <Icon as={Briefcase} size='xl' className="text-amber-600" />
-                  </Box>
-                  <VStack className="flex-1">
-                    <Text size="xs" className="text-typography-500 font-medium">Profession</Text>
-                    <Text size="md" className="text-typography-900 font-bold">
-                      {profileData?.worksas || "Not Specified"}
-                    </Text>
-                    {profileData?.companyName && (
-                      <Text size="xs" className="text-amber-700 font-medium">{profileData?.companyName}</Text>
-                    )}
-                  </VStack>
-                </HStack>
 
-                <Box className="h-[1px] bg-slate-100 w-full" />
-
-                {/* Income Row */}
-                <HStack items-center space="md">
-                  <Box className="p-2.5 rounded-xl bg-amber-50">
-                    <Icon as={Banknote} size='xl' className="text-amber-600" />
-                  </Box>
-                  <VStack className="flex-1">
-                    <Text size="xs" className="text-typography-500 font-medium">Annual Income</Text>
-                    <Text size="md" className="text-typography-900 font-bold">
-                      {profileData?.income || "Not Specified"}
-                    </Text>
-                  </VStack>
-                </HStack>
-              </VStack>
-            </GradientCard>
-
-            <EditCareerModal
-              isOpen={showCareerModal}
-              onClose={() => setShowCareerModal(false)}
-              formData={profileData}
-              updateForm={updateForm}
-              INCOME_RANGES={INCOME_RANGES}
-              WORK_WITH={WORK_WITH}
-            // validationTriggered={validationTriggered}
-            // handleSave={handleSaveCareer}
-            // isSaving={isSaving}
-            />
 
             {/* 9. Hobbiew */}
 
@@ -1407,8 +1221,6 @@ export default function ProfileEditScreen({ navigation, route }: any) {
               onClose={() => setShowHobbiesModal(false)}
               selectedHobbies={selectedHobbies}
               toggleHobby={toggleHobby}
-            // handleSave={onSaveHobbies}
-            // isSaving={isSaving}
             />
 
             <GradientCard
@@ -1497,5 +1309,190 @@ const DetailRow = ({ label, value }: any) => (
   </HStack>
 );
 
+
+
+
+//#region  Sample desing codes
+{/* 5. Location & Community */ }
+
+{/* <GradientCard
+              title="Location & Community"
+              icon={MapPin}
+              onEdit={() => setShowLocationModal(true)}
+              // A soft rose-to-white gradient to represent social/location mapping
+              gradientColors={['#fff1f2', '#ffffff']}
+            >
+              <VStack space="lg" className="mt-2">
+
+                 <HStack items-center justify-between className="py-2">
+                  <HStack space="md" items-center>
+                    <Box className="p-2.5 rounded-xl bg-rose-50">
+                      <Icon as={MapPin} size='lg' className="text-rose-600" />
+                    </Box>
+                    <VStack>
+                      <Text size="xs" className="text-typography-500 font-medium">Location</Text>
+                      <HStack space="xs" items-center>
+                        <Text size="md" className="text-typography-900 font-bold">
+                          {profileData?.city || "Not Specified"}
+                        </Text>
+                        {profileData?.city && (
+                          <Icon as={CheckCircle2} size='lg' className="text-emerald-500" />
+                        )}
+                      </HStack>
+                    </VStack>
+                  </HStack>
+                </HStack>
+
+                <Box className="h-[1px] bg-slate-100 w-full" />
+
+                 <HStack items-center justify-between className="py-2">
+                  <HStack space="md" items-center>
+                    <Box className="p-2.5 rounded-xl bg-rose-50">
+                      <Icon as={Globe} size='lg' className="text-rose-600" />
+                    </Box>
+                    <VStack>
+                      <Text size="xs" className="text-typography-500 font-medium">Country</Text>
+                      <Text size="md" className="text-typography-900 font-bold">
+                        {profileData?.country || "Not Specified"}
+                      </Text>
+                    </VStack>
+                  </HStack>
+                </HStack>
+
+                 <HStack space="xs" items-center className="bg-slate-50 p-3 rounded-2xl mt-2 border border-slate-100">
+                  <Icon as={Info} size='sm' className="text-slate-400" />
+                  <Text size="xs" className="text-slate-500 italic">
+                    {profileData?.city ? `Showing you active profiles from ${profileData?.city}.` : "Update your location to see nearby matches."}
+                  </Text>
+                </HStack>
+
+              </VStack>
+            </GradientCard> */}
+
+
+{/* <EditLocationModal
+              isOpen={showLocationModal}
+              onClose={() => setShowLocationModal(false)}
+              formData={profileData}
+            updateForm={updateForm}
+            STATES={STATES}
+            cities={cities}
+            isLoading={isLoadingCities}
+            fetchCities={fetchCities}
+            isCasteNoBar={isCasteNoBar}
+            setIsCasteNoBar={setIsCasteNoBar}
+            validationTriggered={validationTriggered}
+            handleSave={handleSaveLocation}
+            isSaving={isSaving}
+            /> */}
+{/* End Location Modal */ }
+
+{/* 6. Personal & Family */ }
+{/* <GradientCard
+              title="Personal & Family"
+              icon={Heart}
+              onEdit={() => setShowFamilyModal(true)}
+              gradientColors={['#ecfeff', '#ffffff']} // Cyan-50 to White
+            >
+              <VStack space="lg" className="mt-2">
+                 <HStack space="md">
+                  <DetailRow
+                    icon={Ruler}
+                    label="Height"
+                    value={profileData?.height || "Not Set"}
+                    className="flex-1"
+                  />
+                  <DetailRow
+                    icon={Heart}
+                    label="Status"
+                    value={profileData?.maritalStatus || "Not Set"}
+                    className="flex-1"
+                  />
+                </HStack>
+
+                 {profileData?.maritalStatus !== 'Never Married' && (
+                  <>
+                    <Box className="h-[1px] bg-slate-100 w-full" />
+                    <HStack items-center space="md" className="py-1">
+                      <Box className="p-2.5 rounded-xl bg-cyan-50">
+                        <Icon as={Baby} size='lg' className="text-cyan-600" />
+                      </Box>
+                      <VStack>
+                        <Text size="xs" className="text-typography-500 font-medium">Children</Text>
+                        <Text size="md" className="text-typography-900 font-bold">
+                          {profileData?.hasChildren
+                            ? `${profileData?.childrenCount} Child(ren) ${profileData?.kids.length > 0 ? `(${profileData?.kids.map((k: any) => k.gender).join(', ')})` : ''}`
+                            : "No Children"}
+                        </Text>
+                      </VStack>
+                    </HStack>
+                  </>
+                )}
+              </VStack>
+            </GradientCard> */}
+{/* <EditFamilyModal
+          isOpen={showFamilyModal}
+          onClose={() => setShowFamilyModal(false)}
+          formData={formData}
+          updateForm={updateForm}
+          HEIGHT_DATA={HEIGHT_DATA} // Your constant array
+          MARITAL_STATUS={MARITAL_STATUS} // Your constant array
+          handleChildrenCountChange={handleChildrenCountChange}
+          updateKidDetail={updateKidDetail}
+          removeChild={removeChild}
+         validationTriggered={validationTriggered}
+         handleSave={onSaveFamilyDetails} // Your API save function
+         isSaving={isSaving}
+        /> */}
+
+{/* 8. Career & Income card */ }
+{/* <GradientCard
+              title="Career & Income"
+              icon={Briefcase}
+              onEdit={() => setShowCareerModal(true)}
+              gradientColors={['#fffbeb', '#ffffff']} // Amber-50 to White
+            >
+              <VStack space="lg" className="mt-2">
+                 <HStack items-center space="md">
+                  <Box className="p-2.5 rounded-xl bg-amber-50">
+                    <Icon as={Briefcase} size='xl' className="text-amber-600" />
+                  </Box>
+                  <VStack className="flex-1">
+                    <Text size="xs" className="text-typography-500 font-medium">Profession</Text>
+                    <Text size="md" className="text-typography-900 font-bold">
+                      {profileData?.worksas || "Not Specified"}
+                    </Text>
+                    {profileData?.companyName && (
+                      <Text size="xs" className="text-amber-700 font-medium">{profileData?.companyName}</Text>
+                    )}
+                  </VStack>
+                </HStack>
+
+                <Box className="h-[1px] bg-slate-100 w-full" />
+
+                 <HStack items-center space="md">
+                  <Box className="p-2.5 rounded-xl bg-amber-50">
+                    <Icon as={Banknote} size='xl' className="text-amber-600" />
+                  </Box>
+                  <VStack className="flex-1">
+                    <Text size="xs" className="text-typography-500 font-medium">Annual Income</Text>
+                    <Text size="md" className="text-typography-900 font-bold">
+                      {profileData?.income || "Not Specified"}
+                    </Text>
+                  </VStack>
+                </HStack>
+              </VStack>
+            </GradientCard>
+
+            <EditCareerModal
+              isOpen={showCareerModal}
+              onClose={() => setShowCareerModal(false)}
+              formData={profileData}
+              updateForm={updateForm}
+              INCOME_RANGES={INCOME_RANGES}
+              WORK_WITH={WORK_WITH}
+           
+            /> */}
+//#endregion
 
 

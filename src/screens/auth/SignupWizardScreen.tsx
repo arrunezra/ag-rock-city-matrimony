@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Dimensions, Image, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import {
   Box, VStack, HStack, Button, ButtonText, Text, Progress, ProgressFilledTrack, Input, InputField,
@@ -37,6 +37,8 @@ import { itemData, QualificationTemp, transformGroupedData } from '@/src/utils/q
 import { API_BASE_URL_DEV_Profiles_Images, API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
 import { COMMUNITIES, HEIGHT_DATA, HOBBIES, INCOME_RANGES, LIVINGIN, MARITAL_STATUS, RELIGION_DATA, STATES, SUB_COMMUNITIES, WORK_WITH } from '@/src/utils/utils';
 import { UploadProgressModal } from '../common/UploadProgressModal';
+import FuturisticDropdown from '@/src/components/common/FuturisticDropdown';
+import { LookupContext } from '@/src/context/LookupContext';
 
 // --- DATA SOURCES ---
 
@@ -48,7 +50,6 @@ import { UploadProgressModal } from '../common/UploadProgressModal';
 //   { label: "High School", value: "High School" },
 // ];
 const QUALIFICATIONS = itemData
-console.log('QUALIFICATIONS', QUALIFICATIONS);
 
 const SelectionPill = ({ label, isSelected, onSelect }: any) => (
   <Button size='lg'
@@ -66,6 +67,8 @@ export default function SignupWizardScreen() {
   // Constants
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const { user, logout } = useAuth();
+  const { lookups } = useContext(LookupContext);
+
   const { showAlert, hideAlert } = useAlert();
   const { height: screenHeight } = useWindowDimensions();
   const { height } = Dimensions.get('window');
@@ -78,7 +81,7 @@ export default function SignupWizardScreen() {
   const cityRef = React.useRef<any>(null);
   // State Variables
 
-  const [step, setStep] = useState(10);
+  const [step, setStep] = useState(1);
   const totalSteps = 10;
   const progress = (step / totalSteps) * 100;
 
@@ -108,7 +111,7 @@ export default function SignupWizardScreen() {
     religion: '',
     community: '',
     subCommunity: '',
-    country: 'India',
+    country: 'IN',
     email: '',
     phone: '',
     address: '',
@@ -138,6 +141,7 @@ export default function SignupWizardScreen() {
     userid: '',
     worksWith: '',
     worksas: '',
+    others: ''
   });
 
 
@@ -238,59 +242,6 @@ export default function SignupWizardScreen() {
     }
   };
 
-  // const handlePickImage = async () => {
-  //   try {
-  //     const result = await launchImageLibrary({
-  //       mediaType: 'photo',
-  //       quality: 0.8, // Already helping reduce bandwidth
-  //       selectionLimit: 1
-  //     });
-
-  //     if (result.didCancel || !result.assets?.[0]) return;
-
-  //     const file: any = result.assets[0];
-  //     const uploadData = new FormData();
-
-  //     // Improved URI handling: iOS typically needs 'file://' removed for some uploaders,
-  //     // but standard FormData in RN usually works better with the original URI or 'file://' prefix.
-  //     const cleanUri = Platform.OS === 'ios' ? file.uri.replace('file://', '') : file.uri;
-  //     console.log("cleanUri", cleanUri);
-  //     uploadData.append('file', {
-  //       uri: cleanUri,
-  //       type: file.type || 'image/jpeg',
-  //       name: `${formData.userid}_${Date.now()}.jpg`,
-  //     } as any);
-  //     console.log("user id from state", userID);
-  //     uploadData.append('userid', formData.userid);
-  //     console.log("post userid", formData.userid);
-
-  //     setIsUploading(true);
-  //     setUploadProgress(0);
-
-  //     const token = await AsyncStorage.getItem('accessToken');
-  //     const response = await api.post('/files/profile_photo_upload.php', uploadData, {
-  //       headers: {
-  //         'Content-Type': 'multipart/form-data',
-  //         'Authorization': `Bearer ${token}`
-  //       },
-  //       onUploadProgress: ({ loaded, total }) => {
-  //         if (total) setUploadProgress(Math.round((loaded * 100) / total));
-  //       }
-  //     });
-
-  //     if (response.data.success) {
-  //       updateForm('profilePic', API_BASE_URL_DEV_Profiles_Images + '/' + response.data.full_url);
-  //       updateForm('profileThumb', API_BASE_URL_DEV_Profiles_Thumbs + '/' + response.data.thumb_url);
-  //     } else {
-  //       throw new Error(response.data.message || 'Upload failed');
-  //     }
-  //   } catch (error) {
-  //     console.error("Upload process error:", error);
-  //     // Add User-facing Alert here
-  //   } finally {
-  //     setIsUploading(false);
-  //   }
-  // };
   const validateMobileoremail = async () => {
     setValidationTriggered(true)
     if (!formData.email || !formData.phone) {
@@ -323,18 +274,22 @@ export default function SignupWizardScreen() {
       });
 
       if (response?.success) {
-        showAlert({
-          type: 'success',
-          title: 'Profile Info.',
-          message: "Profile validated successfully.",
-          confirmText: "OK",
-          onConfirm: async () => {
-            setIsUploading(false);
-            hideAlert();
-            setIsFinished(true);
-            setStep(prev => prev + 1);
-          }
-        });
+        setIsUploading(false);
+        hideAlert();
+        setIsFinished(true);
+        setStep(prev => prev + 1);
+        // showAlert({
+        //   type: 'success',
+        //   title: 'Profile Info.',
+        //   message: "Profile validated successfully.",
+        //   confirmText: "OK",
+        //   onConfirm: async () => {
+        //     setIsUploading(false);
+        //     hideAlert();
+        //     setIsFinished(true);
+        //     setStep(prev => prev + 1);
+        //   }
+        // });
       }
     } catch (error: any) {
       showAlert({
@@ -602,18 +557,23 @@ export default function SignupWizardScreen() {
       }
     }
     else if (step === 8) {
-      if (!formData.income || !formData.worksWith || !formData.companyName) {
+
+      if (!formData.income || !formData.worksWith) {
+        return;
+      }
+      else if (formData.worksWith !== 'NWK' && !formData.companyName) {
         return;
       }
     }
     if (step === 4) {
       validateMobileoremail();
-      //setValidationTriggered(false)
-
     }
     else if (step === 8) handleParcialSubmit();
     else if (step === totalSteps) handleFinalSubmit();
-    else setStep(prev => prev + 1);
+    else {
+      setStep(prev => prev + 1);
+      setValidationTriggered(false);
+    }
 
   }
   const validateEmail = (email: string) => {
@@ -825,7 +785,20 @@ export default function SignupWizardScreen() {
                   <FormControlLabel className="mb-2">
                     <FormControlLabelText className="font-bold text-slate-700">Select Religion</FormControlLabelText>
                   </FormControlLabel>
-                  <Dropdown
+                  <FuturisticDropdown
+                    data={lookups?.religion || []}
+                    value={formData.religion}
+                    onChange={(item: any) => {
+                      updateForm('religion', item.value)
+                    }}
+                    placeholder="Select Height "
+                    icon={{ icon: Church, color: 'text-blue-500' }}
+                    search={true}
+                    isInvalid={validationTriggered && !formData.religion}
+                  />
+
+
+                  {/* <Dropdown
                     style={[styles.dropdown, { height: 64, borderRadius: 16, paddingHorizontal: 16, backgroundColor: 'white', borderWidth: 1, borderColor: '#e2e8f0' }]}
                     placeholderStyle={{ color: '#94a3b8', fontSize: 16 }}
                     selectedTextStyle={{ color: '#1e293b', fontWeight: '600', fontSize: 16 }}
@@ -837,7 +810,7 @@ export default function SignupWizardScreen() {
                     renderLeftIcon={() => <Icon as={Church} size="sm" className="mr-3 text-blue-500" />}
                     renderRightIcon={() => <Icon as={ChevronDown} size="xs" className="text-slate-400" />}
                     onChange={item => updateForm('religion', item.value)}
-                  />
+                  /> */}
                   <FormControlError>
                     <FormControlErrorText>Religion is required</FormControlErrorText>
                   </FormControlError>
@@ -849,22 +822,19 @@ export default function SignupWizardScreen() {
                     <FormControlLabel className="mb-2">
                       <FormControlLabelText className="font-bold text-slate-700">Select Community</FormControlLabelText>
                     </FormControlLabel>
-                    <Dropdown
-                      style={[styles.dropdown, { height: 64, borderRadius: 16, paddingHorizontal: 16, backgroundColor: 'white', borderWidth: 1, borderColor: '#e2e8f0' }]}
-                      placeholderStyle={{ color: '#94a3b8', fontSize: 16 }}
-                      selectedTextStyle={{ color: '#1e293b', fontWeight: '600', fontSize: 16 }}
-                      data={COMMUNITIES}
-                      labelField="label"
-                      valueField="value"
-                      placeholder="Community"
+                    <FuturisticDropdown
+                      data={lookups?.community || []}
                       value={formData.community}
-                      renderLeftIcon={() => <Icon as={Users} size="sm" className="mr-3 text-blue-500" />}
-                      renderRightIcon={() => <Icon as={ChevronDown} size="xs" className="text-slate-400" />}
-                      onChange={item => {
-                        setValidationTriggered(false);
-                        updateForm('community', item.value);
+                      onChange={(item: any) => {
+                        updateForm('community', item.value)
                       }}
+                      placeholder="Select Community "
+                      icon={{ icon: Users, color: 'text-blue-500' }}
+                      search={false}
+                      isInvalid={validationTriggered && !formData.community}
                     />
+
+
                     <FormControlError>
                       <FormControlErrorText>Community is required</FormControlErrorText>
                     </FormControlError>
@@ -877,14 +847,26 @@ export default function SignupWizardScreen() {
                     <FormControlLabel className="mb-2">
                       <FormControlLabelText className="font-bold text-slate-700">Select Living In</FormControlLabelText>
                     </FormControlLabel>
+                    <FuturisticDropdown
+                      data={lookups?.community || []}
+                      value={formData.community}
+                      onChange={(item: any) => {
+                        updateForm('community', item.value)
+                      }}
+                      placeholder="Select Community "
+                      icon={{ icon: Users, color: 'text-blue-500' }}
+                      search={false}
+                      isInvalid={validationTriggered && !formData.community}
+                    />
+
                     <Dropdown
                       style={[styles.dropdown, { height: 64, borderRadius: 16, paddingHorizontal: 16, backgroundColor: 'white', borderWidth: 1, borderColor: '#e2e8f0' }]}
                       placeholderStyle={{ color: '#94a3b8', fontSize: 16 }}
                       selectedTextStyle={{ color: '#1e293b', fontWeight: '600', fontSize: 16 }}
-                      data={LIVINGIN}
+                      data={lookups?.country || []}
                       labelField="label"
                       valueField="value"
-                      placeholder="Country / City"
+                      placeholder="Country"
                       value={formData.livingIn}
                       renderLeftIcon={() => <Icon as={Globe} size="sm" className="mr-3 text-blue-500" />}
                       renderRightIcon={() => <Icon as={ChevronDown} size="xs" className="text-slate-400" />}
@@ -998,7 +980,24 @@ export default function SignupWizardScreen() {
                   <FormControlLabel className="mb-2">
                     <FormControlLabelText className="font-bold text-slate-700">Current State</FormControlLabelText>
                   </FormControlLabel>
-                  <Dropdown
+                  <FuturisticDropdown
+                    data={lookups?.state}
+                    value={formData.state}
+                    onChange={(item: any) => {
+                      updateForm('state', item.value);
+                      updateForm('city', '');
+                      fetchCities(item.value);
+                    }}
+                    placeholder="Select State "
+                    icon={{ icon: MapPin, color: 'text-blue-500' }}
+                    search={false}
+                    isInvalid={validationTriggered && !formData.fatherDetails}
+                  />
+                  <AnimateError isVisible={validationTriggered && (!formData.state)}>
+                    {"Please select your state"}
+                  </AnimateError>
+
+                  {/* <Dropdown
                     style={[styles.dropdown, { height: 64, borderRadius: 16, paddingHorizontal: 16, backgroundColor: 'white', borderWidth: 1, borderColor: isFocus ? '#0891b2' : '#e2e8f0' }]}
                     placeholderStyle={{ color: '#94a3b8', fontSize: 16 }}
                     selectedTextStyle={{ color: '#1e293b', fontWeight: '600', fontSize: 16 }}
@@ -1016,7 +1015,7 @@ export default function SignupWizardScreen() {
                       updateForm('city', '');
                       fetchCities(item.StateCode);
                     }}
-                  />
+                  /> */}
                   <AnimateError isVisible={validationTriggered && (!formData.state)}>
                     {"Please select your state"}
                   </AnimateError>
@@ -1028,7 +1027,19 @@ export default function SignupWizardScreen() {
                     <FormControlLabel className="mb-2">
                       <FormControlLabelText className="font-bold text-slate-700">Select City</FormControlLabelText>
                     </FormControlLabel>
-                    <Dropdown
+                    <FuturisticDropdown
+                      data={cities || []}
+                      value={formData.city}
+                      onChange={(item: any) => {
+                        updateForm('city', item.value)
+                      }}
+                      placeholder="Select State "
+                      icon={{ icon: Building2, color: 'text-blue-500' }}
+                      search={true}
+                      isInvalid={validationTriggered && !formData.city}
+                    />
+
+                    {/* <Dropdown
                       style={[styles.dropdown, { height: 64, borderRadius: 16, paddingHorizontal: 16, backgroundColor: 'white', borderWidth: 1, borderColor: '#e2e8f0' }]}
                       placeholderStyle={{ color: '#94a3b8', fontSize: 16 }}
                       selectedTextStyle={{ color: '#1e293b', fontWeight: '600', fontSize: 16 }}
@@ -1043,7 +1054,7 @@ export default function SignupWizardScreen() {
                       renderLeftIcon={() => isLoading ? <ActivityIndicator size="small" color="#0891b2" className="mr-3" /> : <Icon as={Building2} size="sm" className="mr-3 text-blue-500" />}
                       renderRightIcon={() => <Icon as={ChevronDown} size="xs" className="text-slate-400" />}
                       onChange={item => updateForm('city', item.CityCode)}
-                    />
+                    /> */}
                     <AnimateError isVisible={validationTriggered && (!formData.city)}>
                       {"City selection is required"}
                     </AnimateError>
@@ -1055,19 +1066,16 @@ export default function SignupWizardScreen() {
                   <FormControlLabel className="mb-2">
                     <FormControlLabelText className="font-bold text-slate-700">Sub Community / Gothra</FormControlLabelText>
                   </FormControlLabel>
-                  <Dropdown
-                    mode="modal"
-                    style={[styles.dropdown, { height: 64, borderRadius: 16, paddingHorizontal: 16, backgroundColor: 'white', borderWidth: 1, borderColor: '#e2e8f0' }]}
-                    placeholderStyle={{ color: '#94a3b8', fontSize: 16 }}
-                    selectedTextStyle={{ color: '#1e293b', fontWeight: '600', fontSize: 16 }}
-                    data={SUB_COMMUNITIES}
-                    labelField="label"
-                    valueField="value"
-                    placeholder="Select Sub Community"
+                  <FuturisticDropdown
+                    data={lookups?.sub_community || []}
                     value={formData.sub_community}
-                    renderLeftIcon={() => <Icon as={Fingerprint} size="sm" className="mr-3 text-blue-500" />}
-                    renderRightIcon={() => <Icon as={ChevronDown} size="xs" className="text-slate-400" />}
-                    onChange={item => updateForm('sub_community', item.value)}
+                    onChange={(item: any) => {
+                      updateForm('sub_community', item.value)
+                    }}
+                    placeholder="Select Community "
+                    icon={{ icon: Fingerprint, color: 'text-blue-500' }}
+                    search={true}
+                    isInvalid={validationTriggered && !formData.sub_community}
                   />
                   <AnimateError isVisible={validationTriggered && (!formData.sub_community)}>
                     {"Sub community details are required"}
@@ -1104,19 +1112,19 @@ export default function SignupWizardScreen() {
                   <FormControlLabel className="mb-2">
                     <FormControlLabelText className="font-bold text-slate-700">Height</FormControlLabelText>
                   </FormControlLabel>
-                  <Dropdown
-                    style={[styles.dropdown, { height: 64, borderRadius: 16, paddingHorizontal: 16, backgroundColor: 'white', borderWidth: 1, borderColor: '#e2e8f0' }]}
-                    placeholderStyle={{ color: '#94a3b8', fontSize: 16 }}
-                    selectedTextStyle={{ color: '#1e293b', fontWeight: '600', fontSize: 16 }}
-                    data={HEIGHT_DATA}
-                    labelField="label"
-                    valueField="value"
-                    mode="modal"
-                    placeholder="Select Height"
-                    renderLeftIcon={() => <Icon as={Ruler} size="sm" className="mr-3 text-blue-500" />}
+                  <FuturisticDropdown
+                    data={HEIGHT_DATA || []}
                     value={formData.height}
-                    onChange={item => updateForm('height', item.value)}
+                    onChange={(item: any) => {
+                      updateForm('height', item.value)
+                    }}
+                    placeholder="Select Height "
+                    icon={{ icon: Ruler, color: 'text-rose-500' }}
+                    search={true}
+                    isInvalid={validationTriggered && !formData.height}
                   />
+
+
                   <AnimateError isVisible={validationTriggered && (!formData.height)}>
                     {"Height is required"}
                   </AnimateError>
@@ -1127,21 +1135,18 @@ export default function SignupWizardScreen() {
                   <FormControlLabel className="mb-2">
                     <FormControlLabelText className="font-bold text-slate-700">Marital Status</FormControlLabelText>
                   </FormControlLabel>
-                  <Dropdown
-                    style={[styles.dropdown, { height: 64, borderRadius: 16, paddingHorizontal: 16, backgroundColor: 'white', borderWidth: 1, borderColor: '#e2e8f0' }]}
-                    placeholderStyle={{ color: '#94a3b8', fontSize: 16 }}
-                    selectedTextStyle={{ color: '#1e293b', fontWeight: '600', fontSize: 16 }}
-                    data={MARITAL_STATUS}
-                    labelField="label"
-                    valueField="value"
-                    placeholder="Select Status"
-                    renderLeftIcon={() => <Icon as={Heart} size="sm" className="mr-3 text-rose-500" />}
+                  <FuturisticDropdown
+                    data={lookups?.marital_status || []}
                     value={formData.maritalStatus}
-                    onChange={item => {
+                    onChange={(item: any) => {
                       updateForm('maritalStatus', item.value);
                       updateForm('hasChildren', 'No');
                       updateForm('kids', []);
                     }}
+                    placeholder="Select Height "
+                    icon={{ icon: Heart, color: 'text-rose-500' }}
+                    search={false}
+                    isInvalid={validationTriggered && !formData.maritalStatus}
                   />
                   <AnimateError isVisible={validationTriggered && (!formData.maritalStatus)}>
                     {"Marital status is required"}
@@ -1149,7 +1154,7 @@ export default function SignupWizardScreen() {
                 </FormControl>
 
                 {/* Conditional Kids Section */}
-                {formData.maritalStatus !== 'Never Married' && formData.maritalStatus !== '' && (
+                {formData.maritalStatus !== 'NM' && formData.maritalStatus !== '' && (
                   <VStack className="gap-4 p-5 rounded-[24px] bg-slate-50 border border-slate-100 animate-in zoom-in-95">
                     <HStack className="items-center space-x-2 gap-2">
                       <Icon as={Baby} size="sm" className="text-cyan-600" />
@@ -1263,7 +1268,19 @@ export default function SignupWizardScreen() {
                   <FormControlLabel className="mb-2">
                     <FormControlLabelText className="font-bold text-slate-700">Highest Qualification</FormControlLabelText>
                   </FormControlLabel>
-
+                  {/* <FuturisticDropdown
+                    data={lookups?.q || []}
+                    value={formData.qualification}
+                    onChange={(item: any) => {
+                      updateForm('maritalStatus', item.value);
+                      updateForm('hasChildren', 'No');
+                      updateForm('kids', []);
+                    }}
+                    placeholder="Select Height "
+                    icon={{ icon: GraduationCap, color: 'text-rose-500' }}
+                    search={false}
+                    isInvalid={validationTriggered && !formData.maritalStatus}
+                  /> */}
                   <Dropdown
                     style={[
                       styles.dropdown,
@@ -1378,20 +1395,18 @@ export default function SignupWizardScreen() {
                   <FormControlLabel className="mb-2">
                     <FormControlLabelText className="font-bold text-slate-700">Annual Income</FormControlLabelText>
                   </FormControlLabel>
-                  <Dropdown
-                    style={[styles.dropdown, { height: 64, borderRadius: 16, paddingHorizontal: 16, backgroundColor: 'white', borderWidth: 1, borderColor: '#e2e8f0' }]}
-                    placeholderStyle={{ color: '#94a3b8', fontSize: 16 }}
-                    selectedTextStyle={{ color: '#1e293b', fontWeight: '600', fontSize: 16 }}
-                    data={INCOME_RANGES}
-                    labelField="label"
-                    valueField="value"
-                    mode="modal"
-                    placeholder="Select Annual Income"
-                    renderLeftIcon={() => <Icon as={Banknote} size="sm" className="mr-3 text-emerald-500" />}
-                    renderRightIcon={() => <Icon as={ChevronDown} size="xs" className="text-slate-400" />}
+                  <FuturisticDropdown
+                    data={lookups?.income_range || []}
                     value={formData.income}
-                    onChange={item => updateForm('income', item.value)}
+                    onChange={(item: any) => {
+                      updateForm('income', item.value);
+                    }}
+                    placeholder="Select Annual Income "
+                    icon={{ icon: Banknote, color: 'text-emerald-500' }}
+                    search={false}
+                    isInvalid={validationTriggered && !formData.income}
                   />
+
                   <AnimateError isVisible={validationTriggered && (!formData.income)}>
                     {"Please select an income range"}
                   </AnimateError>
@@ -1402,6 +1417,19 @@ export default function SignupWizardScreen() {
                   <FormControlLabel className="mb-2">
                     <FormControlLabelText className="font-bold text-slate-700">Working With</FormControlLabelText>
                   </FormControlLabel>
+                  <FuturisticDropdown
+                    data={lookups?.employment_sector || []}
+                    value={formData.worksWith}
+                    onChange={(item: any) => {
+                      updateForm('worksWith', item.value);
+                    }}
+                    placeholder="Select Annual Income "
+                    icon={{ icon: Banknote, color: 'text-blue-500' }}
+                    search={false}
+                    isInvalid={validationTriggered && !formData.worksWith}
+                  />
+
+                  {/* 
                   <Dropdown
                     style={[styles.dropdown, { height: 64, borderRadius: 16, paddingHorizontal: 16, backgroundColor: 'white', borderWidth: 1, borderColor: '#e2e8f0' }]}
                     placeholderStyle={{ color: '#94a3b8', fontSize: 16 }}
@@ -1415,53 +1443,76 @@ export default function SignupWizardScreen() {
                     renderRightIcon={() => <Icon as={ChevronDown} size="xs" className="text-slate-400" />}
                     value={formData.worksWith}
                     onChange={item => updateForm('worksWith', item.value)}
-                  />
+                  /> */}
                   <AnimateError isVisible={validationTriggered && (!formData.worksWith)}>
                     {"Work sector is required"}
                   </AnimateError>
                 </FormControl>
+                {formData.worksWith !== 'NWK' && formData.worksWith !== 'OTH' && <>(
 
-                {/* 3. Designation Input */}
-                <FormControl isInvalid={validationTriggered && (!formData.worksas)}>
-                  <FormControlLabel className="mb-2">
-                    <FormControlLabelText className="font-bold text-slate-700">Working As (Designation)</FormControlLabelText>
-                  </FormControlLabel>
-                  <Input size="lg" className="h-16 rounded-2xl bg-white border-outline-200 shadow-sm shadow-slate-100">
-                    <InputSlot className="pl-4">
-                      <Icon as={UserRound} className="text-blue-500" size="sm" />
-                    </InputSlot>
-                    <InputField
-                      placeholder="e.g. Senior Product Manager"
-                      value={formData.worksas}
-                      onChangeText={(v) => updateForm('worksas', v)}
-                      className="font-medium"
-                    />
-                  </Input>
-                  <AnimateError isVisible={validationTriggered && (!formData.worksas)}>
-                    {"Your designation is required"}
-                  </AnimateError>
-                </FormControl>
+                  <FormControl isInvalid={validationTriggered && (!formData.worksas)}>
+                    <FormControlLabel className="mb-2">
+                      <FormControlLabelText className="font-bold text-slate-700">Working As (Designation)</FormControlLabelText>
+                    </FormControlLabel>
+                    <Input size="lg" className="h-16 rounded-2xl bg-white border-outline-200 shadow-sm shadow-slate-100">
+                      <InputSlot className="pl-4">
+                        <Icon as={UserRound} className="text-blue-500" size="sm" />
+                      </InputSlot>
+                      <InputField
+                        placeholder="e.g. Senior Product Manager"
+                        value={formData.worksas}
+                        onChangeText={(v) => updateForm('worksas', v)}
+                        className="font-medium"
+                      />
+                    </Input>
+                    <AnimateError isVisible={validationTriggered && (!formData.worksas)}>
+                      {"Your designation is required"}
+                    </AnimateError>
+                  </FormControl>
 
-                {/* 4. Company Name Input */}
-                <FormControl isInvalid={validationTriggered && (!formData.companyName)}>
-                  <FormControlLabel className="mb-2">
-                    <FormControlLabelText className="font-bold text-slate-700">Employer / Company Name</FormControlLabelText>
-                  </FormControlLabel>
-                  <Input size="lg" className="h-16 rounded-2xl bg-white border-outline-200 shadow-sm shadow-slate-100">
-                    <InputSlot className="pl-4">
-                      <Icon as={Building} className="text-blue-500" size="sm" />
-                    </InputSlot>
-                    <InputField
-                      placeholder="e.g. Google / Self-Employed"
-                      value={formData.companyName}
-                      onChangeText={(v) => updateForm('companyName', v)}
-                      className="font-medium"
-                    />
-                  </Input>
-                  <AnimateError isVisible={validationTriggered && (!formData.companyName)}>
-                    {"Company name is required"}
-                  </AnimateError>
-                </FormControl>
+
+                  <FormControl isInvalid={validationTriggered && (!formData.companyName)}>
+                    <FormControlLabel className="mb-2">
+                      <FormControlLabelText className="font-bold text-slate-700">Employer / Company Name</FormControlLabelText>
+                    </FormControlLabel>
+                    <Input size="lg" className="h-16 rounded-2xl bg-white border-outline-200 shadow-sm shadow-slate-100">
+                      <InputSlot className="pl-4">
+                        <Icon as={Building} className="text-blue-500" size="sm" />
+                      </InputSlot>
+                      <InputField
+                        placeholder="e.g. Google / Self-Employed"
+                        value={formData.companyName}
+                        onChangeText={(v) => updateForm('companyName', v)}
+                        className="font-medium"
+                      />
+                    </Input>
+                    <AnimateError isVisible={validationTriggered && (!formData.companyName)}>
+                      {"Company name is required"}
+                    </AnimateError>
+                  </FormControl>
+                  )</>
+                }
+                {
+                  formData.worksWith === 'OTH' && <FormControl isInvalid={validationTriggered && (!formData.others)}>
+                    <FormControlLabel className="mb-2">
+                      <FormControlLabelText className="font-bold text-slate-700">Others</FormControlLabelText>
+                    </FormControlLabel>
+                    <Input size="lg" className="h-16 rounded-2xl bg-white border-outline-200 shadow-sm shadow-slate-100">
+                      <InputSlot className="pl-4">
+                        <Icon as={School} className="text-blue-500" size="sm" />
+                      </InputSlot>
+                      <InputField
+                        placeholder="e.g. Full-time ministry"
+                        value={formData.others}
+                        onChangeText={(v) => updateForm('others', v)}
+                        className="font-medium"
+                      />
+                    </Input>
+                    <AnimateError isVisible={validationTriggered && (!formData.others)}>
+                      {"Others is required"}
+                    </AnimateError>
+                  </FormControl>
+                }
               </VStack>
             </VStack>
           )}
