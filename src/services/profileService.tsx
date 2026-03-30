@@ -138,6 +138,17 @@ export const profileService = {
       return { success: false, message: "Network connection failed" };
     }
   },
+  loadLookupData: async (action: string, lookupMasterID: number) => {
+    try {
+      const response = await api.get(`/lookups/getlookups.php?action=${action}&masterid=${lookupMasterID}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        return error.response.data;
+      }
+      return { success: false, message: "Network connection failed" };
+    }
+  },
 
 };
 

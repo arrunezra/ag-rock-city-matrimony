@@ -101,7 +101,11 @@ switch ($action) {
             'country' => $input['country']
         ];
         break;
-
+ case 'hobbies':
+        $updates['familydetails'] = [
+            'hobbies' => $input['hobbies'] 
+        ];
+        break;
     default:
         echo json_encode(["success" => false, "message" => "Invalid action"]);
         exit;

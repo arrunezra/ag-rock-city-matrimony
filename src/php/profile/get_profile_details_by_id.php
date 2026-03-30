@@ -69,13 +69,20 @@ $sql = "SELECT
                         ,children_count
                         ,aboutus
                         ,hobbies
+                        ,hobbies_name
                         ,height
                         ,weight
                         ,blood_group
                         ,qualification
+                        ,qualification_name
+                        ,college
                         ,income
+                        ,income_name
                         ,work_with
+                        ,work_with_name
+                        ,working_as
                         ,company_name
+                        ,others
                     FROM V_Profile 
 			    WHERE profile_id = :id 
 			    LIMIT 1";

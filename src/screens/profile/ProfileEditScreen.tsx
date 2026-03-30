@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Alert, Dimensions, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, Dimensions, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Box, Heading, Input, InputField, Button, ButtonText, Spinner, useToast, Toast, ToastTitle, Center, Avatar, AvatarImage, Text, HStack, VStack, Modal, ModalBackdrop, ModalContent, Progress, ProgressFilledTrack } from '@/src/components/common/GluestackUI';
 import api from '@/src/api/api';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -28,6 +28,7 @@ import profileService from '@/src/services/profileService';
 import { ProfileSkeleton } from '@/src/components/common/ProfileSkeleton';
 import { LookupContext } from '@/src/context/LookupContext';
 import { useAppToast } from '@/src/context/ToastContext';
+import NoDataScreen from '../common/NoDataScreen';
 
 
 export default function ProfileEditScreen({ navigation, route }: any) {
@@ -42,7 +43,9 @@ export default function ProfileEditScreen({ navigation, route }: any) {
   const { totalStrength, checklist } = getProfileCompletionData(user);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+
+
   const [isExpanded, setIsExpanded] = useState(false);
   const confettiRef = useRef<LottieView>(null);
   const { width, height } = Dimensions.get('window');
@@ -66,10 +69,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
     worksas: '',
     companyName: '',
     income: '',
-    selectedHobbies: ['Traveling',
-      'Hiking',
-      'Painting',
-      'Dancing'],
+    selectedHobbies: [],
     age: '',
     dob: '',
     diet: '',
@@ -97,7 +97,6 @@ export default function ProfileEditScreen({ navigation, route }: any) {
     employerName: '',
     highestQualification: ''
   });
-  const hobbies = ['Cooking', 'Travelling', 'Music', 'Pets'];
   const profileCompletion = 75; // This would be calculated dynamically
   const toast = useToast();
 
@@ -112,19 +111,18 @@ export default function ProfileEditScreen({ navigation, route }: any) {
   const [showHobbiesModal, setShowHobbiesModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [selectedHobbies, setSelectedHobbies] = useState(['Traveling',
-    'Hiking',
-    'Painting',
-    'Dancing']);
+  const [selectedHobbies, setSelectedHobbies] = useState([]);
   const [isHardReload, setIsHardReload] = useState(false);
 
   const [showPreferencesModal, setShowPreferencesModal] = useState(false);
+  const [qualification, setQualification] = useState<any>([]);
 
 
 
   // 2. Standard useEffect for initial mount
   useEffect(() => {
     loadData();
+    loadLookupData()
   }, []);
 
   useEffect(() => {
@@ -163,13 +161,17 @@ export default function ProfileEditScreen({ navigation, route }: any) {
         }
         data.brother_count = String(data.brother_count)
         data.sister_count = String(data.sister_count)
-        console.log('loadData', data)
 
         setProfileData({
           ...data,
           // Ensure hobbies is always an array for your UI
-          hobbies: typeof data.hobbies === 'string' ? data.hobbies.split(',') : (data.hobbies || [])
+          hobbies: typeof data.hobbies === 'string' ? data.hobbies.split(',') : (data.hobbies || []),
+          hobbies_name: typeof data.hobbies_name === 'string' ? data.hobbies_name.split(',') : (data.hobbies_name || [])
+
         });
+        console.log('loadData', data)
+
+        setIsDataLoaded(true)
       }
     } catch (e) {
       console.error("Fetch Profile Error:", e);
@@ -177,6 +179,29 @@ export default function ProfileEditScreen({ navigation, route }: any) {
       setLoading(false);
     }
   };
+  const loadLookupData = async () => {
+    setLoading(true); // Show loader while refreshing
+    try {
+      const res = await profileService.loadLookupData('qualification', 18);
+      console.log('loadLookupData', res)
+      if (res.success) {
+
+        // Handle kids_details parsing safely
+        try {
+          setQualification(res.data)
+        } catch (parseError) {
+          console.error("Error parsing kids_details:", parseError);
+        }
+
+
+      }
+    } catch (e) {
+      console.error("Fetch Profile Error:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleImagePick = async () => {
     const result = await launchImageLibrary({
       mediaType: 'photo',
@@ -527,13 +552,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
     updateForm('kids', updatedKids);
     updateForm('childrenCount', updatedKids.length.toString());
   };
-  const toggleHobby = (hobby: string) => {
-    setSelectedHobbies((prev: any) =>
-      prev.includes(hobby)
-        ? prev.filter((h: any) => h !== hobby)
-        : [...prev, hobby]
-    );
-  };
+
 
 
 
@@ -555,215 +574,219 @@ export default function ProfileEditScreen({ navigation, route }: any) {
   return (
     <Box className="flex-1 bg-[#F1F5F9]">
 
-      <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+      <ScrollView showsVerticalScrollIndicator={false} bounces={false}
+        refreshControl={
+          <RefreshControl refreshing={isHardReload} onRefresh={loadData} tintColor="#6366f1" />
+        }      >
         {loading ? (
           <Center className="flex-1 h-screen">
             <Spinner size='large' color="$primary500" />
           </Center>
-        ) : (
+        ) : isDataLoaded ? (
           <>
-            {/* 1. HERO IMAGE SECTION (Matches ProfileDetailScreen) handlePickImage */}
-            <Box className="h-[350px] w-full bg-gray-900">
-              <Pressable onPress={() => { navigation.navigate('ShowProfileGallery') }} className="flex-1">
-                <FastImage
-                  source={{
-                    uri: profileImage,
-                    priority: FastImage.priority.high
-                  }}
-                  style={StyleSheet.absoluteFill}
-                  resizeMode="cover"
-                />
-
-                {/* Camera Icon moved to Top Right */}
-                <Box className="absolute top-12 right-6 z-20 bg-black/30 p-2 rounded-full border border-white/20">
-                  <Icon as={CameraIcon} className="text-white" size="xl" />
-                </Box>
-              </Pressable>
-
-              {/* Custom Back Button */}
-              <TouchableOpacity
-                onPress={() => navigation.goBack()}
-                className="absolute top-12 left-6 z-20 bg-black/30 p-2 rounded-full border border-white/20"
-              >
-                <Icon as={ChevronLeftIcon} className="text-white" size="xl" />
-              </TouchableOpacity>
-
-              {/* Gradient to blend into the white card */}
-              <LinearGradient
-                colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.9)']}
-                style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100 }}
-              />
-            </Box>
-
-            {/* End Hero Image Section */}
-
-            {/* Progress Section */}
-            <ProfileStrength percentage={profileCompletion} />
-
-            {/* 2. Interactive Checklist */}
-            {/* {strength < 100 && <ProfileChecklist checklist={checklist} />} */}
-
-            {/* Checklist: Only shows items that are NOT done */}
-            {totalStrength < 100 && (
-              <ProfileChecklist
-                checklist={checklist}
-                navigation={navigation}
-              />
-            )}
-
-            {/* End Checklist */}
-
-            {/* 3. About Section */}
-            <GradientCard
-              title="Personality & Expectations"
-              onEdit={() => setIsAboutModalVisible(true)}
-            >
-              <Box className="relative">
-                <Text
-                  className="text-typography-600 leading-6 text-sm"
-                  numberOfLines={isExpanded ? undefined : 3}
-                >
-
-                  {profileData?.aboutus || "I am glad you chose to visit my profile. Currently, I am employed as a Writer. My dreams and aspirations constantly drive me toward success..."}
-                </Text>
-                {!isExpanded && (
-                  <LinearGradient
-                    colors={['rgba(255,255,255,0)', 'rgba(247,249,252,0.9)', '#f7f9fc']}
-                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 30 }}
+            <Box>
+              {/* 1. HERO IMAGE SECTION (Matches ProfileDetailScreen) handlePickImage */}
+              <Box className="h-[350px] w-full bg-gray-900">
+                <Pressable onPress={() => { navigation.navigate('ShowProfileGallery') }} className="flex-1">
+                  <FastImage
+                    source={{
+                      uri: profileImage,
+                      priority: FastImage.priority.high
+                    }}
+                    style={StyleSheet.absoluteFill}
+                    resizeMode="cover"
                   />
-                )}
-              </Box>
-              <TouchableOpacity
-                onPress={() => setIsExpanded(!isExpanded)}
-                className="mt-2 self-center"
-              >
-                <HStack className="items-center">
-                  <Text className="text-cyan-600 font-bold text-xs uppercase tracking-tighter">
-                    {isExpanded ? "Show Less" : "Read More"}
-                  </Text>
-                  <Icon as={isExpanded ? ChevronUpIcon : ChevronDownIcon} size="xs" className="text-cyan-600 ml-1" />
-                </HStack>
-              </TouchableOpacity>
-            </GradientCard>
 
-
-            {isAboutModalVisible && <EditAboutModal
-              isOpen={isAboutModalVisible}
-              user={user}
-              onClose={() => setIsAboutModalVisible(false)}
-              content={profileData?.aboutus || "I am glad you chose to visit my profile. Currently, I am employed as a Writer. My dreams and aspirations constantly drive me toward success..."}
-            />
-            }
-
-            {/* 4. Basics Details Card */}
-
-            <GradientCard
-              title="Basic Details"
-              icon={User}
-              onEdit={() => setShowBasicsModal(true)}
-              // Using the Blue-to-White gradient for the "Identity" section
-              gradientColors={['#eff6ff', '#ffffff']}
-            >
-              <VStack space="lg" className="mt-2">
-
-                {/* Row 1: Age & Date of Birth */}
-                <HStack items-center space="md">
-                  <HStack items-center space="md" className="flex-1">
-                    <Box className="p-2.5 rounded-xl bg-blue-50">
-                      <Icon as={User} size='lg' className="text-blue-600" />
-                    </Box>
-                    <VStack>
-                      <Text size="xs" className="text-typography-500 font-medium">Age</Text>
-                      <Text size="md" className="text-typography-900 font-bold">{profileData?.age} Years</Text>
-                    </VStack>
-                  </HStack>
-
-                  <HStack items-center space="md" className="flex-1">
-                    <Box className="p-2.5 rounded-xl bg-blue-50">
-                      <Icon as={Calendar} size='lg' className="text-blue-600" />
-                    </Box>
-                    <VStack>
-                      <Text size="xs" className="text-typography-500 font-medium">DOB</Text>
-                      <Text size="md" className="text-typography-900 font-bold">{profileData?.dob}</Text>
-                    </VStack>
-                  </HStack>
-                </HStack>
-
-                <Box className="h-[1px] bg-slate-100 w-full" />
-
-                {/* Row 2: Marital Status */}
-                <HStack items-center space="md">
-                  <Box className="p-2.5 rounded-xl bg-blue-50">
-                    <Icon as={Heart} size='lg' className="text-blue-600" />
+                  {/* Camera Icon moved to Top Right */}
+                  <Box className="absolute top-12 right-6 z-20 bg-black/30 p-2 rounded-full border border-white/20">
+                    <Icon as={CameraIcon} className="text-white" size="xl" />
                   </Box>
-                  <VStack className="flex-1">
-                    <Text size="xs" className="text-typography-500 font-medium">Marital Status</Text>
-                    <Text size="md" className="text-typography-900 font-bold">{profileData?.marital_status_name}</Text>
-                  </VStack>
-                </HStack>
+                </Pressable>
 
-                {/* Children Section */}
-                {profileData?.marital_status !== 'NM' && <VStack space="md" className="mt-2">
-                  {profileData?.has_children === 'Yes' ? (
-                    <>
-                      {/* Summary Header */}
+                {/* Custom Back Button */}
+                <TouchableOpacity
+                  onPress={() => navigation.goBack()}
+                  className="absolute top-12 left-6 z-20 bg-black/30 p-2 rounded-full border border-white/20"
+                >
+                  <Icon as={ChevronLeftIcon} className="text-white" size="xl" />
+                </TouchableOpacity>
+
+                {/* Gradient to blend into the white card */}
+                <LinearGradient
+                  colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.9)']}
+                  style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100 }}
+                />
+              </Box>
+
+              {/* End Hero Image Section */}
+
+              {/* Progress Section */}
+              <ProfileStrength percentage={profileCompletion} />
+
+              {/* 2. Interactive Checklist */}
+              {/* {strength < 100 && <ProfileChecklist checklist={checklist} />} */}
+
+              {/* Checklist: Only shows items that are NOT done */}
+              {totalStrength < 100 && (
+                <ProfileChecklist
+                  checklist={checklist}
+                  navigation={navigation}
+                />
+              )}
+
+              {/* End Checklist */}
+
+              {/* 3. About Section */}
+              <GradientCard
+                title="Personality & Expectations"
+                onEdit={() => setIsAboutModalVisible(true)}
+              >
+                <Box className="relative">
+                  <Text
+                    className="text-typography-600 leading-6 text-sm"
+                    numberOfLines={isExpanded ? undefined : 3}
+                  >
+
+                    {profileData?.aboutus || "I am glad you chose to visit my profile. Currently, I am employed as a Writer. My dreams and aspirations constantly drive me toward success..."}
+                  </Text>
+                  {!isExpanded && (
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0)', 'rgba(247,249,252,0.9)', '#f7f9fc']}
+                      style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 30 }}
+                    />
+                  )}
+                </Box>
+                <TouchableOpacity
+                  onPress={() => setIsExpanded(!isExpanded)}
+                  className="mt-2 self-center"
+                >
+                  <HStack className="items-center">
+                    <Text className="text-cyan-600 font-bold text-xs uppercase tracking-tighter">
+                      {isExpanded ? "Show Less" : "Read More"}
+                    </Text>
+                    <Icon as={isExpanded ? ChevronUpIcon : ChevronDownIcon} size="xs" className="text-cyan-600 ml-1" />
+                  </HStack>
+                </TouchableOpacity>
+              </GradientCard>
+
+
+              {isAboutModalVisible && <EditAboutModal
+                isOpen={isAboutModalVisible}
+                user={user}
+                onClose={() => setIsAboutModalVisible(false)}
+                content={profileData?.aboutus || "I am glad you chose to visit my profile. Currently, I am employed as a Writer. My dreams and aspirations constantly drive me toward success..."}
+              />
+              }
+
+              {/* 4. Basics Details Card */}
+
+              <GradientCard
+                title="Basic Details"
+                icon={User}
+                onEdit={() => setShowBasicsModal(true)}
+                // Using the Blue-to-White gradient for the "Identity" section
+                gradientColors={['#eff6ff', '#ffffff']}
+              >
+                <VStack space="lg" className="mt-2">
+
+                  {/* Row 1: Age & Date of Birth */}
+                  <HStack items-center space="md">
+                    <HStack items-center space="md" className="flex-1">
+                      <Box className="p-2.5 rounded-xl bg-blue-50">
+                        <Icon as={User} size='lg' className="text-blue-600" />
+                      </Box>
+                      <VStack>
+                        <Text size="xs" className="text-typography-500 font-medium">Age</Text>
+                        <Text size="md" className="text-typography-900 font-bold">{profileData?.age} Years</Text>
+                      </VStack>
+                    </HStack>
+
+                    <HStack items-center space="md" className="flex-1">
+                      <Box className="p-2.5 rounded-xl bg-blue-50">
+                        <Icon as={Calendar} size='lg' className="text-blue-600" />
+                      </Box>
+                      <VStack>
+                        <Text size="xs" className="text-typography-500 font-medium">DOB</Text>
+                        <Text size="md" className="text-typography-900 font-bold">{profileData?.dob}</Text>
+                      </VStack>
+                    </HStack>
+                  </HStack>
+
+                  <Box className="h-[1px] bg-slate-100 w-full" />
+
+                  {/* Row 2: Marital Status */}
+                  <HStack items-center space="md">
+                    <Box className="p-2.5 rounded-xl bg-blue-50">
+                      <Icon as={Heart} size='lg' className="text-blue-600" />
+                    </Box>
+                    <VStack className="flex-1">
+                      <Text size="xs" className="text-typography-500 font-medium">Marital Status</Text>
+                      <Text size="md" className="text-typography-900 font-bold">{profileData?.marital_status_name}</Text>
+                    </VStack>
+                  </HStack>
+
+                  {/* Children Section */}
+                  {profileData?.marital_status !== 'NM' && <VStack space="md" className="mt-2">
+                    {profileData?.has_children === 'Yes' ? (
+                      <>
+                        {/* Summary Header */}
+                        <HStack items-center space="md">
+                          <Box className="p-2.5 rounded-xl bg-blue-50">
+                            <Icon as={Baby} size='lg' className="text-blue-600" />
+                          </Box>
+                          <VStack className="flex-1">
+                            <Text size="xs" className="text-typography-500 font-medium">Children Count</Text>
+                            <Text size="md" className="text-typography-900 font-bold">
+                              {profileData?.children_count || "0"} Children
+                            </Text>
+                          </VStack>
+                        </HStack>
+
+                        {/* Individual Child Details */}
+                        {(profileData?.kids_details).map((kid: any, index: number) => (
+                          <Box
+                            key={index}
+                            className="ml-12 p-3 rounded-xl bg-slate-50 border border-slate-100"
+                          >
+                            <HStack space="md" className="justify-between items-center">
+                              <VStack>
+                                <Text size="xs" className="text-slate-500 uppercase font-bold">Child {index + 1}</Text>
+                                <Text size="sm" className="text-typography-900 font-bold">
+                                  {kid.age} Yrs • {kid.gender}
+                                </Text>
+                              </VStack>
+
+                              <Box className={`px-2 py-1 rounded-md ${kid.livingTogether === 'Yes' ? 'bg-green-100' : 'bg-amber-100'}`}>
+                                <Text className={`text-[10px] font-bold ${kid.livingTogether === 'Yes' ? 'text-green-700' : 'text-amber-700'}`}>
+                                  {kid.livingTogether === 'Yes' ? "LIVING WITH ME" : "NOT LIVING WITH ME"}
+                                </Text>
+                              </Box>
+                            </HStack>
+                          </Box>
+                        ))}
+                      </>
+                    ) : (
+                      /* Case: No Children */
                       <HStack items-center space="md">
                         <Box className="p-2.5 rounded-xl bg-blue-50">
                           <Icon as={Baby} size='lg' className="text-blue-600" />
                         </Box>
-                        <VStack className="flex-1">
-                          <Text size="xs" className="text-typography-500 font-medium">Children Count</Text>
-                          <Text size="md" className="text-typography-900 font-bold">
-                            {profileData?.children_count || "0"} Children
-                          </Text>
+                        <VStack>
+                          <Text size="xs" className="text-typography-500 font-medium">Children</Text>
+                          <Text size="md" className="text-typography-900 font-bold">No Children</Text>
                         </VStack>
                       </HStack>
-
-                      {/* Individual Child Details */}
-                      {(profileData?.kids_details).map((kid: any, index: number) => (
-                        <Box
-                          key={index}
-                          className="ml-12 p-3 rounded-xl bg-slate-50 border border-slate-100"
-                        >
-                          <HStack space="md" className="justify-between items-center">
-                            <VStack>
-                              <Text size="xs" className="text-slate-500 uppercase font-bold">Child {index + 1}</Text>
-                              <Text size="sm" className="text-typography-900 font-bold">
-                                {kid.age} Yrs • {kid.gender}
-                              </Text>
-                            </VStack>
-
-                            <Box className={`px-2 py-1 rounded-md ${kid.livingTogether === 'Yes' ? 'bg-green-100' : 'bg-amber-100'}`}>
-                              <Text className={`text-[10px] font-bold ${kid.livingTogether === 'Yes' ? 'text-green-700' : 'text-amber-700'}`}>
-                                {kid.livingTogether === 'Yes' ? "LIVING WITH ME" : "NOT LIVING WITH ME"}
-                              </Text>
-                            </Box>
-                          </HStack>
-                        </Box>
-                      ))}
-                    </>
-                  ) : (
-                    /* Case: No Children */
-                    <HStack items-center space="md">
-                      <Box className="p-2.5 rounded-xl bg-blue-50">
-                        <Icon as={Baby} size='lg' className="text-blue-600" />
-                      </Box>
-                      <VStack>
-                        <Text size="xs" className="text-typography-500 font-medium">Children</Text>
-                        <Text size="md" className="text-typography-900 font-bold">No Children</Text>
-                      </VStack>
-                    </HStack>
-                  )}
-                </VStack>}
+                    )}
+                  </VStack>}
 
 
 
 
-                <Box className="h-[1px] bg-slate-100 w-full" />
+                  <Box className="h-[1px] bg-slate-100 w-full" />
 
-                {/* Row 3: Diet & Blood Group */}
-                <HStack items-center space="md">
-                  {/* <HStack items-center space="md" className="flex-1">
+                  {/* Row 3: Diet & Blood Group */}
+                  <HStack items-center space="md">
+                    {/* <HStack items-center space="md" className="flex-1">
                     <Box className="p-2.5 rounded-xl bg-blue-50">
                       <Icon as={Coffee} size='lg' className="text-blue-600" />
                     </Box>
@@ -773,29 +796,29 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                     </VStack>
                   </HStack> */}
 
-                  <HStack items-center space="md" className="flex-1">
-                    <Box className="p-2.5 rounded-xl bg-blue-50">
-                      <Icon as={Droplets} size='lg' className="text-blue-600" />
-                    </Box>
-                    <VStack>
-                      <Text size="xs" className="text-typography-500 font-medium">Blood Group</Text>
-                      <Text size="md" className="text-typography-900 font-bold">{profileData?.bloodGroup || "O+"}</Text>
-                    </VStack>
+                    <HStack items-center space="md" className="flex-1">
+                      <Box className="p-2.5 rounded-xl bg-blue-50">
+                        <Icon as={Droplets} size='lg' className="text-blue-600" />
+                      </Box>
+                      <VStack>
+                        <Text size="xs" className="text-typography-500 font-medium">Blood Group</Text>
+                        <Text size="md" className="text-typography-900 font-bold">{profileData?.bloodGroup || "O+"}</Text>
+                      </VStack>
+                    </HStack>
+
+                    <HStack items-center space="md" className="flex-1">
+                      <Box className="p-2.5 rounded-xl bg-blue-50">
+                        <Icon as={Accessibility} size='lg' className="text-blue-600" />
+                      </Box>
+                      <VStack>
+                        <Text size="xs" className="text-typography-500 font-medium">Disability</Text>
+                        <Text size="md" className="text-typography-900 font-bold">{profileData?.disability || "None"}</Text>
+                      </VStack>
+                    </HStack>
                   </HStack>
 
-                  <HStack items-center space="md" className="flex-1">
-                    <Box className="p-2.5 rounded-xl bg-blue-50">
-                      <Icon as={Accessibility} size='lg' className="text-blue-600" />
-                    </Box>
-                    <VStack>
-                      <Text size="xs" className="text-typography-500 font-medium">Disability</Text>
-                      <Text size="md" className="text-typography-900 font-bold">{profileData?.disability || "None"}</Text>
-                    </VStack>
-                  </HStack>
-                </HStack>
-
-                {/* Row 5: Health & Disability */}
-                {/* <HStack items-center space="md">
+                  {/* Row 5: Health & Disability */}
+                  {/* <HStack items-center space="md">
                   <HStack items-center space="md" className="flex-1">
                     <Box className="p-2.5 rounded-xl bg-blue-50">
                       <Icon as={Activity} size='lg' className="text-blue-600" />
@@ -818,479 +841,486 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                 </HStack> */}
 
 
-                {/* Verification Hint */}
-                <HStack space="xs" items-center className="bg-slate-50 p-3 rounded-2xl mt-2 border border-slate-100">
-                  <Icon as={Info} size='sm' className="text-slate-400" />
-                  <Text size="xs" className="text-slate-500 italic">
-                    Basic info like Age & DOB are verified via govt. ID.
-                  </Text>
-                </HStack>
-
-              </VStack>
-            </GradientCard>
-
-            {/* The Modal Component */}
-            {showBasicsModal && <EditBasicsModalScreen
-              isOpen={showBasicsModal}
-              onClose={() => setShowBasicsModal(false)}
-              content={profileData}
-              user={user}
-              onRefresh={loadData}
-              lookups={lookups}
-              showToast={showToast}
-            />}
-
-            {/* End Basics Details Card */}
-
-
-            {/* 4. Religious & Community Details */}
-
-            <GradientCard
-              title="Religion & Community"
-              icon={MoonStar}
-              onEdit={() => setShowReligionModal(true)}
-              gradientColors={['#f0f9ff', '#ffffff']} // Updated to Blue theme
-            >
-              <VStack space="lg" className="mt-2">
-                {/* Row 1: Religion */}
-                <HStack items-center space="md">
-                  <Box className="p-2.5 rounded-xl bg-blue-50">
-                    <Icon as={MoonStar} size='lg' className="text-blue-600" />
-                  </Box>
-                  <VStack>
-                    <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Religion</Text>
-                    <Text size="md" className="text-typography-900 font-bold">{profileData?.religion_name || "Not Specified"}</Text>
-                  </VStack>
-                </HStack>
-
-                <Box className="h-[1px] bg-slate-100 w-full" />
-
-                {/* Row 2: Mother Tongue */}
-                <HStack items-center space="md">
-                  <Box className="p-2.5 rounded-xl bg-blue-50">
-                    <Icon as={Languages} size='lg' className="text-blue-600" />
-                  </Box>
-                  <VStack>
-                    <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Mother Tongue</Text>
-                    <Text size="md" className="text-typography-900 font-bold">{profileData?.mother_tongues_name || "Not Specified"}</Text>
-                  </VStack>
-                </HStack>
-
-                <Box className="h-[1px] bg-slate-100 w-full" />
-
-                {/* Row 3: Community & Sub Community */}
-                <HStack items-center space="md">
-                  <HStack items-center space="md" className="flex-1">
-                    <Box className="p-2.5 rounded-xl bg-blue-50">
-                      <Icon as={Users2} size='lg' className="text-blue-600" />
-                    </Box>
-                    <VStack>
-                      <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Community</Text>
-                      <Text size="md" className="text-typography-900 font-bold">{profileData?.community_name || "Not Specified"}</Text>
-                    </VStack>
-                  </HStack>
-                  <VStack className="flex-1 border-l border-slate-100 pl-4">
-                    <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Sub Community</Text>
-                    <Text size="md" className="text-typography-900 font-bold">{profileData?.sub_community_name || "None"}</Text>
-                  </VStack>
-                </HStack>
-
-                <Box className="h-[1px] bg-slate-100 w-full" />
-
-                {/* Row 4: Caste No Bar Status */}
-                <HStack items-center space="md">
-                  <Box className={`p-2.5 rounded-xl ${profileData?.isCasteNoBar ? 'bg-blue-600' : 'bg-slate-100'}`}>
-                    <Icon as={Check} size='sm' className={profileData?.isCasteNoBar ? 'text-white' : 'text-slate-400'} />
-                  </Box>
-                  <VStack>
-                    <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Preference</Text>
-                    <Text size="md" className={`font-bold ${profileData?.is_caste_no_bar === 1 ? 'text-blue-600' : 'text-typography-900'}`}>
-                      {profileData?.is_caste_no_bar === 1 ? "Caste No Bar" : "Specific Community Only"}
+                  {/* Verification Hint */}
+                  <HStack space="xs" items-center className="bg-slate-50 p-3 rounded-2xl mt-2 border border-slate-100">
+                    <Icon as={Info} size='sm' className="text-slate-400" />
+                    <Text size="xs" className="text-slate-500 italic">
+                      Basic info like Age & DOB are verified via govt. ID.
                     </Text>
-                  </VStack>
-                </HStack>
-
-                {/* Community Match Hint */}
-                <HStack space="xs" items-center className="bg-blue-50/50 p-3 rounded-2xl mt-2 border border-blue-100">
-                  <Icon as={Info} size='sm' className="text-blue-400" />
-                  <Text size="xs" className="text-blue-600 italic">
-                    {profileData?.is_caste_no_bar === 1
-                      ? "You'll see matches from all communities."
-                      : `Showing active profiles from the ${profileData?.community || 'selected'} community.`}
-                  </Text>
-                </HStack>
-              </VStack>
-            </GradientCard>
-
-            {showReligionModal && <EditReligionModal
-              isOpen={showReligionModal}
-              onClose={() => setShowReligionModal(false)}
-              content={profileData}
-              lookups={lookups}
-              onRefresh={loadData}
-              showToast={showToast}
-              user={user}
-            />}
-            {/* 4. End Religious & Community Details */}
-
-            {/*  4. Contact details */}
-
-            <GradientCard
-              title="Contact Details"
-              icon={Phone}
-              onEdit={() => setShowContactModal(true)}
-              // A clean Cyan-to-White gradient for a fresh communication feel
-              gradientColors={['#ecfeff', '#ffffff']}
-            >
-              <VStack space="lg" className="mt-2">
-
-                {/* Phone Number Row */}
-                <HStack items-center justify-between className="py-2">
-                  <HStack space="md" items-center>
-                    <Box className="p-2.5 rounded-xl bg-cyan-50">
-                      <Icon as={Phone} size='lg' className="text-cyan-600" />
-                    </Box>
-                    <VStack>
-                      <Text size="xs" className="text-typography-500 font-medium">Mobile Number</Text>
-                      <HStack items-center space="xs">
-                        <Text size="md" className="text-typography-900 font-bold">
-                          {user?.phone || "Not Specified"}
-                        </Text>
-                        {user?.phone && (
-                          <Icon as={CheckCircle2} size='lg' className="text-emerald-500" />
-                        )}
-                      </HStack>
-                    </VStack>
                   </HStack>
-                </HStack>
 
-                {/* Divider */}
-                <Box className="h-[1px] bg-slate-100 w-full" />
+                </VStack>
+              </GradientCard>
+
+              {/* The Modal Component */}
+              {showBasicsModal && <EditBasicsModalScreen
+                isOpen={showBasicsModal}
+                onClose={() => setShowBasicsModal(false)}
+                content={profileData}
+                user={user}
+                onRefresh={loadData}
+                lookups={lookups}
+                showToast={showToast}
+              />}
+
+              {/* End Basics Details Card */}
 
 
-                {/* Email Row */}
-                <HStack items-center justify-between className="py-2">
-                  <HStack space="md" items-center>
-                    <Box className="p-2.5 rounded-xl bg-cyan-50">
-                      <Icon as={Mail} size='lg' className="text-cyan-600" />
-                    </Box>
-                    <VStack>
-                      <Text size="xs" className="text-typography-500 font-medium">Email Address</Text>
-                      <HStack items-center space="xs">
-                        <Text size="md" className="text-typography-900 font-bold">
-                          {user?.email || "Not Specified"}
-                        </Text>
-                        {user?.email && (
-                          <Icon as={CheckCircle2} size='lg' className="text-emerald-500" />
-                        )}
-                      </HStack>
-                    </VStack>
-                  </HStack>
-                </HStack>
+              {/* 4. Religious & Community Details */}
 
-                {/* Privacy Badge */}
-                <HStack space="xs" items-center className="bg-slate-50 p-3 rounded-2xl mt-2 border border-slate-100">
-                  <Icon as={ShieldCheck} size='sm' className="text-emerald-600" />
-                  <Text size="xs" className="text-slate-500 italic">
-                    Your contact details are only shared with accepted matches.
-                  </Text>
-                </HStack>
-
-              </VStack>
-            </GradientCard>
-
-            <ContactModal
-              isOpen={showContactModal}
-              onClose={() => setShowContactModal(false)}
-              formData={profileData}
-              // updateForm={updateForm}
-              // onSave={handleSaveContact}
-              // isSaving={isSaving}
-              validationTriggered={false} // Set to true if you want to show errors immediately
-            />
-
-            {/* 4. End Contact details */}
-
-            {/* 5. Family Details Section */}
-
-            <GradientCard
-              title="Family Details"
-              icon={Users}
-              onEdit={() => setShowFamilyModal(true)}
-              gradientColors={['#f0f9ff', '#ffffff']} // Professional blue gradient
-            >
-              <VStack space="lg" className="mt-2">
-
-                {/* Row 1: Parents */}
-                <HStack items-center space="md">
-                  <HStack items-center space="md" className="flex-1">
+              <GradientCard
+                title="Religion & Community"
+                icon={MoonStar}
+                onEdit={() => setShowReligionModal(true)}
+                gradientColors={['#f0f9ff', '#ffffff']} // Updated to Blue theme
+              >
+                <VStack space="lg" className="mt-2">
+                  {/* Row 1: Religion */}
+                  <HStack items-center space="md">
                     <Box className="p-2.5 rounded-xl bg-blue-50">
-                      <Icon as={UserRound} size='lg' className="text-blue-600" />
+                      <Icon as={MoonStar} size='lg' className="text-blue-600" />
                     </Box>
                     <VStack>
-                      <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Mother</Text>
-                      <Text size="md" className="text-typography-900 font-bold">{profileData?.mother_occupation_name || "Not Specified"}</Text>
+                      <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Religion</Text>
+                      <Text size="md" className="text-typography-900 font-bold">{profileData?.religion_name || "Not Specified"}</Text>
                     </VStack>
                   </HStack>
 
-                  <HStack items-center space="md" className="flex-1">
+                  <Box className="h-[1px] bg-slate-100 w-full" />
+
+                  {/* Row 2: Mother Tongue */}
+                  <HStack items-center space="md">
                     <Box className="p-2.5 rounded-xl bg-blue-50">
-                      <Icon as={UserSquare} size='lg' className="text-blue-600" />
+                      <Icon as={Languages} size='lg' className="text-blue-600" />
                     </Box>
                     <VStack>
-                      <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Father</Text>
-                      <Text size="md" className="text-typography-900 font-bold">{profileData?.father_occupation_name || "Not Specified"}</Text>
-                    </VStack>
-                  </HStack>
-                </HStack>
-
-                <Box className="h-[1px] bg-slate-100 w-full" />
-
-                {/* Row 2: Siblings */}
-                <HStack items-center space="md">
-                  <HStack items-center space="md" className="flex-1">
-                    <Box className="p-2.5 rounded-xl bg-blue-50">
-                      <Icon as={Users2} size='lg' className="text-blue-600" />
-                    </Box>
-                    <VStack>
-                      <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Sisters</Text>
-                      <Text size="md" className="text-typography-900 font-bold">{profileData?.sister_count || "0"}</Text>
+                      <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Mother Tongue</Text>
+                      <Text size="md" className="text-typography-900 font-bold">{profileData?.mother_tongues_name || "Not Specified"}</Text>
                     </VStack>
                   </HStack>
 
-                  <HStack items-center space="md" className="flex-1">
-                    <Box className="p-2.5 rounded-xl bg-blue-50">
-                      <Icon as={Users} size='lg' className="text-blue-600" />
-                    </Box>
-                    <VStack>
-                      <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Brothers</Text>
-                      <Text size="md" className="text-typography-900 font-bold">{profileData?.brother_count || "0"}</Text>
+                  <Box className="h-[1px] bg-slate-100 w-full" />
+
+                  {/* Row 3: Community & Sub Community */}
+                  <HStack items-center space="md">
+                    <HStack items-center space="md" className="flex-1">
+                      <Box className="p-2.5 rounded-xl bg-blue-50">
+                        <Icon as={Users2} size='lg' className="text-blue-600" />
+                      </Box>
+                      <VStack>
+                        <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Community</Text>
+                        <Text size="md" className="text-typography-900 font-bold">{profileData?.community_name || "Not Specified"}</Text>
+                      </VStack>
+                    </HStack>
+                    <VStack className="flex-1 border-l border-slate-100 pl-4">
+                      <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Sub Community</Text>
+                      <Text size="md" className="text-typography-900 font-bold">{profileData?.sub_community_name || "None"}</Text>
                     </VStack>
                   </HStack>
-                </HStack>
 
-                <Box className="h-[1px] bg-slate-100 w-full" />
+                  <Box className="h-[1px] bg-slate-100 w-full" />
 
-                {/* Row 3: Financial Status (New Field) */}
-                <HStack items-center space="md">
-                  <HStack items-center space="md" className="flex-1">
-                    <Box className="p-2.5 rounded-xl bg-blue-50">
-                      <Icon as={Briefcase} size='lg' className="text-blue-600" />
+                  {/* Row 4: Caste No Bar Status */}
+                  <HStack items-center space="md">
+                    <Box className={`p-2.5 rounded-xl ${profileData?.isCasteNoBar ? 'bg-blue-600' : 'bg-slate-100'}`}>
+                      <Icon as={Check} size='sm' className={profileData?.isCasteNoBar ? 'text-white' : 'text-slate-400'} />
                     </Box>
                     <VStack>
-                      <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Financial Status</Text>
-                      <HStack space="xs" items-center>
-                        <Text size="md" className="text-typography-900 font-bold">{profileData?.family_type || "Not Specified"}</Text>
-                        {profileData?.family_type === 'Elite' && <Box className="w-2 h-2 rounded-full bg-amber-400" />}
-                      </HStack>
-                    </VStack>
-                  </HStack>
-                </HStack>
-
-                <Box className="h-[1px] bg-slate-100 w-full" />
-
-                {/* Row 4: Location */}
-                <HStack items-center space="md">
-                  <HStack items-center space="md" className="flex-1">
-                    <Box className="p-2.5 rounded-xl bg-blue-50">
-                      <Icon as={MapPin} size='lg' className="text-blue-600" />
-                    </Box>
-                    <VStack className="flex-1">
-                      <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Family Location</Text>
-                      <Text size="md" className="text-typography-900 font-bold" numberOfLines={1} ellipsizeMode="tail">
-                        {profileData?.city_name ? `${profileData?.city_name}, ${profileData?.state_name}` : "Location not set"}
+                      <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Preference</Text>
+                      <Text size="md" className={`font-bold ${profileData?.is_caste_no_bar === 1 ? 'text-blue-600' : 'text-typography-900'}`}>
+                        {profileData?.is_caste_no_bar === 1 ? "Caste No Bar" : "Specific Community Only"}
                       </Text>
                     </VStack>
                   </HStack>
-                </HStack>
 
-              </VStack>
-            </GradientCard>
-            {showFamilyModal && <FamilyDetailsModal
-              isOpen={showFamilyModal}
-              onClose={() => setShowFamilyModal(false)}
-              updateForm={updateForm}
-              content={profileData}
-              lookups={lookups}
-              onRefresh={loadData}
-              showToast={showToast}
-              user={user}
-            //   onSave={handleSaveFamily}
-            //   isSaving={isSaving}
-            //  validationTriggered={false}
-            />
-            }
-            {/* End Family Details Section*/}
-
-
-
-
-            {/* 7. Education and Career Section */}
-
-
-
-            <GradientCard
-              title="Education & Career"
-              icon={GraduationCap}
-              onEdit={() => setShowEducationModal(true)}
-              gradientColors={['#f5f3ff', '#ffffff']} // Violet-50 to White
-            >
-              <VStack space="lg" className="mt-2">
-                <HStack items-center space="md">
-                  <Box className="p-2.5 rounded-xl bg-violet-50">
-                    <Icon as={GraduationCap} size='xl' className="text-violet-600" />
-                  </Box>
-                  <VStack className="flex-1">
-                    <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Highest Qualification</Text>
-                    <Text size="md" className="text-typography-900 font-bold">
-                      {profileData?.qualification || "B.E / B.Tech - Engineering"}
+                  {/* Community Match Hint */}
+                  <HStack space="xs" items-center className="bg-blue-50/50 p-3 rounded-2xl mt-2 border border-blue-100">
+                    <Icon as={Info} size='sm' className="text-blue-400" />
+                    <Text size="xs" className="text-blue-600 italic">
+                      {profileData?.is_caste_no_bar === 1
+                        ? "You'll see matches from all communities."
+                        : `Showing active profiles from the ${profileData?.community || 'selected'} community.`}
                     </Text>
-                    <Text size="sm" className="text-typography-600 italic">
-                      {profileData?.college || "Indra Ganesan College of Engineering"}
+                  </HStack>
+                </VStack>
+              </GradientCard>
+
+              {showReligionModal && <EditReligionModal
+                isOpen={showReligionModal}
+                onClose={() => setShowReligionModal(false)}
+                content={profileData}
+                lookups={lookups}
+                onRefresh={loadData}
+                showToast={showToast}
+                user={user}
+              />}
+              {/* 4. End Religious & Community Details */}
+
+              {/*  4. Contact details */}
+
+              <GradientCard
+                title="Contact Details"
+                icon={Phone}
+                onEdit={() => setShowContactModal(true)}
+                // A clean Cyan-to-White gradient for a fresh communication feel
+                gradientColors={['#ecfeff', '#ffffff']}
+              >
+                <VStack space="lg" className="mt-2">
+
+                  {/* Phone Number Row */}
+                  <HStack items-center justify-between className="py-2">
+                    <HStack space="md" items-center>
+                      <Box className="p-2.5 rounded-xl bg-cyan-50">
+                        <Icon as={Phone} size='lg' className="text-cyan-600" />
+                      </Box>
+                      <VStack>
+                        <Text size="xs" className="text-typography-500 font-medium">Mobile Number</Text>
+                        <HStack items-center space="xs">
+                          <Text size="md" className="text-typography-900 font-bold">
+                            {user?.phone || "Not Specified"}
+                          </Text>
+                          {user?.phone && (
+                            <Icon as={CheckCircle2} size='lg' className="text-emerald-500" />
+                          )}
+                        </HStack>
+                      </VStack>
+                    </HStack>
+                  </HStack>
+
+                  {/* Divider */}
+                  <Box className="h-[1px] bg-slate-100 w-full" />
+
+
+                  {/* Email Row */}
+                  <HStack items-center justify-between className="py-2">
+                    <HStack space="md" items-center>
+                      <Box className="p-2.5 rounded-xl bg-cyan-50">
+                        <Icon as={Mail} size='lg' className="text-cyan-600" />
+                      </Box>
+                      <VStack>
+                        <Text size="xs" className="text-typography-500 font-medium">Email Address</Text>
+                        <HStack items-center space="xs">
+                          <Text size="md" className="text-typography-900 font-bold">
+                            {user?.email || "Not Specified"}
+                          </Text>
+                          {user?.email && (
+                            <Icon as={CheckCircle2} size='lg' className="text-emerald-500" />
+                          )}
+                        </HStack>
+                      </VStack>
+                    </HStack>
+                  </HStack>
+
+                  {/* Privacy Badge */}
+                  <HStack space="xs" items-center className="bg-slate-50 p-3 rounded-2xl mt-2 border border-slate-100">
+                    <Icon as={ShieldCheck} size='sm' className="text-emerald-600" />
+                    <Text size="xs" className="text-slate-500 italic">
+                      Your contact details are only shared with accepted matches.
                     </Text>
-                  </VStack>
-                </HStack>
+                  </HStack>
 
-                <Box className="h-[1px] bg-slate-100 w-full" />
+                </VStack>
+              </GradientCard>
 
-                <HStack items-center space="md">
-                  <Box className="p-2.5 rounded-xl bg-violet-50">
-                    <Icon as={Briefcase} size='xl' className="text-violet-600" />
-                  </Box>
-                  <VStack className="flex-1">
-                    <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Working As</Text>
-                    <Text size="md" className="text-typography-900 font-bold">
-                      {profileData?.workingAs || "Software Developer"}
-                    </Text>
-                    <Text size="sm" className="text-typography-600">
-                      {profileData?.employerName || "PsiberTech Solutions Pte Ltd"}
-                    </Text>
-                  </VStack>
-                </HStack>
-
-                <Box className="h-[1px] bg-slate-100 w-full" />
-
-                <HStack items-center space="md">
-                  <Box className="p-2.5 rounded-xl bg-violet-50">
-                    <Icon as={Banknote} size='xl' className="text-violet-600" />
-                  </Box>
-                  <VStack className="flex-1">
-                    <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Annual Income</Text>
-                    <Text size="md" className="text-typography-900 font-bold">
-                      {profileData?.annualIncome || "Dont want to specify"}
-                    </Text>
-                  </VStack>
-                </HStack>
-              </VStack>
-            </GradientCard>
-
-            {/* THE MODAL CALL */}
-            <EducationDetailsModal
-              isOpen={showEducationModal}
-              onClose={() => setShowEducationModal(false)}
-              formData={profileData} // Pass your state data
-              updateForm={updateForm} // Pass your update function
-            // onSave={handleSaveEducation}
-            // isSaving={isSaving}
-            />
+              <ContactModal
+                isOpen={showContactModal}
+                onClose={() => setShowContactModal(false)}
+                formData={profileData}
+                // updateForm={updateForm}
+                // onSave={handleSaveContact}
+                // isSaving={isSaving}
+                validationTriggered={false} // Set to true if you want to show errors immediately
+              />
+              {/* 4. End Contact details */}
 
 
+              {/* 5. Family Details Section */}
 
-            {/* 9. Hobbiew */}
+              <GradientCard
+                title="Family Details"
+                icon={Users}
+                onEdit={() => setShowFamilyModal(true)}
+                gradientColors={['#f0f9ff', '#ffffff']} // Professional blue gradient
+              >
+                <VStack space="lg" className="mt-2">
 
-            <GradientCard
-              title="Hobbies & Interests"
-              icon={Sparkles}
-              onEdit={() => setShowHobbiesModal(true)}
-              gradientColors={['#ecfdf5', '#ffffff']} // Emerald-50 to White
-            >
-              <HStack className="flex-wrap gap-2 mt-2">
-                {selectedHobbies.length > 0 ? (
-                  selectedHobbies.map((hobby) => (
-                    <Box key={hobby} className="px-3 py-1 rounded-full bg-emerald-100 border border-emerald-200">
-                      <Text size="xs" className="text-emerald-700 font-bold">{hobby}</Text>
+                  {/* Row 1: Parents */}
+                  <HStack items-center space="md">
+                    <HStack items-center space="md" className="flex-1">
+                      <Box className="p-2.5 rounded-xl bg-blue-50">
+                        <Icon as={UserRound} size='lg' className="text-blue-600" />
+                      </Box>
+                      <VStack>
+                        <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Mother</Text>
+                        <Text size="md" className="text-typography-900 font-bold">{profileData?.mother_occupation_name || "Not Specified"}</Text>
+                      </VStack>
+                    </HStack>
+
+                    <HStack items-center space="md" className="flex-1">
+                      <Box className="p-2.5 rounded-xl bg-blue-50">
+                        <Icon as={UserSquare} size='lg' className="text-blue-600" />
+                      </Box>
+                      <VStack>
+                        <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Father</Text>
+                        <Text size="md" className="text-typography-900 font-bold">{profileData?.father_occupation_name || "Not Specified"}</Text>
+                      </VStack>
+                    </HStack>
+                  </HStack>
+
+                  <Box className="h-[1px] bg-slate-100 w-full" />
+
+                  {/* Row 2: Siblings */}
+                  <HStack items-center space="md">
+                    <HStack items-center space="md" className="flex-1">
+                      <Box className="p-2.5 rounded-xl bg-blue-50">
+                        <Icon as={Users2} size='lg' className="text-blue-600" />
+                      </Box>
+                      <VStack>
+                        <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Sisters</Text>
+                        <Text size="md" className="text-typography-900 font-bold">{profileData?.sister_count || "0"}</Text>
+                      </VStack>
+                    </HStack>
+
+                    <HStack items-center space="md" className="flex-1">
+                      <Box className="p-2.5 rounded-xl bg-blue-50">
+                        <Icon as={Users} size='lg' className="text-blue-600" />
+                      </Box>
+                      <VStack>
+                        <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Brothers</Text>
+                        <Text size="md" className="text-typography-900 font-bold">{profileData?.brother_count || "0"}</Text>
+                      </VStack>
+                    </HStack>
+                  </HStack>
+
+                  <Box className="h-[1px] bg-slate-100 w-full" />
+
+                  {/* Row 3: Financial Status (New Field) */}
+                  <HStack items-center space="md">
+                    <HStack items-center space="md" className="flex-1">
+                      <Box className="p-2.5 rounded-xl bg-blue-50">
+                        <Icon as={Briefcase} size='lg' className="text-blue-600" />
+                      </Box>
+                      <VStack>
+                        <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Financial Status</Text>
+                        <HStack space="xs" items-center>
+                          <Text size="md" className="text-typography-900 font-bold">{profileData?.family_type || "Not Specified"}</Text>
+                          {profileData?.family_type === 'Elite' && <Box className="w-2 h-2 rounded-full bg-amber-400" />}
+                        </HStack>
+                      </VStack>
+                    </HStack>
+                  </HStack>
+
+                  <Box className="h-[1px] bg-slate-100 w-full" />
+
+                  {/* Row 4: Location */}
+                  <HStack items-center space="md">
+                    <HStack items-center space="md" className="flex-1">
+                      <Box className="p-2.5 rounded-xl bg-blue-50">
+                        <Icon as={MapPin} size='lg' className="text-blue-600" />
+                      </Box>
+                      <VStack className="flex-1">
+                        <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Family Location</Text>
+                        <Text size="md" className="text-typography-900 font-bold" numberOfLines={1} ellipsizeMode="tail">
+                          {profileData?.city_name ? `${profileData?.city_name}, ${profileData?.state_name}` : "Location not set"}
+                        </Text>
+                      </VStack>
+                    </HStack>
+                  </HStack>
+
+                </VStack>
+              </GradientCard>
+              {showFamilyModal && <FamilyDetailsModal
+                isOpen={showFamilyModal}
+                onClose={() => setShowFamilyModal(false)}
+                updateForm={updateForm}
+                content={profileData}
+                lookups={lookups}
+                onRefresh={loadData}
+                showToast={showToast}
+                user={user}
+              />
+              }
+              {/* End Family Details Section*/}
+
+
+
+
+              {/* 7. Education and Career Section */}
+
+              <GradientCard
+                title="Education & Career"
+                icon={GraduationCap}
+                onEdit={() => setShowEducationModal(true)}
+                gradientColors={['#f5f3ff', '#ffffff']} // Violet-50 to White
+              >
+                <VStack space="lg" className="mt-2">
+                  <HStack items-center space="md">
+                    <Box className="p-2.5 rounded-xl bg-violet-50">
+                      <Icon as={GraduationCap} size='xl' className="text-violet-600" />
                     </Box>
-                  ))
-                ) : (
-                  <Text size="sm" className="text-typography-400 italic">No hobbies added yet</Text>
-                )}
-              </HStack>
-            </GradientCard>
-            <EditHobbiesModal
-              isOpen={showHobbiesModal}
-              onClose={() => setShowHobbiesModal(false)}
-              selectedHobbies={selectedHobbies}
-              toggleHobby={toggleHobby}
-            />
-
-            <GradientCard
-              title="Partner Preferences"
-              icon={Heart}
-              onEdit={() => setShowPreferencesModal(true)}
-              // Using the same Rose-to-White gradient for consistency with the Location/Community cards
-              gradientColors={['#fff1f2', '#ffffff']}
-            >
-              <VStack space="lg" className="mt-2">
-
-                {/* Age & Height Preference Row */}
-                <HStack items-center justify-between className="py-2">
-                  <HStack space="md" items-center>
-                    <Box className="p-2.5 rounded-xl bg-rose-50">
-                      <Icon as={Scale} size='lg' className="text-rose-600" />
-                    </Box>
-                    <VStack>
-                      <Text size="xs" className="text-typography-500 font-medium">Age & Height</Text>
+                    <VStack className="flex-1">
+                      <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Highest Qualification</Text>
                       <Text size="md" className="text-typography-900 font-bold">
-                        {profileData?.prefAgeMin && profileData?.prefAgeMax
-                          ? `${profileData?.prefAgeMin} - ${profileData?.prefAgeMax} Yrs`
-                          : "Not Set"}
-                        {profileData?.prefHeightMin && `, ${profileData?.prefHeightMin}+`}
+                        {profileData?.qualification_name || "Not specified"}
+                      </Text>
+                      <Text size="sm" className="text-typography-600 italic">
+                        {profileData?.college || "Not specified"}
                       </Text>
                     </VStack>
                   </HStack>
-                </HStack>
 
-                {/* Divider */}
-                <Box className="h-[1px] bg-slate-100 w-full" />
+                  <Box className="h-[1px] bg-slate-100 w-full" />
 
-                {/* Education & Income Preference */}
-                <HStack items-center justify-between className="py-2">
-                  <HStack space="md" items-center>
-                    <Box className="p-2.5 rounded-xl bg-rose-50">
-                      <Icon as={GraduationCap} size='lg' className="text-rose-600" />
+                  <HStack items-center space="md">
+                    <Box className="p-2.5 rounded-xl bg-violet-50">
+                      <Icon as={Briefcase} size='xl' className="text-violet-600" />
                     </Box>
                     <VStack className="flex-1">
-                      <Text size="xs" className="text-typography-500 font-medium">Professional Preference</Text>
-                      <HStack items-center space="xs" className="flex-wrap">
-                        <Text size="md" className="text-typography-900 font-bold">
-                          {profileData?.prefEducation || "Any Education"}
-                        </Text>
-                        {profileData?.prefIncome && (
-                          <Box className="bg-rose-100 px-2 py-0.5 rounded-full">
-                            <Text className="text-[10px] text-rose-700 font-bold">
-                              {profileData?.prefIncome}+ LPA
-                            </Text>
-                          </Box>
-                        )}
-                      </HStack>
+                      <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Working As</Text>
+                      <Text size="md" className="text-typography-900 font-bold">
+                        {profileData?.work_with === 'NWK' ? profileData?.work_with_name : " - " + profileData?.work_with_name}
+                      </Text>
+                      {profileData?.work_with !== 'NWK' && <Text size="sm" className="text-typography-600">
+                        {profileData?.company_name || "Not specified"}
+                      </Text>
+                      }
                     </VStack>
                   </HStack>
+
+                  <Box className="h-[1px] bg-slate-100 w-full" />
+
+                  <HStack items-center space="md">
+                    <Box className="p-2.5 rounded-xl bg-violet-50">
+                      <Icon as={Banknote} size='xl' className="text-violet-600" />
+                    </Box>
+                    <VStack className="flex-1">
+                      <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Annual Income</Text>
+                      <Text size="md" className="text-typography-900 font-bold">
+                        {profileData?.income_name || "Dont want to specify"}
+                      </Text>
+                    </VStack>
+                  </HStack>
+                </VStack>
+              </GradientCard>
+
+              {/* THE MODAL CALL */}
+              <EducationDetailsModal
+                isOpen={showEducationModal}
+                onClose={() => setShowEducationModal(false)}
+                formData={profileData} // Pass your state data
+                updateForm={updateForm} // Pass your update function
+                qualification={qualification}
+                lookups={lookups}
+                showToast={showToast}
+                onRefresh={loadData}
+                user={user}
+              />
+
+
+
+              {/* 9. Hobbiew */}
+
+              <GradientCard
+                title="Hobbies & Interests"
+                icon={Sparkles}
+                onEdit={() => setShowHobbiesModal(true)}
+                gradientColors={['#ecfdf5', '#ffffff']} // Emerald-50 to White
+              >
+                <HStack className="flex-wrap gap-2 mt-2">
+                  {profileData?.hobbies_name.length > 0 ? (
+                    profileData?.hobbies_name.map((hobby: any) => (
+                      <Box key={hobby} className="px-3 py-1 rounded-full bg-emerald-100 border border-emerald-200">
+                        <Text size="xs" className="text-emerald-700 font-bold">{hobby}</Text>
+                      </Box>
+                    ))
+                  ) : (
+                    <Text size="sm" className="text-typography-400 italic">No hobbies added yet</Text>
+                  )}
                 </HStack>
+              </GradientCard>
+              {showHobbiesModal && <EditHobbiesModal
+                isOpen={showHobbiesModal}
+                onClose={() => setShowHobbiesModal(false)}
+                selectedHobbies={profileData?.hobbies}
+                user={user}
+                showToast={showToast}
+                onRefresh={loadData}
+                lookups={lookups}
+              />
+              }
+              {/* 9. ENd Hobbiew */}
 
-                {/* Match Compatibility Hint */}
-                <HStack space="xs" items-center className="bg-slate-50 p-3 rounded-2xl mt-2 border border-slate-100">
-                  <Icon as={Info} size='sm' className="text-slate-400" />
-                  <Text size="xs" className="text-slate-500 italic">
-                    Matches are filtered based on these criteria to improve compatibility.
-                  </Text>
-                </HStack>
+              {/* 10. Partner Preferences */}
 
-              </VStack>
-            </GradientCard>
+              {/* <GradientCard
+                title="Partner Preferences"
+                icon={Heart}
+                onEdit={() => setShowPreferencesModal(true)}
+                // Using the same Rose-to-White gradient for consistency with the Location/Community cards
+                gradientColors={['#fff1f2', '#ffffff']}
+              >
+                <VStack space="lg" className="mt-2">
 
-            <Box className="h-10" />
+                   <HStack items-center justify-between className="py-2">
+                    <HStack space="md" items-center>
+                      <Box className="p-2.5 rounded-xl bg-rose-50">
+                        <Icon as={Scale} size='lg' className="text-rose-600" />
+                      </Box>
+                      <VStack>
+                        <Text size="xs" className="text-typography-500 font-medium">Age & Height</Text>
+                        <Text size="md" className="text-typography-900 font-bold">
+                          {profileData?.prefAgeMin && profileData?.prefAgeMax
+                            ? `${profileData?.prefAgeMin} - ${profileData?.prefAgeMax} Yrs`
+                            : "Not Set"}
+                          {profileData?.prefHeightMin && `, ${profileData?.prefHeightMin}+`}
+                        </Text>
+                      </VStack>
+                    </HStack>
+                  </HStack>
+
+                   <Box className="h-[1px] bg-slate-100 w-full" />
+
+                   <HStack items-center justify-between className="py-2">
+                    <HStack space="md" items-center>
+                      <Box className="p-2.5 rounded-xl bg-rose-50">
+                        <Icon as={GraduationCap} size='lg' className="text-rose-600" />
+                      </Box>
+                      <VStack className="flex-1">
+                        <Text size="xs" className="text-typography-500 font-medium">Professional Preference</Text>
+                        <HStack items-center space="xs" className="flex-wrap">
+                          <Text size="md" className="text-typography-900 font-bold">
+                            {profileData?.prefEducation || "Any Education"}
+                          </Text>
+                          {profileData?.prefIncome && (
+                            <Box className="bg-rose-100 px-2 py-0.5 rounded-full">
+                              <Text className="text-[10px] text-rose-700 font-bold">
+                                {profileData?.prefIncome}+ LPA
+                              </Text>
+                            </Box>
+                          )}
+                        </HStack>
+                      </VStack>
+                    </HStack>
+                  </HStack>
+
+                   <HStack space="xs" items-center className="bg-slate-50 p-3 rounded-2xl mt-2 border border-slate-100">
+                    <Icon as={Info} size='sm' className="text-slate-400" />
+                    <Text size="xs" className="text-slate-500 italic">
+                      Matches are filtered based on these criteria to improve compatibility.
+                    </Text>
+                  </HStack>
+
+                </VStack>
+              </GradientCard> */}
+
+              <Box className="h-10" />
+            </Box>
           </>
-        )}
+
+        ) : <Center className="flex-1 h-screen"><NoDataScreen /></Center>
+
+
+        }
         <UploadProgressModal
           isOpen={isUploading}
           uploadProgress={uploadProgress}

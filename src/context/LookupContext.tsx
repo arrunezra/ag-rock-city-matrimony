@@ -85,7 +85,7 @@ export const LookupProvider = ({ children }: { children: ReactNode }) => {
         try {
             // Updated to a bulk helper endpoint that returns all MasterIDs
             const res = await api.get('/helpers/lookups.php');
-            //console.log('lookups=', res.data);
+            console.log('lookups=', res.data);
             if (res.data.success) {
                 setLookups(res.data.data);
                 setIsReady(true);
