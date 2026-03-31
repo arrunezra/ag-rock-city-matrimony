@@ -20,15 +20,15 @@ const ProfileHomeScreen = () => {
                         onEdit={() => navigation.navigate('ProfileEdit')}
                     />
                 );
-            case 'PREMIUM_MATCHES':
-            case 'NEW_MATCHES':
-                return (
-                    <SectionHorizontalList
-                        title={item.title}
-                        data={item.data}
-                        isPremium={item.type === 'PREMIUM_MATCHES'}
-                    />
-                );
+            // case 'PREMIUM_MATCHES':
+            // case 'NEW_MATCHES':
+            //     return (
+            //         <SectionHorizontalList
+            //             title={item.title}
+            //             data={item.data}
+            //             isPremium={item.type === 'PREMIUM_MATCHES'}
+            //         />
+            //     );
             default:
                 return null;
         }

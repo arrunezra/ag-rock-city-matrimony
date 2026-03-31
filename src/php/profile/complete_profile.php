@@ -24,19 +24,24 @@ try {
     // 4. Handle Profile Logic
     if ($step === 10) {
         // --- UPDATES ---
-        $targetUserId = $data['userid'];
+        $targetprofile_id = $data['profile_id'];
 
-        $sql = "UPDATE profiles SET qualification = ?, college = ?, income = ?, work_details = ?, company_name = ?, others  = ? WHERE userid = ?";
+       
+
+        $sql = "UPDATE profiles_professional SET qualification = ?, college = ?, income = ?, work_with = ?, company_name = ?, others  = ? WHERE profile_id = ?";
         $stmt = $db->prepare($sql);
         $stmt->execute([
             $data['qualification'] ?? null, 
             $data['college'] ?? null, 
             $data['income'] ?? null, 
-            $data['workDetails'] ?? null, 
-            $data['companyName'] ?? null, 
+            $data['work_details'] ?? null, 
+            $data['company_name'] ?? null, 
             $data['others'] ?? null, 
-            $targetUserId
+            $targetprofile_id
         ]);
+        $db->commit();
+        echo json_encode(["success" => true, "profile_id" => $profile_id, "userid" => $generatedUid]);
+
     } else 
     {
         // --- INITIAL INSERT / PROGRESS (Step 1-8) ---

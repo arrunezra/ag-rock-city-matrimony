@@ -98,8 +98,10 @@ export default function SignupWizardScreen() {
   const [isFocus, setIsFocus] = useState(false);
   const [profilePic, setProfilePic] = useState('');
   const [profileThumb, setProfileThumb] = useState('');
+  const [qualification, setQualification] = useState<any>([]);
 
   const [userID, setUserID] = useState('');
+  const [profileID, setProfileID] = useState('');
 
   // Comprehensive Form State
   const [formData, setFormData] = useState<any>({
@@ -210,13 +212,14 @@ export default function SignupWizardScreen() {
       } as any);
 
       uploadData.append('userid', formData.userid);
+      uploadData.append('profile_id', profileID);
 
       // 3. Start Upload
       setIsUploading(true);
       setUploadProgress(0);
 
       const token = await AsyncStorage.getItem('accessToken');
-      const response = await api.post('/files/profile_photo_upload.php', uploadData, {
+      const response = await api.post('/files/profile_gallery_upload.php', uploadData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`
@@ -291,6 +294,9 @@ export default function SignupWizardScreen() {
         //   }
         // });
       }
+      else {
+        console.log('response', response);
+      }
     } catch (error: any) {
       showAlert({
         type: 'error',
@@ -350,6 +356,7 @@ export default function SignupWizardScreen() {
 
         setIsFinished(true);
         updateForm('userid', response?.userid);
+        setProfileID(response?.profile_id)
         setUserID(response?.userid);
         setStep(prev => prev + 1);
       } else {
@@ -507,6 +514,27 @@ export default function SignupWizardScreen() {
     }
   };
 
+  const loadLookupData = async () => {
+    try {
+      const res = await profileService.loadLookupData('qualification', 18);
+      console.log('loadLookupData', res)
+      if (res.success) {
+
+        // Handle kids_details parsing safely
+        try {
+          setQualification(res.data)
+        } catch (parseError) {
+          console.error("Error parsing kids_details:", parseError);
+        }
+
+
+      }
+    } catch (e) {
+      console.error("Fetch Profile Error:", e);
+    } finally {
+    }
+  };
+
   //use memo
   const dateErrorMessage = useMemo(() => {
     if (!isDateValid()) return "Enter a valid DD (01-31), MM (01-12), and YYYY";
@@ -550,6 +578,7 @@ export default function SignupWizardScreen() {
       if (!formData.height || !formData.maritalStatus) {
         return;
       }
+      loadLookupData()
     }
     else if (step === 7) {
       if (!formData.qualification || !formData.college) {
@@ -791,9 +820,9 @@ export default function SignupWizardScreen() {
                     onChange={(item: any) => {
                       updateForm('religion', item.value)
                     }}
-                    placeholder="Select Height "
+                    placeholder="Select Religion "
                     icon={{ icon: Church, color: 'text-blue-500' }}
-                    search={true}
+                    search={false}
                     isInvalid={validationTriggered && !formData.religion}
                   />
 
@@ -847,17 +876,7 @@ export default function SignupWizardScreen() {
                     <FormControlLabel className="mb-2">
                       <FormControlLabelText className="font-bold text-slate-700">Select Living In</FormControlLabelText>
                     </FormControlLabel>
-                    <FuturisticDropdown
-                      data={lookups?.community || []}
-                      value={formData.community}
-                      onChange={(item: any) => {
-                        updateForm('community', item.value)
-                      }}
-                      placeholder="Select Community "
-                      icon={{ icon: Users, color: 'text-blue-500' }}
-                      search={false}
-                      isInvalid={validationTriggered && !formData.community}
-                    />
+
 
                     <Dropdown
                       style={[styles.dropdown, { height: 64, borderRadius: 16, paddingHorizontal: 16, backgroundColor: 'white', borderWidth: 1, borderColor: '#e2e8f0' }]}
@@ -1268,81 +1287,18 @@ export default function SignupWizardScreen() {
                   <FormControlLabel className="mb-2">
                     <FormControlLabelText className="font-bold text-slate-700">Highest Qualification</FormControlLabelText>
                   </FormControlLabel>
-                  {/* <FuturisticDropdown
-                    data={lookups?.q || []}
+                  <FuturisticDropdown
+                    data={qualification || []}
                     value={formData.qualification}
                     onChange={(item: any) => {
-                      updateForm('maritalStatus', item.value);
-                      updateForm('hasChildren', 'No');
-                      updateForm('kids', []);
+                      updateForm('qualification', item.value);
                     }}
                     placeholder="Select Height "
                     icon={{ icon: GraduationCap, color: 'text-rose-500' }}
                     search={false}
                     isInvalid={validationTriggered && !formData.maritalStatus}
-                  /> */}
-                  <Dropdown
-                    style={[
-                      styles.dropdown,
-                      {
-                        height: 64,
-                        borderRadius: 16,
-                        paddingHorizontal: 16,
-                        backgroundColor: 'white',
-                        borderWidth: 1,
-                        borderColor: '#e2e8f0'
-                      }
-                    ]}
-                    placeholderStyle={{ color: '#94a3b8', fontSize: 16 }}
-                    selectedTextStyle={{ color: '#1e293b', fontWeight: '600', fontSize: 16 }}
-                    // containerStyle handles the modal/list popup
-                    containerStyle={{
-                      borderRadius: 16,
-                      marginTop: 8,
-                      overflow: 'hidden',
-                      backgroundColor: 'white'
-                    }}
-                    data={QUALIFICATIONS}
-                    mode="modal"
-                    labelField="label"
-                    valueField="value"
-                    placeholder="Select Qualification"
-                    renderLeftIcon={() => <Icon as={GraduationCap} size="sm" className="mr-3 text-blue-500" />}
-                    renderRightIcon={() => <Icon as={ChevronDown} size="xs" className="text-slate-400" />}
-
-                    renderItem={(item) => (
-                      <View
-                        className={`px-5 py-4 border-b border-slate-50 ${item.isHeader ? 'bg-slate-50/80' : 'bg-white'
-                          }`}
-                      >
-                        {item.isHeader ? (
-                          // Header alignment (e.g., ENGINEERING)
-                          <Text className="text-[11px] font-bold text-slate-400 uppercase tracking-[2px]">
-                            {item.label}
-                          </Text>
-                        ) : (
-                          // Option alignment (e.g., Bachelor of...)
-                          <HStack space="md" className="items-center">
-                            {/* The Blue Dot - perfectly centered vertically */}
-                            <Box className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-
-                            {/* The Text - flex-1 allows it to wrap without pushing the dot */}
-                            <Text
-                              className="text-[15px] text-slate-700 font-medium flex-1 leading-6"
-                              numberOfLines={2}
-                            >
-                              {item.label}
-                            </Text>
-                          </HStack>
-                        )}
-                      </View>
-                    )}
-                    value={formData.qualification}
-                    onChange={item => {
-                      if (item.isHeader) return;
-                      updateForm('qualification', item.value);
-                    }}
                   />
+
                   <AnimateError isVisible={validationTriggered && (!formData.qualification)}>
                     {"Please select your highest qualification"}
                   </AnimateError>
@@ -1390,13 +1346,12 @@ export default function SignupWizardScreen() {
               </VStack>
 
               <VStack className="gap-6">
-                {/* 1. Annual Income Dropdown */}
                 <FormControl isInvalid={validationTriggered && (!formData.income)}>
                   <FormControlLabel className="mb-2">
                     <FormControlLabelText className="font-bold text-slate-700">Annual Income</FormControlLabelText>
                   </FormControlLabel>
                   <FuturisticDropdown
-                    data={lookups?.income_range || []}
+                    data={_.orderBy(lookups?.income_range, ['value'], ['asc']) || []}
                     value={formData.income}
                     onChange={(item: any) => {
                       updateForm('income', item.value);
@@ -1412,7 +1367,6 @@ export default function SignupWizardScreen() {
                   </AnimateError>
                 </FormControl>
 
-                {/* 2. Work Sector Dropdown */}
                 <FormControl isInvalid={validationTriggered && (!formData.worksWith)}>
                   <FormControlLabel className="mb-2">
                     <FormControlLabelText className="font-bold text-slate-700">Working With</FormControlLabelText>
@@ -1429,21 +1383,7 @@ export default function SignupWizardScreen() {
                     isInvalid={validationTriggered && !formData.worksWith}
                   />
 
-                  {/* 
-                  <Dropdown
-                    style={[styles.dropdown, { height: 64, borderRadius: 16, paddingHorizontal: 16, backgroundColor: 'white', borderWidth: 1, borderColor: '#e2e8f0' }]}
-                    placeholderStyle={{ color: '#94a3b8', fontSize: 16 }}
-                    selectedTextStyle={{ color: '#1e293b', fontWeight: '600', fontSize: 16 }}
-                    data={WORK_WITH}
-                    labelField="label"
-                    valueField="value"
-                    mode="modal"
-                    placeholder="Sector (e.g. Private, Govt)"
-                    renderLeftIcon={() => <Icon as={Briefcase} size="sm" className="mr-3 text-blue-500" />}
-                    renderRightIcon={() => <Icon as={ChevronDown} size="xs" className="text-slate-400" />}
-                    value={formData.worksWith}
-                    onChange={item => updateForm('worksWith', item.value)}
-                  /> */}
+
                   <AnimateError isVisible={validationTriggered && (!formData.worksWith)}>
                     {"Work sector is required"}
                   </AnimateError>
