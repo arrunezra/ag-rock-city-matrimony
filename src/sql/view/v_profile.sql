@@ -42,9 +42,9 @@ ALTER VIEW V_Profile as (
     ,pf.mother_occupation
     ,GetLookupValues(14, pf.mother_occupation,'') AS mother_occupation_name
     ,pf.noof_sibling
-    ,pf.sister_count
-    ,pf.kids_details
-    ,pf.brother_count
+    ,COALESCE(pf.sister_count, 0) AS sister_count
+    ,COALESCE(pf.brother_count, 0) AS brother_count
+    ,pf.kids_details 
     ,pf.has_children
     ,pf.children_count
     ,pf.aboutus
@@ -69,6 +69,8 @@ ALTER VIEW V_Profile as (
     ,ppr.working_as
     ,ppr.company_name
     ,ppr.others
+    
+    ,ppf.file_name
 
 FROM profiles p
 LEFT JOIN users us ON p.userid = us.userid 
@@ -76,7 +78,9 @@ LEFT JOIN profiles_background pb ON p.profile_id = pb.profile_id
 LEFT JOIN profiles_family pf ON p.profile_id = pf.profile_id
 LEFT JOIN profiles_physical pph ON p.profile_id = pph.profile_id
 LEFT JOIN profiles_professional ppr ON p.profile_id = ppr.profile_id
-WHERE us.Role = 'member'
+LEFT JOIN profile_files ppf ON p.profile_id = ppf.profile_id
+
+WHERE us.Role = 'member' AND ppf.is_verified = 1
                          
 )
 

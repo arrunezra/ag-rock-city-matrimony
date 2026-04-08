@@ -30,8 +30,8 @@ export const authService = {
     const response = await api.get('/auth/verify.php');
     return response.data;
   },
-  forgotPassword: async (email: string) => {
-    const response = await api.post('/auth/forgot_password.php', { email });
+  forgotPassword: async (body: any) => {
+    const response = await api.post('/auth/reset_password.php', body);
     return response.data;
   },
 };

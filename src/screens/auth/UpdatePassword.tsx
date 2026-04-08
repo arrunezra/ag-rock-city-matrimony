@@ -10,10 +10,12 @@ import {
     Image,
 } from '@/src/components/common/GluestackUI';
 import { Lock, Eye, EyeOff, ShieldCheck, CheckCircle2, Icon, User } from '@/src/components/common/IconUI';
+import { useAuth } from '@/src/context/AuthContext';
 
 const UpdatePassword = ({ navigation, route }: any) => {
     // Assuming 'identifier' is passed via route params (e.g., "user@email.com")
     const identifier = route?.params?.identifier || "user@example.com";
+    const { isLoading, isAuthenticated, userRole, user, logout } = useAuth();
 
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -36,6 +38,7 @@ const UpdatePassword = ({ navigation, route }: any) => {
             triggerShake();
             return;
         }
+        console.log('isAuthenticated', isAuthenticated);
         // Success logic...
         navigation.navigate('Login');
     };

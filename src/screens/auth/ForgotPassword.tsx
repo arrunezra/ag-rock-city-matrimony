@@ -12,6 +12,8 @@ import {
 import { Lock, Eye, EyeOff, ShieldCheck, CheckCircle2, Icon, User, Mail } from '@/src/components/common/IconUI';
 import { SuccessOverlay } from '../common/SuccessOverlay';
 import FailedScreen from '../common/FailedScreen';
+import authService from '@/src/services/authService';
+import { CommonActions } from '@react-navigation/native';
 
 const ForgotPassword = ({ navigation, route }: any) => {
     // Assuming 'identifier' is passed via route params (e.g., "user@email.com")
@@ -34,6 +36,37 @@ const ForgotPassword = ({ navigation, route }: any) => {
             Animated.timing(shakeAnimation, { toValue: 0, duration: 45, useNativeDriver: true }),
         ]).start();
     };
+    const handleResetPassword = async () => {
+        try {
+            const res = await authService.forgotPassword({ email: email, new_password: password });
+            if (res.status) {
+                setIsSuccess(true)
+                setTimeout(() => {
+                    setStatus('error');
+
+                    setTimeout(() => {
+                        setIsSuccess(false)
+                        setStatus('idle');
+
+                        navigation.dispatch(
+                            CommonActions.reset({
+                                index: 0,
+                                routes: [{
+                                    name: 'Login'
+                                }],
+                            })
+                        );
+                    }, 3000);
+                }, 1000);
+                //navigation.navigate('Login');
+            } else {
+                setErrors({ confirmPassword: "Somthing went wrong" });
+                triggerShake();
+            }
+        } catch (e) {
+
+        }
+    };
 
     const handleUpdate = () => {
         if (password !== confirmPassword) {
@@ -41,18 +74,9 @@ const ForgotPassword = ({ navigation, route }: any) => {
             triggerShake();
             return;
         }
+        handleResetPassword()
         // Success logic...
-        setTimeout(() => {
-            //setIsSuccess(true);
-            setStatus('error');
 
-            setTimeout(() => {
-                setIsSuccess(false)
-                setStatus('idle');
-
-                // navigation.navigate('Login');
-            }, 5000);
-        }, 1000);
     };
 
     return (

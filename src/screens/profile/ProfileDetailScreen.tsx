@@ -19,7 +19,7 @@ import LoadingScreen from '../common/SuccessScreen';
 export default function ProfileDetailScreen({ route }: any) {
     const { user } = useAuth();
     const { profile_id } = route.params; // Data passed from the list
-    //console.log('profile_id', profile_id)
+    console.log('profile_id', profile_id)
     const [isLoading, setIsLoading] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);

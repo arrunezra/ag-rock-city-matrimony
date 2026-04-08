@@ -22,16 +22,23 @@ const FuturisticDropdown = ({
             style={[
                 {
                     height: 56,
-                    backgroundColor: '#F8FAFC',
+                    backgroundColor: '#FFFFFF',
                     borderRadius: 16,
                     paddingHorizontal: 16,
                     borderWidth: 1,
                     borderColor: '#E2E8F0',
+
+                    shadowColor: '#f1f5f9',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 1,
+                    shadowRadius: 2,
+                    elevation: 2,
+
                 },
                 isInvalid && { borderColor: '#DC2626', borderWidth: 1.5 }
             ]}
-            placeholderStyle={{ fontSize: 14, color: '#94A3B8' }}
-            selectedTextStyle={{ fontSize: 15, color: '#1E293B', fontWeight: '500' }}
+            placeholderStyle={{ fontSize: 16, color: '#070707ff', fontWeight: '400' }}
+            selectedTextStyle={{ fontSize: 16, color: '#1E293B', fontWeight: '500' }}
             inputSearchStyle={{
                 height: 45,
                 fontSize: 14,

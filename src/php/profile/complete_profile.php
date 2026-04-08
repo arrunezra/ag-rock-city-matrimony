@@ -1,9 +1,11 @@
 <?php
-header("Access-Control-Allow-Origin: *");
+ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
+
+ 
 require_once '../config/database.php';
 require_once '../helpers/cammon.php';
-require_once __DIR__ . '/../error_log_config.php'; 
+require_once __DIR__ . '/../error_log_config.php';
 
 $db = Database::getInstance();
 $data = json_decode(file_get_contents("php://input"), true);
@@ -23,24 +25,22 @@ try {
 
     // 4. Handle Profile Logic
     if ($step === 10) {
-        // --- UPDATES ---
-        $targetprofile_id = $data['profile_id'];
+        $targetprofile_id = $data['profile_id'] ?? null;
+        if (!$targetprofile_id) {
+            throw new Exception("Profile ID is required for step 10");
+        }
 
-       
-
-        $sql = "UPDATE profiles_professional SET qualification = ?, college = ?, income = ?, work_with = ?, company_name = ?, others  = ? WHERE profile_id = ?";
+        $sql = "UPDATE profiles_family SET hobbies = ? WHERE profile_id = ?";
         $stmt = $db->prepare($sql);
         $stmt->execute([
-            $data['qualification'] ?? null, 
-            $data['college'] ?? null, 
-            $data['income'] ?? null, 
-            $data['work_details'] ?? null, 
-            $data['company_name'] ?? null, 
-            $data['others'] ?? null, 
+            $data['hobbies'] ?? null, 
             $targetprofile_id
         ]);
+
         $db->commit();
-        echo json_encode(["success" => true, "profile_id" => $profile_id, "userid" => $generatedUid]);
+        
+        http_response_code(200);
+        echo json_encode(["success" => true, "message" => "Hobbies updated"]);
 
     } else 
     {

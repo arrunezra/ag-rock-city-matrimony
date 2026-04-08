@@ -42,9 +42,7 @@ export default function GlobalAlert({
 }: GlobalAlertProps) {
 
   // Configuration for different alert states
-  console.log('isOpen', isOpen)
 
-  console.log(config)
   // Configuration for different alert states
   const alertConfig: Record<string, {
     icon: any;

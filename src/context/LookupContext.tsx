@@ -27,6 +27,7 @@ interface LookupData {
     financial_status: LookupOption[];
     financial_details: LookupOption[];
     country: LookupOption[];
+    hobbies: LookupOption[];
 }
 
 // 3. Define the Context's return type
@@ -54,7 +55,8 @@ export const LookupContext = createContext<LookupContextType>({
         siblings: [],
         financial_status: [],
         financial_details: [],
-        country: []
+        country: [],
+        hobbies: []
     },
     isReady: false,
     refreshLookups: async () => { },
@@ -77,7 +79,8 @@ export const LookupProvider = ({ children }: { children: ReactNode }) => {
         siblings: [],
         financial_status: [],
         financial_details: [],
-        country: []
+        country: [],
+        hobbies: []
     });
     const [isReady, setIsReady] = useState(false);
 

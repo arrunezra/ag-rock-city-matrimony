@@ -36,7 +36,7 @@ export default function LoginScreen({ navigation }: any) {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
+  // 
   const handleLogin = async () => {
     if (!validateForm()) return;
     setLoading(true);
@@ -55,7 +55,11 @@ export default function LoginScreen({ navigation }: any) {
 
         // navigation.replace('Home');
       } else {
-        Alert.alert('Error', response.message || 'Login failed');
+        setErrors((pre: any) => ({
+          ...pre,
+          password: "Invalid phone number/email or password"
+        }));
+
       }
     } catch (error: any) {
       console.log(error);

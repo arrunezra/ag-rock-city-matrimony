@@ -161,8 +161,9 @@ const StaffDashboard = ({ navigation }: any) => {
                                                 <TouchableOpacity
                                                     onPress={() => navigation.navigate("Main", {
                                                         screen: "StaffRegistration",
-                                                        params: { id: item.staff_id, isEdit: true }
+                                                        params: { id: item.id, isEdit: true }
                                                     })}
+
                                                     className="h-10 w-10 bg-emerald-50 rounded-full items-center justify-center border border-emerald-100 shadow-sm active:bg-emerald-100"                                            >
                                                     <Icon as={Edit3Icon} size="sm" className="text-slate-600" />
                                                 </TouchableOpacity>

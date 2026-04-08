@@ -22,6 +22,7 @@ export const profileService = {
   },
   createProfile: async (profile: any) => {
     const response = await api.post('/profile/complete_profile.php', profile)
+    console.log('response', response);
     return response.data;
   },
   getCities: async (stateId: any, searchQuery: string | null = null) => {

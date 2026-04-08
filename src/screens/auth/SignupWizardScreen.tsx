@@ -17,7 +17,7 @@ import {
   RadioIndicator,
   RadioGroup
 } from '@/src/components/common/GluestackUI';
-import { Icon, ChevronLeftIcon, ChevronDownIcon, CheckIcon, SearchIcon, CalendarDays, UserCheck, User, Globe, ChevronDown, Users, Church, ShieldCheck, Phone, Mail, CheckCircle2, Check, Fingerprint, Building2, MapPin, Trash2, Baby, Heart, Ruler, BookOpen, School, GraduationCap, UserRound, Briefcase, Banknote, Building } from '@/src/components/common/IconUI';
+import { Icon, ChevronLeftIcon, ChevronDownIcon, CheckIcon, SearchIcon, CalendarDays, UserCheck, User, Globe, ChevronDown, Users, Church, ShieldCheck, Phone, Mail, CheckCircle2, Check, Fingerprint, Building2, MapPin, Trash2, Baby, Heart, Ruler, BookOpen, School, GraduationCap, UserRound, Briefcase, Banknote, Building, Sparkles } from '@/src/components/common/IconUI';
 //import { launchImageLibrary } from 'react-native-image-picker';
 import ImagePicker from 'react-native-image-crop-picker';
 import api from '@/src/api/api';
@@ -81,11 +81,10 @@ export default function SignupWizardScreen() {
   const cityRef = React.useRef<any>(null);
   // State Variables
 
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(10);
   const totalSteps = 10;
   const progress = (step / totalSteps) * 100;
 
-  const [selectedHobbies, setSelectedHobbies] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isCasteNoBar, setIsCasteNoBar] = useState<boolean>(false);
@@ -96,9 +95,9 @@ export default function SignupWizardScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocus, setIsFocus] = useState(false);
-  const [profilePic, setProfilePic] = useState('');
-  const [profileThumb, setProfileThumb] = useState('');
   const [qualification, setQualification] = useState<any>([]);
+  const [localSelected, setLocalSelected] = useState<string[]>([]);
+  const MAX_HOBBIES = 5;
 
   const [userID, setUserID] = useState('');
   const [profileID, setProfileID] = useState('');
@@ -136,7 +135,7 @@ export default function SignupWizardScreen() {
     gender: 'Male',
     profileFor: profileFor,
     casteNoBar: isCasteNoBar,
-    hobbies: selectedHobbies,
+    hobbies: '',
     sub_community: '',
     alt_phone: '',
     weight: '',
@@ -182,11 +181,7 @@ export default function SignupWizardScreen() {
 
   };
 
-  const toggleHobby = (hobby: string) => {
-    setSelectedHobbies(prev =>
-      prev.includes(hobby) ? prev.filter(h => h !== hobby) : [...prev, hobby]
-    );
-  };
+
   // Upload image
 
   const handlePickImage = async () => {
@@ -312,7 +307,7 @@ export default function SignupWizardScreen() {
     setIsUploading(true);
 
 
-    const payload = { ...formData, hobbies: selectedHobbies, profileFor, casteNoBar: isCasteNoBar, step: 8, alt_phone: '', weight: '' };
+    const payload = { ...formData, profileFor, casteNoBar: isCasteNoBar, step: 8, alt_phone: '', weight: '' };
     try {
       const response = await profileService.createProfile(payload).catch((error: any) => {
         if (error.response) {
@@ -352,7 +347,7 @@ export default function SignupWizardScreen() {
       });
 
       if (response?.success) {
-        console.log("created file userid====", response);
+        //console.log("created file userid====", response);
 
         setIsFinished(true);
         updateForm('userid', response?.userid);
@@ -374,8 +369,15 @@ export default function SignupWizardScreen() {
   };
   const handleFinalSubmit = async () => {
     setIsUploading(true);
-    const payload = { ...formData, hobbies: JSON.stringify(selectedHobbies), profileFor, step: 10, casteNoBar: isCasteNoBar, kids_details: JSON.stringify(formData.kids) };
+    const payload = {
+      ...formData,
+      hobbies: localSelected?.join(','), profileFor,
+      step: 10,
+      //userid: 'RCST0326-56496',
+      profile_id: profileID
+    };
     try {
+      //console.log('payload', payload);
       const response = await profileService.createProfile(payload)
       if (response.success) {
         updateForm('userid', response.userid)
@@ -613,7 +615,25 @@ export default function SignupWizardScreen() {
     // Validates a standard 10-digit number; adjust regex based on your region
     return /^\d{10}$/.test(phone.replace(/\s/g, ''));
   };
+  const categories = useMemo(() =>
+    (lookups?.hobbies || []).filter((h: any) => h.parent === null),
+    [lookups]);
+  const internalToggle = useCallback((hobbyValue: any) => {
+    // Force value to be a string. This prevents [object Object] crashes
+    const cleanVal = String(hobbyValue);
 
+    setLocalSelected((prev) => {
+      const isExist = prev.includes(cleanVal);
+      if (isExist) {
+        return prev.filter((v) => v !== cleanVal);
+      } else {
+        if (prev.length < MAX_HOBBIES) {
+          return [...prev, cleanVal];
+        }
+        return prev;
+      }
+    });
+  }, [MAX_HOBBIES]);
   return (
     <KeyboardAvoidingView behavior="padding" className="flex-1">
       <Box className="flex-1 bg-white">
@@ -1271,8 +1291,6 @@ export default function SignupWizardScreen() {
           )}
 
 
-
-
           {/* STEP 7: Education & Qualification */}
           {step === 7 && (
             <VStack className="gap-8 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -1476,14 +1494,80 @@ export default function SignupWizardScreen() {
 
           {/* STEP 10: Hobbies */}
           {step === 10 && (
-            <VStack className="gap-6 pb-10">
-              <Heading size="xl">Hobbies</Heading>
-              <HStack className="flex-wrap gap-3">
-                {HOBBIES.map(h => (
-                  <SelectionPill key={h} label={h} isSelected={selectedHobbies.includes(h)} onSelect={() => toggleHobby(h)} />
+            // <VStack className="gap-6 pb-10">
+            //   <Heading size="xl">Hobbies</Heading>
+            //   <HStack className="flex-wrap gap-3">
+            //     {HOBBIES.map(h => (
+            //       <SelectionPill key={h} label={h} isSelected={selectedHobbies.includes(h)} onSelect={() => toggleHobby(h)} />
+            //     ))}
+            //   </HStack>
+            // </VStack>
+
+            <ScrollView className="px-6 pb-10" showsVerticalScrollIndicator={false}>
+              <VStack className="items-center mb-8">
+                {/* <Box className="w-16 h-16 rounded-[22px] items-center justify-center bg-emerald-50 border-b-4 border-emerald-200">
+                  <Icon as={Sparkles} size='xl' className="text-emerald-600" />
+                </Box> */}
+                <Heading size="xl" className="mt-4">Interests</Heading>
+                <Text size="sm" className="text-slate-500">
+                  {localSelected.length} / {MAX_HOBBIES} selected
+                </Text>
+              </VStack>
+
+              <VStack space="xl" className="pb-10">
+                {categories.map((cat: any) => (
+                  <VStack key={`cat-${cat.value}`} space="md" className="mb-6">
+                    {/* Category Label */}
+                    <HStack space="sm" className="mb-2 mt-4 px-1 item-center">
+                      {/* Small vertical accent line */}
+                      <Text className="text-[14px] font-extrabold text-emerald-700 uppercase  ">
+                        {cat.label}
+                      </Text>
+                    </HStack>
+
+                    {/* Hobbies in this Category */}
+                    <HStack className="flex-wrap gap-3">
+                      {(lookups?.hobbies || [])
+                        .filter((h: any) => h.parent === cat.value)
+                        .map((hobby: any) => {
+                          const hVal = String(hobby.value);
+                          const isSelected = localSelected.includes(hVal);
+                          const isMax = localSelected.length >= MAX_HOBBIES;
+
+                          return (
+                            <TouchableOpacity
+                              key={`hobby-${hVal}`}
+                              activeOpacity={0.7}
+                              onPress={() => internalToggle(hVal)}
+                              // Keep structural styles in className
+                              className="px-4 py-2.5 rounded-2xl border-2 flex-row items-center"
+                              // Use standard style for all DYNAMIC properties
+                              style={{
+                                backgroundColor: isSelected ? '#059669' : (isMax ? '#f8fafc' : '#ffffff'),
+                                borderColor: isSelected ? '#059669' : '#e2e8f0',
+                                opacity: !isSelected && isMax ? 0.4 : 1,
+                                elevation: isSelected ? 2 : 0, // Optional: Add subtle shadow for Android
+                              }}
+                            >
+                              {isSelected && (
+                                <Icon as={Check} size="xs" className="text-white mr-1.5" />
+                              )}
+                              <Text
+                                className="text-sm font-semibold"
+                                style={{
+                                  color: isSelected ? '#ffffff' : '#475569',
+                                }}
+                              >
+                                {hobby.label}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                    </HStack>
+                  </VStack>
                 ))}
-              </HStack>
-            </VStack>
+              </VStack>
+            </ScrollView>
           )}
         </ScrollView>
 

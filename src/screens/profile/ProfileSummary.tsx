@@ -9,6 +9,7 @@ import DashboardSkeleton from '../staff/DashboardSkeleton';
 import { MotiView } from 'moti';
 import profileService from '@/src/services/profileService';
 import { API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
+import { getExtension } from '@/src/utils/common';
 
 const ProfileSummary = ({ navigation }: any) => {
     const [data, setData] = useState<any>(null);
@@ -22,7 +23,7 @@ const ProfileSummary = ({ navigation }: any) => {
         setRefreshing(true);
         try {
             const res = await profileService.getDashboardData();
-            console
+
             if (res.success) setData(res.data);
         } catch (err) {
             console.error(err);
@@ -145,7 +146,7 @@ const ProfileSummary = ({ navigation }: any) => {
                                             console.log(item);
                                             navigation.navigate("Main", {
                                                 screen: "ProfileDetail",
-                                                params: { id: item.id }
+                                                params: { profile_id: item.profile_id }
                                             })
                                         }}
                                         className="mb-4 overflow-hidden rounded-[30px] bg-white border border-slate-100 shadow-sm"
@@ -153,11 +154,10 @@ const ProfileSummary = ({ navigation }: any) => {
                                     >
                                         <VStack className="p-4">
                                             {/* --- TOP SECTION: Profile & Basic Info --- */}
-                                            {/* --- TOP SECTION: Profile & Basic Info --- */}
                                             <HStack space="md" className="items-center">
                                                 <Box className="relative">
                                                     <Image
-                                                        source={{ uri: API_BASE_URL_DEV_Profiles_Thumbs + '/' + item.profile_thumb || 'https://via.placeholder.com/150' }}
+                                                        source={{ uri: getExtension(item.file_name, 'addthumnail') || 'https://via.placeholder.com/150' }}
                                                         className="h-14 w-14 rounded-2xl bg-slate-100"
                                                         alt="Profile Image"
                                                     />

@@ -47,10 +47,10 @@ export const ProfileCard = ({ profile, onPress }: any) => {
         style={{ height: CARD_HEIGHT }}
         className="w-full rounded-[40px] overflow-hidden shadow-2xl bg-background-100 border border-white/10"      >
         {/* 1. Background Image */}
-        {profile.profile_thumb ? (
+        {profile.file_name ? (
           <FastImage
             source={{
-              uri: `${API_BASE_URL_DEV_Profiles_Images}/${profile.profile_pic}`,
+              uri: `${API_BASE_URL_DEV_Profiles_Images}/${profile.file_name}`,
               priority: FastImage.priority.high,
             }}
             style={{ width: '100%', height: '100%' }}

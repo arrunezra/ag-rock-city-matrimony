@@ -1,32 +1,24 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: GET");
-require_once __DIR__ . '/../error_log_config.php'; 
-
+header("Content-Type: application/json");
 require_once '../config/database.php';
 
 try {
     $db = Database::getInstance();
-    
-    // 1. Validate Input
-    $id = $_GET['id'];  
-    $action = $_GET['action'] ?? 'view'; 
-	
-    if (!$id) {
-        http_response_code(400);
-        echo json_encode(["success" => false, "message" => "Invalid or missing Profile ID"]);
-		error_log("Invalid or missing Profile ID");
 
-        exit;
-    }
+    // 1. Get Counts
+    $statsSql = "SELECT 
+                    SUM(CASE WHEN isActive = 1 THEN 1 ELSE 0 END) as active_count,
+                    SUM(CASE WHEN isActive = 0 THEN 1 ELSE 0 END) as inactive_count,
+                    SUM(CASE WHEN IsVerified = 1 THEN 1 ELSE 0 END) as verified_count,
+                    SUM(CASE WHEN IsVerified = 0 THEN 1 ELSE 0 END) as unverified_count,
+                    COUNT(*) as total_count
+                 FROM users";
+    $statsStmt = $db->query($statsSql);
+    $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($action === 'edit') {
-		    }
-		else if ($action === 'view') {
-			
-		}
-$sql = "SELECT 
+    // 2. Get Last 10 Records
+    $recentSql = "SELECT 
 						 profile_id
                         ,userid
                         ,first_name
@@ -62,9 +54,9 @@ $sql = "SELECT
                         ,mother_occupation
                         ,mother_occupation_name
                         ,noof_sibling
-                        ,COALESCE(sister_count, 0) AS sister_count
-                        ,COALESCE(brother_count, 0) AS brother_count
+                        ,sister_count
                         ,kids_details
+                        ,brother_count
                         ,has_children
                         ,children_count
                         ,aboutus
@@ -83,41 +75,21 @@ $sql = "SELECT
                         ,working_as
                         ,company_name
                         ,others
+                        ,file_name
                     FROM V_Profile
-			    WHERE profile_id = :id 
-			    LIMIT 1";
-    
+				ORDER BY updated_at DESC 
+				LIMIT 10";
+    $recentStmt = $db->query($recentSql);
+    $recent = $recentStmt->fetchAll(PDO::FETCH_ASSOC);
 
-     
-
-    $stmt = $db->prepare($sql);
-    $stmt->execute(['id' => $id]);
-    
-    // 3. Use fetch() for a single record
-    $profile = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($profile) {
-        echo json_encode([
-            "success" => true,
-            "data" => $profile
-        ]);
-    } else {
-        http_response_code(404);
-		    error_log("Profile not found");
-
-        echo json_encode([
-            "success" => false, 
-            "message" => "Profile not found"
-        ]);
-    }
-
-} catch (Exception $e) {
-    // 4. Log the actual error internally, but show a clean message to the user
-    error_log($e->getMessage());
-    http_response_code(500);
-	
     echo json_encode([
-        "success" => false, 
-        "message" => "An internal server error occurred"
+        "success" => true,
+       "data" => [
+        "summary" => $stats,
+        "profile" => $recent
+    ]
     ]);
+
+} catch (PDOException $e) {
+    echo json_encode(["success" => false, "message" => $e->getMessage()]);
 }

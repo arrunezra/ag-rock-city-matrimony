@@ -14,9 +14,12 @@ import { CommonActions } from '@react-navigation/native';
 import LottieView from 'lottie-react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { SuccessOverlay } from '../common/SuccessOverlay';
+import { useAuth } from '@/src/context/AuthContext';
 
 const SetPasswordScreen = ({ navigation, route }: any) => {
   const { userid, mobile, email: userEmail, name } = route.params;
+  const { isLoading, isAuthenticated, userRole, user, logout } = useAuth();
+
   const [email, setEmail] = useState(userEmail);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -111,7 +114,17 @@ const SetPasswordScreen = ({ navigation, route }: any) => {
       setIsSuccess(true);
       setLoading(false);
       setTimeout(() => {
+        console.log('isAuthenticated', isAuthenticated);
         setIsSuccess(false);
+        //navigation.navigate('Login');
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{
+              name: 'Login'
+            }],
+          })
+        );
       }, 3000);
 
     }, 1000);

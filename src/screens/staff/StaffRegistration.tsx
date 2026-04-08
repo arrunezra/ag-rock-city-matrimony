@@ -23,11 +23,12 @@ import { KeyboardAvoidingView, KeyboardAwareScrollView } from 'react-native-keyb
 import { ArrowRight, Home, ShieldCheck, User, UserCheck } from 'lucide-react-native';
 import { LookupContext } from '@/src/context/LookupContext';
 import ChruchService from '@/src/services/ChruchService';
-import _ from 'lodash';
+import _, { cloneDeep } from 'lodash';
 import StaffService from '@/src/services/StaffService';
 import { SuccessOverlay } from '../common/SuccessOverlay';
 import { StatusAlert } from '../common/StatusAlert';
 import FailedScreen from '../common/FailedScreen';
+import FuturisticDropdown from '@/src/components/common/FuturisticDropdown';
 
 const StaffRegistration = ({ navigation, route }: any) => {
     const { id, isEdit } = route.params || {};
@@ -82,10 +83,12 @@ const StaffRegistration = ({ navigation, route }: any) => {
         }
     }, [id]);
     const fetchSingleStaffById = async () => {
-        const response = await StaffService.fetchSingleStaffById(id);
-        if (response.success) {
-            response.data.joiningDate = new Date();
-            response.data.joiningDateLabel = new Date().toISOString().split('T')[0];
+        const responses = await StaffService.fetchSingleStaffById(id);
+        console.log('response', responses);
+        if (responses.success) {
+            let response = cloneDeep(responses);
+            response.data.joiningDate = new Date(response.data.joiningDate);
+            response.data.joiningDateLabel = new Date(response.data.joiningDate).toISOString().split('T')[0];
             fetchCities(response?.data?.state ?? "");
             setFormData(response.data);
         }
@@ -97,7 +100,31 @@ const StaffRegistration = ({ navigation, route }: any) => {
     const getCurchBranches = async () => {
         const branches = await ChruchService.getCurchBranches(formData.city ?? "")
         if (branches.success) {
-            setChurchBranches(branches.data);
+
+            const transformedData = branches?.data?.map((item: any) => ({
+                value: item.church_id.toString(),
+                label: item.church_name,
+                address: item.address,
+                city: item.city,
+                state: item.state,
+                country: item.country,
+                postal_code: item.postal_code,
+                pastor_name: item.pastor_name
+            }));
+
+            setChurchBranches(transformedData);
+
+            if (formData.church_id) {
+                var indx = _.findIndex(transformedData, ["value", formData.church_id]);
+                if (indx != -1) {
+                    updateForm('selected_pastor', transformedData[indx].pastor_name);
+                    updateForm('selected_address', transformedData[indx].address);
+                    console.log('selected_pastor', transformedData[indx].pastor_name);
+                    console.log('selected_address', transformedData[indx].address);
+
+                }
+            }
+
         } else {
             setChurchBranches([]);
         }
@@ -295,6 +322,8 @@ const StaffRegistration = ({ navigation, route }: any) => {
                 setTimeout(() => {
                     setShowSuccess(false);
 
+                    navigation.navigate('Main', { screen: 'StaffSummaryView' })
+
                 }, 5000);
             } else {
                 if (!response?.success) {
@@ -318,7 +347,6 @@ const StaffRegistration = ({ navigation, route }: any) => {
                 action: 'update',
                 ...formData,
             }
-            console.log(data);
             const response = await StaffService.UpdateStaff(data);
             console.log(response);
             if (response?.success) {
@@ -326,6 +354,8 @@ const StaffRegistration = ({ navigation, route }: any) => {
                 setTimeout(() => {
                     setShowSuccess(false);
                     navigation.navigate('StaffSummaryView');
+                    //navigation.navigate('Main', { screen: 'StaffSummaryView' })
+
                 }, 5000);
             } else {
                 if (!response?.success) {
@@ -476,48 +506,39 @@ const StaffRegistration = ({ navigation, route }: any) => {
                                     </FormControl>
 
                                     <FormControl isInvalid={!!errors.state}>
-                                        <Dropdown
-                                            style={[styles.dropdown, { height: 56, borderRadius: 16, backgroundColor: 'white' }, isStateFocus && { borderColor: '#0891b2' }, errors.state && { borderColor: '#EF4444' }]}
-                                            data={STATES || []}
-                                            labelField="StateName"
-                                            valueField="StateCode"
-                                            placeholder="Select State"
+
+                                        <FuturisticDropdown
+                                            data={lookups?.state}
                                             value={formData.state}
-                                            onFocus={() => setIsStateFocus(true)}
-                                            onBlur={() => setIsStateFocus(false)}
-                                            onChange={item => {
-                                                updateForm('state', item.StateCode);
+                                            onChange={(item: any) => {
+                                                updateForm('state', item.value);
                                                 updateForm('city', '');
-                                                fetchCities(item.StateCode);
+                                                fetchCities(item.value);
                                             }}
-                                            renderLeftIcon={() => <Icon as={MapPin} size="sm" className="mr-2 text-cyan-600" />}
+                                            placeholder="Select State "
+                                            icon={{ icon: MapPin, color: 'text-cyan-600' }}
+                                            search={false}
+                                            isInvalid={errors.state}
                                         />
+
                                         <AnimateError isVisible={errors.state}>{errors.state}</AnimateError>
                                     </FormControl>
 
                                     {formData.state && (
                                         <FormControl isInvalid={!!errors.city}>
-                                            <Dropdown
-                                                style={[styles.dropdown, { height: 56, borderRadius: 16, backgroundColor: 'white' }, isCityFocus && { borderColor: '#0891b2' }, errors.city && { borderColor: '#EF4444' }]}
+                                            <FuturisticDropdown
                                                 data={cities || []}
-                                                labelField="CityName"
-                                                valueField="CityCode"
-                                                mode='modal'
-                                                onFocus={() => setIsCityFocus(true)}
-                                                onBlur={() => setIsCityFocus(false)}
-                                                placeholder={isLoading ? "Loading cities..." : "Select City"}
                                                 value={formData.city}
-                                                onChange={item => {
-                                                    updateForm('city', item.CityCode)
-
-                                                }
-
-                                                }
-                                                renderLeftIcon={() => isLoading ?
-                                                    <ActivityIndicator size="small" color="#0891b2" className="mr-2" /> :
-                                                    <Icon as={Navigation} size="sm" className="mr-2 text-cyan-600" />
-                                                }
+                                                onChange={(item: any) => {
+                                                    updateForm('city', item.value)
+                                                }}
+                                                placeholder="Select City "
+                                                icon={{ icon: Navigation, color: 'text-cyan-600' }}
+                                                search={true}
+                                                isInvalid={errors.city}
                                             />
+
+
                                             <AnimateError isVisible={errors.city}>{errors.city}</AnimateError>
                                         </FormControl>
                                     )}
@@ -553,7 +574,7 @@ const StaffRegistration = ({ navigation, route }: any) => {
                                                 Ministry Role
                                             </FormControlLabelText>
                                         </FormControlLabel>
-                                        <Dropdown
+                                        {/* <Dropdown
                                             style={[
                                                 styles.dropdown,
                                                 isRoleFocus && { borderColor: '#0891b2' }
@@ -569,7 +590,19 @@ const StaffRegistration = ({ navigation, route }: any) => {
                                             renderLeftIcon={() => (
                                                 <Icon as={UserCheck} size="sm" className="mr-2 text-cyan-600" />
                                             )}
+                                        /> */}
+                                        <FuturisticDropdown
+                                            data={_.filter(lookups.role, (item: any) => item.value !== 'member') || []}
+                                            value={formData.role || ''}
+                                            onChange={(item: any) => {
+                                                updateForm('role', item.value)
+                                            }}
+                                            placeholder="Ministry Role "
+                                            icon={{ icon: UserCheck, color: 'text-cyan-600' }}
+                                            search={false}
+                                            isInvalid={errors.role}
                                         />
+
                                         <AnimateError isVisible={errors.role}>{errors.role}</AnimateError>
                                     </FormControl>
                                     <FormControl isInvalid={!!errors.designation}>
@@ -578,23 +611,19 @@ const StaffRegistration = ({ navigation, route }: any) => {
                                                 Ministry Designation
                                             </FormControlLabelText>
                                         </FormControlLabel>
-                                        <Dropdown
-                                            style={[
-                                                styles.dropdown,
-                                                isDesignationFocus && { borderColor: '#0891b2' }
-                                            ]}
+
+                                        <FuturisticDropdown
                                             data={lookups.designation || []}
-                                            labelField="label"
-                                            valueField="value"
-                                            placeholder="Ministry Designation"
                                             value={formData.designation}
-                                            onFocus={() => setIsDesignationFocus(true)}
-                                            onBlur={() => setIsDesignationFocus(false)}
-                                            onChange={item => updateForm('designation', item.value)}
-                                            renderLeftIcon={() => (
-                                                <Icon as={UserCheck} size="sm" className="mr-2 text-cyan-600" />
-                                            )}
+                                            onChange={(item: any) => {
+                                                updateForm('designation', item.value)
+                                            }}
+                                            placeholder="Ministry Designation"
+                                            icon={{ icon: UserCheck, color: 'text-cyan-600' }}
+                                            search={false}
+                                            isInvalid={errors.designation}
                                         />
+
                                         <AnimateError isVisible={errors.designation}>{errors.designation}</AnimateError>
                                     </FormControl>
                                     {/* --- Section 4: Account Status --- */}
@@ -607,7 +636,7 @@ const StaffRegistration = ({ navigation, route }: any) => {
                                         <HStack className="items-center justify-between p-4 bg-white rounded-2xl border border-slate-200 shadow-sm shadow-slate-100">
                                             <VStack>
                                                 <Text className="font-bold text-slate-700 text-lg">
-                                                    {formData.activeStatus === 'Active' ? 'Active' : 'Inactive'}
+                                                    {formData.activeStatus === '1' ? '1' : '0'}
                                                 </Text>
                                                 <Text className="text-slate-400 text-sm">
                                                     Determines if this staff can access the system
@@ -633,27 +662,21 @@ const StaffRegistration = ({ navigation, route }: any) => {
                                             </FormControlLabelText>
                                         </FormControlLabel>
 
-                                        <Dropdown
-                                            style={[
-                                                styles.dropdown,
-                                                isChurchFocus && { borderColor: '#0891b2' }
-                                            ]}
+
+                                        <FuturisticDropdown
                                             data={churchBranches || []}
-                                            labelField="church_name"
-                                            valueField="church_id"
-                                            placeholder="Assigned Church"
                                             value={formData?.church_id}
-                                            onFocus={() => setIsChurchFocus(true)}
-                                            onBlur={() => setIsChurchFocus(false)}
-                                            onChange={item => {
-                                                updateForm('church_id', item.church_id);
+                                            onChange={(item: any) => {
+                                                updateForm('church_id', item.value);
                                                 updateForm('selected_pastor', item.pastor_name);
                                                 updateForm('selected_address', item.address);
                                             }}
-                                            renderLeftIcon={() => (
-                                                <Icon as={Home} size="sm" className="mr-2 text-cyan-600" />
-                                            )}
+                                            placeholder="Assigned Church"
+                                            icon={{ icon: Home, color: 'text-cyan-600' }}
+                                            search={false}
+                                            isInvalid={errors.church_id}
                                         />
+
                                         <AnimateError isVisible={errors.church_id}>{errors.church_id}</AnimateError>
                                     </FormControl>
 
@@ -716,7 +739,7 @@ const StaffRegistration = ({ navigation, route }: any) => {
             {/* ANDROID NATIVE PICKER (Only shows when triggered) */}
             {showAndroidPicker && (
                 <DateTimePicker
-                    value={formData.joiningDate}
+                    value={formData?.joiningDate}
                     mode="date"
                     display="default"
                     maximumDate={new Date()}

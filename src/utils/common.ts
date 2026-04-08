@@ -1,4 +1,5 @@
-import { FileArchive, FileSpreadsheet, FileText,File, FileImage } from "lucide-react-native";
+import { FileArchive, FileSpreadsheet, FileText, File, FileImage } from "lucide-react-native";
+import { API_BASE_URL_DEV_Profiles_Thumbs } from "./environment";
 
 // --- 1. Dynamic Icon Helper ---
 export const getFileIconConfig = (ext: string = '') => {
@@ -15,4 +16,33 @@ export const getFileIconConfig = (ext: string = '') => {
         default:
             return { Icon: File, bgClass: 'bg-slate-50', iconColor: '#475569' };
     }
+};
+
+export const getExtension = (fileName: string, action: 'fileName' | 'dotwithextension' | 'dotwitouthextension' | 'addthumnail') => {
+    // Find the last dot index
+    const lastDotIndex = fileName.lastIndexOf('.');
+
+    // If no dot is found, return the original string or handle appropriately
+    if (lastDotIndex === -1) return fileName;
+
+    if (action === 'fileName') {
+        // Returns "RCST0326-81912_1774956775_thumbnail"
+        return fileName.substring(0, lastDotIndex);
+
+    } else if (action === 'dotwithextension') {
+        // Returns ".jpg"
+        return fileName.substring(lastDotIndex);
+
+    } else if (action === 'dotwitouthextension') {
+        // Returns "jpg"
+        return fileName.substring(lastDotIndex + 1);
+
+    } else if (action === 'addthumnail') {
+        // Returns "RCST0326-81912_1774956775_thumbnail_thumbnail.jpg"
+        const name = fileName.substring(0, lastDotIndex);
+        const ext = fileName.substring(lastDotIndex);
+        return `${API_BASE_URL_DEV_Profiles_Thumbs}/${name}_thumb${ext}`;
+    }
+
+    return fileName;
 };

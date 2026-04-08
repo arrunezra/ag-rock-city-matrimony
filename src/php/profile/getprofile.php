@@ -97,6 +97,7 @@ try {
                 ,income
                 ,work_with
                 ,company_name
+				,file_name
             FROM V_Profile 
             $whereSql 
             ORDER BY updated_at DESC 

@@ -1077,7 +1077,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                       </Box>
                       <VStack>
                         <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Sisters</Text>
-                        <Text size="md" className="text-typography-900 font-bold">{profileData?.sister_count || "0"}</Text>
+                        <Text size="md" className="text-typography-900 font-bold">{profileData?.sister_count ?? "0"}</Text>
                       </VStack>
                     </HStack>
 
@@ -1178,7 +1178,9 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                     <VStack className="flex-1">
                       <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Working As</Text>
                       <Text size="md" className="text-typography-900 font-bold">
-                        {profileData?.work_with === 'NWK' ? profileData?.work_with_name : " - " + profileData?.work_with_name}
+                        {profileData?.work_with === 'NWK' ? profileData?.work_with_name :
+                          profileData?.work_with === 'OTH' ? profileData?.work_with_name + " - " + profileData?.others + " - " + profileData?.working_as :
+                            profileData?.work_with_name + " - " + profileData?.working_as}
                       </Text>
                       {profileData?.work_with !== 'NWK' && <Text size="sm" className="text-typography-600">
                         {profileData?.company_name || "Not specified"}
@@ -1218,7 +1220,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
 
 
 
-              {/* 9. Hobbiew */}
+              {/* 9. Hobbies */}
 
               <GradientCard
                 title="Hobbies & Interests"
