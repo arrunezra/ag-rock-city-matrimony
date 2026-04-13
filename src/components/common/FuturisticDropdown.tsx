@@ -60,7 +60,7 @@ const FuturisticDropdown = ({
                 overflow: 'hidden',
                 paddingTop: 0,
             }}
-            data={data} // Ensure this data comes from the SQL query with 'type' field
+            data={data}
             search={search}
             maxHeight={300}
             labelField="label"
@@ -68,7 +68,6 @@ const FuturisticDropdown = ({
             placeholder={placeholder}
             searchPlaceholder="Search..."
             value={value}
-            // MODIFIED: Prevent selecting headers
             onChange={(item) => {
                 if (item.type !== 'HEADER') {
                     onChange(item);
@@ -83,7 +82,6 @@ const FuturisticDropdown = ({
                     paddingHorizontal: 4
                 },
                 showsVerticalScrollIndicator: true,
-                // Optimization: If a header is clicked, it won't trigger selection logic
                 stickyHeaderIndices: data.map((item: any, index: number) => item.type === 'HEADER' ? index : null).filter((i: any) => i !== null),
             }}
             renderLeftIcon={() => (
@@ -95,12 +93,11 @@ const FuturisticDropdown = ({
                 const isSelected = item.value === value;
 
                 if (isHeader) {
-                    // --- SECTION HEADER VIEW ---
                     return (
                         <View style={{
                             paddingHorizontal: 16,
                             paddingVertical: 10,
-                            backgroundColor: '#F1F5F9', // Slightly darker slate for headers
+                            backgroundColor: '#F1F5F9',
                             marginTop: 10,
                             marginBottom: 4,
                             borderRadius: 8,
@@ -118,7 +115,6 @@ const FuturisticDropdown = ({
                     );
                 }
 
-                // --- STANDARD ITEM VIEW ---
                 return (
                     <View style={{
                         padding: 16,

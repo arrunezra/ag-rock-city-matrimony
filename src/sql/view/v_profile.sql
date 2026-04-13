@@ -5,7 +5,7 @@ ALTER VIEW V_Profile as (
     ,p.first_name
     ,p.last_name
     ,CONCAT(p.first_name, ' ', p.last_name) AS full_name
-    ,p.dob
+    ,DATE_FORMAT(p.dob, '%d-%m-%Y') AS dob
     ,calculate_age(p.dob) AS age
     ,p.gender
     ,p.email
@@ -71,6 +71,8 @@ ALTER VIEW V_Profile as (
     ,ppr.others
     
     ,ppf.file_name
+    ,us.IsVerified 
+    ,us.IsActive 
 
 FROM profiles p
 LEFT JOIN users us ON p.userid = us.userid 
@@ -78,9 +80,16 @@ LEFT JOIN profiles_background pb ON p.profile_id = pb.profile_id
 LEFT JOIN profiles_family pf ON p.profile_id = pf.profile_id
 LEFT JOIN profiles_physical pph ON p.profile_id = pph.profile_id
 LEFT JOIN profiles_professional ppr ON p.profile_id = ppr.profile_id
-LEFT JOIN profile_files ppf ON p.profile_id = ppf.profile_id
+LEFT JOIN profile_files ppf ON ppf.file_id = (
+    SELECT file_id 
+    FROM profile_files 
+    WHERE profile_id = p.profile_id 
+    AND is_verified = 1 
+    ORDER BY is_profile_pic DESC, created_at DESC 
+    LIMIT 1
+)
 
-WHERE us.Role = 'member' AND ppf.is_verified = 1
+WHERE us.Role = 'member'  
                          
 )
 

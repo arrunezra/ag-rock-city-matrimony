@@ -10,6 +10,7 @@ import { MotiView } from 'moti';
 import profileService from '@/src/services/profileService';
 import { API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
 import { getExtension } from '@/src/utils/common';
+import FastImage from '@d11/react-native-fast-image';
 
 const ProfileSummary = ({ navigation }: any) => {
     const [data, setData] = useState<any>(null);
@@ -67,9 +68,9 @@ const ProfileSummary = ({ navigation }: any) => {
                 >
                     <HStack className="justify-between items-center">
                         <VStack>
-                            <Text className="text-indigo-100 text-xs font-bold uppercase tracking-widest">Global Directory</Text>
+                            <Text className="text-indigo-100 text-xs font-bold uppercase tracking-widest">Global Profiles</Text>
                             <Heading size="4xl" className="text-white mt-1">{data?.summary?.total_count || 0}</Heading>
-                            <Text className="text-indigo-200 text-xs mt-1">Total Registered Members</Text>
+                            <Text className="text-indigo-200 text-xs mt-1">Total Registered profiles</Text>
                         </VStack>
                         <Box className="bg-white/20 p-4 rounded-3xl">
                             <Icon as={Users} className="text-white" size="xl" />
@@ -121,7 +122,7 @@ const ProfileSummary = ({ navigation }: any) => {
                 {/* --- RECENT USERS LIST --- */}
                 <VStack space="md">
                     <HStack className="justify-between items-center px-1">
-                        <Heading size="md" className="text-slate-900">Member Directory</Heading>
+                        <Heading size="md" className="text-slate-900">Recent Profiles</Heading>
                         <TouchableOpacity onPress={() => navigation.navigate('UserSummaryView')}>
                             <Text className="text-indigo-600 font-bold text-sm">View All</Text>
                         </TouchableOpacity>
@@ -156,11 +157,23 @@ const ProfileSummary = ({ navigation }: any) => {
                                             {/* --- TOP SECTION: Profile & Basic Info --- */}
                                             <HStack space="md" className="items-center">
                                                 <Box className="relative">
-                                                    <Image
-                                                        source={{ uri: getExtension(item.file_name, 'addthumnail') || 'https://via.placeholder.com/150' }}
+                                                    {/* <FastImage
+                                                        source={{ uri: getExtension(item.file_name, 'addthumnail') }}
                                                         className="h-14 w-14 rounded-2xl bg-slate-100"
-                                                        alt="Profile Image"
+
+                                                    /> */}
+                                                    <FastImage
+                                                        source={{
+                                                            uri: getExtension(item.file_name, 'addthumnail'),
+                                                            priority: FastImage.priority.normal,
+                                                            cache: FastImage.cacheControl.immutable,
+                                                        }}
+
+                                                        style={{ width: 56, height: 56, borderRadius: 32 }}
+                                                        resizeMode={FastImage.resizeMode.cover}
                                                     />
+
+
                                                     {item.IsVerified === 1 && (
                                                         <Box className="absolute -right-2 -top-2 bg-blue-500 rounded-full p-1 border-2 border-white">
                                                             <Check size={10} color="white" />

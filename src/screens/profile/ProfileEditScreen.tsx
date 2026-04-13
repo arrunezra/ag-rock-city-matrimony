@@ -6,21 +6,18 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { Accessibility, Activity, Baby, Banknote, Briefcase, Calendar, CameraIcon, Check, CheckCircle2, CheckIcon, ChevronDown, ChevronDownIcon, ChevronLeftIcon, ChevronUp, ChevronUpIcon, Coffee, Droplets, EditIcon, Globe, GraduationCap, Heart, Icon, Info, Languages, Mail, MapPin, MessageSquareQuote, MoonStar, Network, Phone, Ruler, Scale, School, ShieldCheck, Sparkles, User, UserRound, Users, Users2, UserSquare } from '@/src/components/common/IconUI';
 import FastImage from '@d11/react-native-fast-image';
 import LinearGradient from 'react-native-linear-gradient';
-import { COMMUNITIES, getProfileCompletionData, HEIGHT_DATA, HOBBIES, INCOME_RANGES, LIVINGIN, MARITAL_STATUS, RELIGION_DATA, WORK_WITH } from '@/src/utils/utils';
 import { useAuth } from '@/src/context/AuthContext';
 import LottieView from 'lottie-react-native';
 import EditBasicsModalScreen from './home_sub_screen/EditBasicsModalScreen';
 import EditReligionModal from './home_sub_screen/EditReligionModal';
 import EditAboutModal from './home_sub_screen/EditAboutModal';
 import ContactModal from './home_sub_screen/ContactModal';
-import EditLocationModal from './home_sub_screen/EditLocationModal';
-import EditCareerModal from './home_sub_screen/EditCareerModal';
 import EditHobbiesModal from './home_sub_screen/EditHobbiesModal';
 import { FamilyDetailsModal } from './home_sub_screen/FamilyDetailsModal';
 import { EducationDetailsModal } from './home_sub_screen/EducationDetailsModal';
 import ImagePicker from 'react-native-image-crop-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL_DEV_Profiles_Images, API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
+import { API_BASE_URL_DEV_Profiles_Images } from '@/src/utils/environment';
 import { compressWithSkia } from '@/src/utils/compressWithSkia';
 import { BlurView } from '@react-native-community/blur';
 import { UploadProgressModal } from '../common/UploadProgressModal';
@@ -40,7 +37,10 @@ export default function ProfileEditScreen({ navigation, route }: any) {
   const userid = user?.userid;
   const [profileImage, setProfileImage] = useState(API_BASE_URL_DEV_Profiles_Images + '/' + user?.profilePic);
   const [showBasicsModal, setShowBasicsModal] = useState(false);
-  const { totalStrength, checklist } = getProfileCompletionData(user);
+  const [totalStrength, setTotalStrength] = useState<any>();
+  const [checklist, setChecklist] = useState<any>();
+  const [profileCompletion, setProfileCompletion] = useState(75);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
@@ -97,7 +97,6 @@ export default function ProfileEditScreen({ navigation, route }: any) {
     employerName: '',
     highestQualification: ''
   });
-  const profileCompletion = 75; // This would be calculated dynamically
   const toast = useToast();
 
   const [showConfetti, setShowConfetti] = useState(false);
@@ -138,6 +137,42 @@ export default function ProfileEditScreen({ navigation, route }: any) {
       return () => clearTimeout(timer);
     }
   }, [totalStrength]);
+  const getProfileCompletionData = (user: any) => {
+
+    const sections = [
+      {
+        label: 'Profile Photo',
+        weight: 25,
+        isDone: !!user?.file_name,
+        screen: 'profile'
+      },
+      {
+        label: 'Basics & Lifestyle',
+        weight: 25,
+        isDone: !!user?.marital_status,
+        screen: 'basicdetails'
+      },
+      {
+        label: 'Religion & Community',
+        weight: 25,
+        isDone: !!user?.income && !!user?.religion_name && !!user?.community_name,
+        screen: 'religion'
+      },
+      {
+        label: 'Educations & Career',
+        weight: 25,
+        isDone: !!user?.work_with,
+        //isDone: !!user?.about && user.about.length > 10,
+        screen: 'education'
+      },
+
+    ];
+
+    const totalStrength = sections.reduce((acc, item) => (item.isDone ? acc + item.weight : acc), 0);
+
+    return { totalStrength, checklist: sections };
+  };
+
   // 1. Move loadData outside so the Modal can call it too
   const loadData = async () => {
     setLoading(true); // Show loader while refreshing
@@ -169,14 +204,17 @@ export default function ProfileEditScreen({ navigation, route }: any) {
           hobbies_name: typeof data.hobbies_name === 'string' ? data.hobbies_name.split(',') : (data.hobbies_name || [])
 
         });
-        console.log('loadData', data)
-
+        const { totalStrength, checklist } = getProfileCompletionData(data);
+        setTotalStrength(totalStrength);
+        setChecklist(checklist);
+        setProfileCompletion(totalStrength)
+        setLoading(false);
         setIsDataLoaded(true)
       }
     } catch (e) {
       console.error("Fetch Profile Error:", e);
     } finally {
-      setLoading(false);
+
     }
   };
   const loadLookupData = async () => {
@@ -458,7 +496,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
       </Box>
     );
   };
-  const ProfileChecklist = ({ checklist, navigation }: any) => {
+  const ProfileChecklist = ({ checklist, profileAction }: any) => {
     // Safety check to ensure checklist exists before mapping
     if (!checklist || checklist.length === 0) return null;
 
@@ -494,8 +532,8 @@ export default function ProfileEditScreen({ navigation, route }: any) {
               {!item.isDone && (
                 <TouchableOpacity
                   onPress={() => {
-                    if (item.screen && navigation) {
-                      navigation.navigate(item.screen);
+                    if (item.screen && profileAction) {
+                      profileAction(item.screen);
                     }
                   }}
                   activeOpacity={0.7}
@@ -571,6 +609,19 @@ export default function ProfileEditScreen({ navigation, route }: any) {
       .join(', ');
   };
 
+  const getAboutUs = () => {
+    if (profileData.work_with !== 'NWK' && profileData.working_as) {
+      return `Thank you for stopping by my profile! As a ${profileData.working_as}, my dreams and aspirations are the heartbeat of my journey toward success. I hope to find a life partner who is lovable and deeply understanding—someone who walks beside me as a best friend and stands firm with me through all of life's ups and downs. I look forward to hearing from you soon.`
+    } else return `I am glad you chose to visit my profile. While I am currently focusing on my personal growth and home life, my dreams and aspirations constantly drive me toward a successful future. I am looking for a life partner who would be a true friend—lovable, deeply understanding, and ready to stand by me in every phase of life. Please feel free to connect with me anytime.`
+  }
+  const completeProfile = (action: string) => {
+    if (action === 'profile') { navigation.navigate('ShowProfileGallery') }
+    else if (action === 'basicdetails') { setShowBasicsModal(true) }
+    else if (action === 'religion') { setShowReligionModal(true) }
+    else if (action === 'education') { setShowEducationModal(true) }
+    else { }
+
+  }
   return (
     <Box className="flex-1 bg-[#F1F5F9]">
 
@@ -630,7 +681,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
               {totalStrength < 100 && (
                 <ProfileChecklist
                   checklist={checklist}
-                  navigation={navigation}
+                  profileAction={completeProfile}
                 />
               )}
 
@@ -647,7 +698,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                     numberOfLines={isExpanded ? undefined : 3}
                   >
 
-                    {profileData?.aboutus || "I am glad you chose to visit my profile. Currently, I am employed as a Writer. My dreams and aspirations constantly drive me toward success..."}
+                    {profileData?.aboutus || getAboutUs()}
                   </Text>
                   {!isExpanded && (
                     <LinearGradient
@@ -674,7 +725,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                 isOpen={isAboutModalVisible}
                 user={user}
                 onClose={() => setIsAboutModalVisible(false)}
-                content={profileData?.aboutus || "I am glad you chose to visit my profile. Currently, I am employed as a Writer. My dreams and aspirations constantly drive me toward success..."}
+                content={profileData?.aboutus || getAboutUs()}
               />
               }
 
@@ -812,7 +863,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                       </Box>
                       <VStack>
                         <Text size="xs" className="text-typography-500 font-medium">Disability</Text>
-                        <Text size="md" className="text-typography-900 font-bold">{profileData?.disability || "None"}</Text>
+                        <Text size="md" className="text-typography-900 font-bold">{profileData?.disability || "Not Specified"}</Text>
                       </VStack>
                     </HStack>
                   </HStack>
@@ -1155,7 +1206,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
               >
                 <VStack space="lg" className="mt-2">
                   <HStack items-center space="md">
-                    <Box className="p-2.5 rounded-xl bg-violet-50">
+                    <Box className="p-2.5 rounded-xl bg-violet-50 justify-center">
                       <Icon as={GraduationCap} size='xl' className="text-violet-600" />
                     </Box>
                     <VStack className="flex-1">
@@ -1172,17 +1223,30 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                   <Box className="h-[1px] bg-slate-100 w-full" />
 
                   <HStack items-center space="md">
-                    <Box className="p-2.5 rounded-xl bg-violet-50">
+                    <Box className="p-2.5 rounded-xl bg-violet-50 justify-center">
                       <Icon as={Briefcase} size='xl' className="text-violet-600" />
                     </Box>
                     <VStack className="flex-1">
                       <Text size="xs" className="text-typography-500 font-medium uppercase tracking-tight">Working As</Text>
                       <Text size="md" className="text-typography-900 font-bold">
-                        {profileData?.work_with === 'NWK' ? profileData?.work_with_name :
-                          profileData?.work_with === 'OTH' ? profileData?.work_with_name + " - " + profileData?.others + " - " + profileData?.working_as :
-                            profileData?.work_with_name + " - " + profileData?.working_as}
+                        {(() => {
+                          const { work_with, work_with_name, others, working_as } = profileData || {};
+
+                          // 1. Not working scenario
+                          if (work_with === 'NWK') return work_with_name;
+
+                          // 2. Others or standard working scenario
+                          // Create an array of potential pieces, filter out anything empty/null
+                          const parts = work_with === 'OTH'
+                            ? [work_with_name, others, working_as]
+                            : [work_with_name, working_as];
+
+                          const displayString = parts.filter(Boolean).join(' - ');
+
+                          return displayString || "Not specified";
+                        })()}
                       </Text>
-                      {profileData?.work_with !== 'NWK' && <Text size="sm" className="text-typography-600">
+                      {profileData?.work_with && profileData?.work_with !== 'NWK' && <Text size="sm" className="text-typography-600">
                         {profileData?.company_name || "Not specified"}
                       </Text>
                       }

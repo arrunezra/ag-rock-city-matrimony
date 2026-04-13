@@ -9,8 +9,11 @@ import LottieView from 'lottie-react-native';
 import NotFoundScreen from '../common/NotFoundScreen';
 import FailedScreen from '../common/FailedScreen';
 import { SkeletonItem } from '../common/SkeletonItem';
+import { useAuth } from '@/src/context/AuthContext';
 
 export default function HomeScreen() {
+  const { user } = useAuth();
+
   const navigation = useNavigation<any>();
   const [profiles, setProfiles] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -103,8 +106,7 @@ export default function HomeScreen() {
         keyExtractor={(item, index) => `${item.id}-${index}`}
         renderItem={({ item }) => (
           <Box className="px-4">
-            <ProfileCard profile={item} onPress={() => {
-              console.log('ProfileCard', item)
+            <ProfileCard profile={item} user={user} onPress={() => {
               navigation.navigate('ProfileDetail', { id: item.id })
             }} />
           </Box>

@@ -49,7 +49,7 @@ const StaffDashboard = ({ navigation }: any) => {
                         <TouchableOpacity onPress={() => navigation.navigate('Main', { screen: 'StaffSummaryView' })}>
 
                             <VStack>
-                                <Text className="text-cyan-100 text-xs font-bold uppercase tracking-wider">Total Workforce</Text>
+                                <Text className="text-cyan-100 text-xs font-bold uppercase tracking-wider">Total Employees</Text>
                                 <Heading size="3xl" className="text-white mt-1">{data?.summary?.total_count || 0}</Heading>
                             </VStack>
                         </TouchableOpacity>
@@ -94,7 +94,7 @@ const StaffDashboard = ({ navigation }: any) => {
                 {/* --- Recent Records --- */}
                 <VStack space="md" className="mt-2">
                     <HStack className="justify-between items-center px-1">
-                        <Heading size="md" className="text-slate-800">Recent Members</Heading>
+                        <Heading size="md" className="text-slate-800">Recent Employees</Heading>
                         <TouchableOpacity onPress={() => navigation.navigate('Main', { screen: 'StaffSummaryView' })}>
                             <Text className="text-cyan-600 font-bold">View All</Text>
                         </TouchableOpacity>
@@ -147,8 +147,8 @@ const StaffDashboard = ({ navigation }: any) => {
                                                 </Text>
                                                 <Text className="text-xs text-slate-500 font-medium">{item.designation_name}</Text>
 
-                                                <Box className={`mt-2 self-start px-2 py-0.5 rounded-lg ${item.activeStatus === 'Active' ? 'bg-teal-50' : 'bg-slate-100'}`}>
-                                                    <Text className={`text-[10px] font-bold uppercase tracking-tight ${item.activeStatus === 'Active' ? 'text-teal-600' : 'text-slate-400'}`}>
+                                                <Box className={`mt-2 self-start px-2 py-0.5 rounded-lg ${item.activeStatus === '1' ? 'bg-teal-50' : 'bg-slate-100'}`}>
+                                                    <Text className={`text-[10px] font-bold uppercase tracking-tight ${item.activeStatus === '1' ? 'text-teal-600' : 'text-slate-400'}`}>
                                                         {item.activeStatus}
                                                     </Text>
                                                 </Box>

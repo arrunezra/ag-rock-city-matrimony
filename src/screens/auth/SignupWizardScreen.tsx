@@ -15,9 +15,11 @@ import {
   Radio,
   RadioLabel,
   RadioIndicator,
-  RadioGroup
+  RadioGroup,
+  Textarea,
+  TextareaInput
 } from '@/src/components/common/GluestackUI';
-import { Icon, ChevronLeftIcon, ChevronDownIcon, CheckIcon, SearchIcon, CalendarDays, UserCheck, User, Globe, ChevronDown, Users, Church, ShieldCheck, Phone, Mail, CheckCircle2, Check, Fingerprint, Building2, MapPin, Trash2, Baby, Heart, Ruler, BookOpen, School, GraduationCap, UserRound, Briefcase, Banknote, Building, Sparkles } from '@/src/components/common/IconUI';
+import { Icon, ChevronLeftIcon, ChevronDownIcon, CheckIcon, SearchIcon, CalendarDays, UserCheck, User, Globe, ChevronDown, Users, Church, ShieldCheck, Phone, Mail, CheckCircle2, Check, Fingerprint, Building2, MapPin, Trash2, Baby, Heart, Ruler, BookOpen, School, GraduationCap, UserRound, Briefcase, Banknote, Building, Sparkles, X, Lightbulb } from '@/src/components/common/IconUI';
 //import { launchImageLibrary } from 'react-native-image-picker';
 import ImagePicker from 'react-native-image-crop-picker';
 import api from '@/src/api/api';
@@ -33,9 +35,9 @@ import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useAlert } from '@/src/context/AlertContext';
 import { useAuth } from '@/src/context/AuthContext';
 import { AnimateError } from '../common/AnimateError';
-import { itemData, QualificationTemp, transformGroupedData } from '@/src/utils/qualification';
+import { itemData } from '@/src/utils/qualification';
 import { API_BASE_URL_DEV_Profiles_Images, API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
-import { COMMUNITIES, HEIGHT_DATA, HOBBIES, INCOME_RANGES, LIVINGIN, MARITAL_STATUS, RELIGION_DATA, STATES, SUB_COMMUNITIES, WORK_WITH } from '@/src/utils/utils';
+import { HEIGHT_DATA } from '@/src/utils/utils';
 import { UploadProgressModal } from '../common/UploadProgressModal';
 import FuturisticDropdown from '@/src/components/common/FuturisticDropdown';
 import { LookupContext } from '@/src/context/LookupContext';
@@ -81,8 +83,10 @@ export default function SignupWizardScreen() {
   const cityRef = React.useRef<any>(null);
   // State Variables
 
-  const [step, setStep] = useState(10);
-  const totalSteps = 10;
+  const [step, setStep] = useState(1);
+
+
+  const totalSteps = 11;
   const progress = (step / totalSteps) * 100;
 
   const [isUploading, setIsUploading] = useState(false);
@@ -101,7 +105,10 @@ export default function SignupWizardScreen() {
 
   const [userID, setUserID] = useState('');
   const [profileID, setProfileID] = useState('');
+  const [aboutText, setAboutText] = useState('');
 
+  const MAX_CHARS = 1000;
+  const MIN_CHARS = 50;
   // Comprehensive Form State
   const [formData, setFormData] = useState<any>({
     firstName: '',
@@ -208,6 +215,7 @@ export default function SignupWizardScreen() {
 
       uploadData.append('userid', formData.userid);
       uploadData.append('profile_id', profileID);
+      uploadData.append('is_profile_pic', 1);
 
       // 3. Start Upload
       setIsUploading(true);
@@ -275,6 +283,8 @@ export default function SignupWizardScreen() {
         setIsUploading(false);
         hideAlert();
         setIsFinished(true);
+        setValidationTriggered(false);
+
         setStep(prev => prev + 1);
         // showAlert({
         //   type: 'success',
@@ -372,9 +382,10 @@ export default function SignupWizardScreen() {
     const payload = {
       ...formData,
       hobbies: localSelected?.join(','), profileFor,
-      step: 10,
+      step: 11,
       //userid: 'RCST0326-56496',
-      profile_id: profileID
+      profile_id: profileID,
+      aboutus: aboutText
     };
     try {
       //console.log('payload', payload);
@@ -389,26 +400,23 @@ export default function SignupWizardScreen() {
         });
         setTimeout(() => {
           hideAlert();
+
+          // navigation.navigate('forgotpwd', {
+          //         identifier: email
+          //       })
+
+
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
               routes: [{
-                name: 'SetPassword', params: {
-                  userid: response?.userid || "",
-                  mobile: formData.mobile || "",
-                  email: formData.email || "",
-                  name: formData.name || "",
+                name: 'forgotpwd', params: {
+                  identifier: formData.email || ""
                 }
               }],
             })
           );
-          // navigation.navigate('SetPassword', {
-          //   userid: response?.userid || "",
-          //   mobile: formData.mobile || "",
-          //   email: formData.email || "",
-          //   name: formData.name || "",
 
-          // })
         }, 2000);
       } else {
         showAlert({
@@ -594,6 +602,14 @@ export default function SignupWizardScreen() {
       }
       else if (formData.worksWith !== 'NWK' && !formData.companyName) {
         return;
+      } else {
+        let aboutas = '';
+        if (formData?.worksWith !== 'NWK' && formData?.worksas) {
+          aboutas = `Thank you for stopping by my profile! As a ${formData?.worksas}, my dreams and aspirations are the heartbeat of my journey toward success. I hope to find a life partner who is lovable and deeply understanding—someone who walks beside me as a best friend and stands firm with me through all of life's ups and downs. I look forward to hearing from you soon.`
+        } else aboutas = `I am glad you chose to visit my profile. While I am currently focusing on my personal growth and home life, my dreams and aspirations constantly drive me toward a successful future. I am looking for a life partner who would be a true friend—lovable, deeply understanding, and ready to stand by me in every phase of life. Please feel free to connect with me anytime.`
+
+        setAboutText(aboutas);
+
       }
     }
     if (step === 4) {
@@ -602,8 +618,8 @@ export default function SignupWizardScreen() {
     else if (step === 8) handleParcialSubmit();
     else if (step === totalSteps) handleFinalSubmit();
     else {
-      setStep(prev => prev + 1);
       setValidationTriggered(false);
+      setStep(prev => prev + 1);
     }
 
   }
@@ -898,22 +914,22 @@ export default function SignupWizardScreen() {
                     </FormControlLabel>
 
 
-                    <Dropdown
-                      style={[styles.dropdown, { height: 64, borderRadius: 16, paddingHorizontal: 16, backgroundColor: 'white', borderWidth: 1, borderColor: '#e2e8f0' }]}
-                      placeholderStyle={{ color: '#94a3b8', fontSize: 16 }}
-                      selectedTextStyle={{ color: '#1e293b', fontWeight: '600', fontSize: 16 }}
+
+
+                    <FuturisticDropdown
                       data={lookups?.country || []}
-                      labelField="label"
-                      valueField="value"
-                      placeholder="Country"
                       value={formData.livingIn}
-                      renderLeftIcon={() => <Icon as={Globe} size="sm" className="mr-3 text-blue-500" />}
-                      renderRightIcon={() => <Icon as={ChevronDown} size="xs" className="text-slate-400" />}
-                      onChange={item => {
+                      onChange={(item: any) => {
                         setValidationTriggered(false);
                         updateForm('livingIn', item.value);
                       }}
+                      placeholder="Select Country "
+                      icon={{ icon: Globe, color: 'text-blue-500' }}
+                      search={false}
+                      isInvalid={validationTriggered && !formData.livingIn}
                     />
+
+
                     <FormControlError>
                       <FormControlErrorText>Living In is required</FormControlErrorText>
                     </FormControlError>
@@ -1032,29 +1048,6 @@ export default function SignupWizardScreen() {
                     search={false}
                     isInvalid={validationTriggered && !formData.fatherDetails}
                   />
-                  <AnimateError isVisible={validationTriggered && (!formData.state)}>
-                    {"Please select your state"}
-                  </AnimateError>
-
-                  {/* <Dropdown
-                    style={[styles.dropdown, { height: 64, borderRadius: 16, paddingHorizontal: 16, backgroundColor: 'white', borderWidth: 1, borderColor: isFocus ? '#0891b2' : '#e2e8f0' }]}
-                    placeholderStyle={{ color: '#94a3b8', fontSize: 16 }}
-                    selectedTextStyle={{ color: '#1e293b', fontWeight: '600', fontSize: 16 }}
-                    data={STATES}
-                    labelField="StateName"
-                    valueField="StateCode"
-                    placeholder="Select State"
-                    onFocus={() => setIsFocus(true)}
-                    onBlur={() => setIsFocus(false)}
-                    value={formData.state}
-                    renderLeftIcon={() => <Icon as={MapPin} size="sm" className="mr-3 text-blue-500" />}
-                    renderRightIcon={() => <Icon as={ChevronDown} size="xs" className="text-slate-400" />}
-                    onChange={item => {
-                      updateForm('state', item.StateCode);
-                      updateForm('city', '');
-                      fetchCities(item.StateCode);
-                    }}
-                  /> */}
                   <AnimateError isVisible={validationTriggered && (!formData.state)}>
                     {"Please select your state"}
                   </AnimateError>
@@ -1182,7 +1175,7 @@ export default function SignupWizardScreen() {
                       updateForm('hasChildren', 'No');
                       updateForm('kids', []);
                     }}
-                    placeholder="Select Height "
+                    placeholder="Select Marital Status "
                     icon={{ icon: Heart, color: 'text-rose-500' }}
                     search={false}
                     isInvalid={validationTriggered && !formData.maritalStatus}
@@ -1311,7 +1304,7 @@ export default function SignupWizardScreen() {
                     onChange={(item: any) => {
                       updateForm('qualification', item.value);
                     }}
-                    placeholder="Select Height "
+                    placeholder="Select Qualification"
                     icon={{ icon: GraduationCap, color: 'text-rose-500' }}
                     search={false}
                     isInvalid={validationTriggered && !formData.maritalStatus}
@@ -1406,70 +1399,74 @@ export default function SignupWizardScreen() {
                     {"Work sector is required"}
                   </AnimateError>
                 </FormControl>
-                {formData.worksWith !== 'NWK' && formData.worksWith !== 'OTH' && <>(
+                {formData.worksWith !== 'NWK' && formData.worksWith !== 'OTH' && (
+                  <>
+                    {/* Removed the raw '(' that was here */}
+                    <FormControl isInvalid={validationTriggered && !formData.worksas}>
+                      <FormControlLabel className="mb-2">
+                        <FormControlLabelText className="font-bold text-slate-700">
+                          Working As (Designation)
+                        </FormControlLabelText>
+                      </FormControlLabel>
+                      <Input size="lg" className="h-16 rounded-2xl bg-white border-outline-200 shadow-sm shadow-slate-100">
+                        <InputSlot className="pl-4">
+                          <Icon as={UserRound} className="text-blue-500" size="sm" />
+                        </InputSlot>
+                        <InputField
+                          placeholder="e.g. Senior Product Manager"
+                          value={formData.worksas}
+                          onChangeText={(v) => updateForm('worksas', v)}
+                          className="font-medium"
+                        />
+                      </Input>
+                      <AnimateError isVisible={validationTriggered && !formData.worksas}>
+                        {"Your designation is required"}
+                      </AnimateError>
+                    </FormControl>
 
-                  <FormControl isInvalid={validationTriggered && (!formData.worksas)}>
-                    <FormControlLabel className="mb-2">
-                      <FormControlLabelText className="font-bold text-slate-700">Working As (Designation)</FormControlLabelText>
-                    </FormControlLabel>
-                    <Input size="lg" className="h-16 rounded-2xl bg-white border-outline-200 shadow-sm shadow-slate-100">
-                      <InputSlot className="pl-4">
-                        <Icon as={UserRound} className="text-blue-500" size="sm" />
-                      </InputSlot>
-                      <InputField
-                        placeholder="e.g. Senior Product Manager"
-                        value={formData.worksas}
-                        onChangeText={(v) => updateForm('worksas', v)}
-                        className="font-medium"
-                      />
-                    </Input>
-                    <AnimateError isVisible={validationTriggered && (!formData.worksas)}>
-                      {"Your designation is required"}
-                    </AnimateError>
-                  </FormControl>
-
-
-                  <FormControl isInvalid={validationTriggered && (!formData.companyName)}>
-                    <FormControlLabel className="mb-2">
-                      <FormControlLabelText className="font-bold text-slate-700">Employer / Company Name</FormControlLabelText>
-                    </FormControlLabel>
-                    <Input size="lg" className="h-16 rounded-2xl bg-white border-outline-200 shadow-sm shadow-slate-100">
-                      <InputSlot className="pl-4">
-                        <Icon as={Building} className="text-blue-500" size="sm" />
-                      </InputSlot>
-                      <InputField
-                        placeholder="e.g. Google / Self-Employed"
-                        value={formData.companyName}
-                        onChangeText={(v) => updateForm('companyName', v)}
-                        className="font-medium"
-                      />
-                    </Input>
-                    <AnimateError isVisible={validationTriggered && (!formData.companyName)}>
-                      {"Company name is required"}
-                    </AnimateError>
-                  </FormControl>
-                  )</>
-                }
-                {
-                  formData.worksWith === 'OTH' && <FormControl isInvalid={validationTriggered && (!formData.others)}>
-                    <FormControlLabel className="mb-2">
-                      <FormControlLabelText className="font-bold text-slate-700">Others</FormControlLabelText>
-                    </FormControlLabel>
-                    <Input size="lg" className="h-16 rounded-2xl bg-white border-outline-200 shadow-sm shadow-slate-100">
-                      <InputSlot className="pl-4">
-                        <Icon as={School} className="text-blue-500" size="sm" />
-                      </InputSlot>
-                      <InputField
-                        placeholder="e.g. Full-time ministry"
-                        value={formData.others}
-                        onChangeText={(v) => updateForm('others', v)}
-                        className="font-medium"
-                      />
-                    </Input>
-                    <AnimateError isVisible={validationTriggered && (!formData.others)}>
-                      {"Others is required"}
-                    </AnimateError>
-                  </FormControl>
+                    <FormControl isInvalid={validationTriggered && !formData.companyName}>
+                      <FormControlLabel className="mb-2">
+                        <FormControlLabelText className="font-bold text-slate-700">
+                          Employer / Company Name
+                        </FormControlLabelText>
+                      </FormControlLabel>
+                      <Input size="lg" className="h-16 rounded-2xl bg-white border-outline-200 shadow-sm shadow-slate-100">
+                        <InputSlot className="pl-4">
+                          <Icon as={Building} className="text-blue-500" size="sm" />
+                        </InputSlot>
+                        <InputField
+                          placeholder="e.g. Google / Self-Employed"
+                          value={formData.companyName}
+                          onChangeText={(v) => updateForm('companyName', v)}
+                          className="font-medium"
+                        />
+                      </Input>
+                      <AnimateError isVisible={validationTriggered && !formData.companyName}>
+                        {"Company name is required"}
+                      </AnimateError>
+                    </FormControl>
+                    {/* Removed the raw ')' that was here */}
+                  </>
+                )}
+                {formData.worksWith === 'OTH' && <FormControl isInvalid={validationTriggered && (!formData.others)}>
+                  <FormControlLabel className="mb-2">
+                    <FormControlLabelText className="font-bold text-slate-700">Others</FormControlLabelText>
+                  </FormControlLabel>
+                  <Input size="lg" className="h-16 rounded-2xl bg-white border-outline-200 shadow-sm shadow-slate-100">
+                    <InputSlot className="pl-4">
+                      <Icon as={School} className="text-blue-500" size="sm" />
+                    </InputSlot>
+                    <InputField
+                      placeholder="e.g. Full-time ministry"
+                      value={formData.others}
+                      onChangeText={(v) => updateForm('others', v)}
+                      className="font-medium"
+                    />
+                  </Input>
+                  <AnimateError isVisible={validationTriggered && (!formData.others)}>
+                    {"Others is required"}
+                  </AnimateError>
+                </FormControl>
                 }
               </VStack>
             </VStack>
@@ -1494,14 +1491,6 @@ export default function SignupWizardScreen() {
 
           {/* STEP 10: Hobbies */}
           {step === 10 && (
-            // <VStack className="gap-6 pb-10">
-            //   <Heading size="xl">Hobbies</Heading>
-            //   <HStack className="flex-wrap gap-3">
-            //     {HOBBIES.map(h => (
-            //       <SelectionPill key={h} label={h} isSelected={selectedHobbies.includes(h)} onSelect={() => toggleHobby(h)} />
-            //     ))}
-            //   </HStack>
-            // </VStack>
 
             <ScrollView className="px-6 pb-10" showsVerticalScrollIndicator={false}>
               <VStack className="items-center mb-8">
@@ -1569,6 +1558,114 @@ export default function SignupWizardScreen() {
               </VStack>
             </ScrollView>
           )}
+
+
+          {step === 11 &&
+            <ScrollView
+              contentContainerStyle={{ paddingBottom: 40 }}
+              className="px-6 py-4"
+              showsVerticalScrollIndicator={false}
+            >
+              <VStack space="xl">
+
+                {/* 2026 Futuristic Icon Section */}
+                <VStack className="items-center mb-8">
+
+
+                  <Heading size="xl" className="mt-4 tracking-tight text-center text-typography-900">
+                    Personality
+                  </Heading>
+                  <Text size="xs" className="text-typography-500 text-center mt-1 px-10">
+                    Share your story. Profiles with thoughtful bios get 70% more engagement.
+                  </Text>
+                </VStack>
+
+                <VStack space="md">
+                  <Box className="relative">
+                    <Textarea
+                      size="lg"
+                      className={`h-64 p-4 rounded-3xl border-2 transition-all bg-white ${aboutText.length >= MIN_CHARS
+                        ? 'border-outline-100'
+                        : 'border-error-100'
+                        }`}
+                    >
+                      <TextareaInput
+                        placeholder="Write something interesting about yourself..."
+                        value={aboutText}
+                        onChangeText={setAboutText}
+                        maxLength={MAX_CHARS}
+                        multiline
+                        textAlignVertical="top"
+
+                        className="text-lg leading-6 pr-8 text-typography-800"
+                      />
+                    </Textarea>
+
+                    {/* Floating Clear Button */}
+                    {aboutText.length > 0 && (
+                      <TouchableOpacity
+                        onPress={() => setAboutText('')}
+                        className="absolute top-4 right-4 bg-slate-100 p-1.5 rounded-full"
+                      >
+                        <Icon as={X} size='lg' className="text-slate-500" />
+                      </TouchableOpacity>
+                    )}
+
+                    {/* Character Counter & Status */}
+                    <HStack className="justify-between mt-3 px-2">
+                      <HStack items-center space="xs">
+                        <Box className={`w-2 h-2 rounded-full ${aboutText.length < MIN_CHARS ? 'bg-error-500' : 'bg-emerald-500'}`} />
+                        <Text size="xs" className={aboutText.length < MIN_CHARS ? "text-error-600 font-medium" : "text-emerald-600 font-medium"}>
+                          {aboutText.length < MIN_CHARS
+                            ? `${MIN_CHARS - aboutText.length} characters to go`
+                            : "Bio length is perfect"}
+                        </Text>
+                      </HStack>
+                      <Text size="xs" className="text-typography-400 font-mono">
+                        {aboutText.length}/{MAX_CHARS}
+                      </Text>
+                    </HStack>
+                  </Box>
+
+                  {/* Tips Box */}
+                  <Box className="bg-slate-50 p-5 rounded-3xl border border-slate-100 mt-2">
+                    <HStack space="sm" items-center className="mb-3">
+                      <Icon as={Lightbulb} size="sm" className="text-amber-500" />
+                      <Heading size="xs" className="text-slate-800">Writing Tips</Heading>
+                    </HStack>
+                    <VStack space="xs">
+                      <Text size="xs" className="text-slate-600 leading-5">• Mention your career and future goals.</Text>
+                      <Text size="xs" className="text-slate-600 leading-5">• Talk about your favorite weekend hobbies.</Text>
+                      <Text size="xs" className="text-slate-600 leading-5">• Describe the qualities of your ideal partner.</Text>
+                    </VStack>
+                  </Box>
+                </VStack>
+                {/* <Box className="p-6 border-t border-outline-100 bg-white">
+                    <HStack className="w-full gap-3">
+                        <Button variant="outline" action="secondary" onPress={onClose} className="flex-1 rounded-2xl h-14 border-outline-300">
+                            <ButtonText className="text-typography-600 font-bold">Cancel</ButtonText>
+                        </Button>
+                        <Button
+                            onPress={handleSave}
+                            isDisabled={isSaving || aboutText.length < MIN_CHARS}
+                            className={`flex-1 rounded-2xl h-14 shadow-lg ${isSaving || aboutText.length < MIN_CHARS
+                                ? 'bg-slate-200'
+                                : 'bg-amber-500 shadow-amber-100'
+                                }`}
+                        >
+                            {isSaving ? (
+                                <Spinner color="white" />
+                            ) : (
+                                <ButtonText className="text-white font-bold text-lg">Submit</ButtonText>
+                            )}
+                         </Button>
+                    </HStack>
+                </Box> */}
+              </VStack>
+            </ScrollView>
+          }
+
+
         </ScrollView>
 
         <Box className="p-6 bg-white border-t border-outline-50">

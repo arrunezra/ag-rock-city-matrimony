@@ -34,48 +34,16 @@ try {
                         ,city_name
                         ,state
                         ,state_name
-                        ,country
-                        ,updated_at
+                        
                         ,country_name
-                        ,religion
-                        ,religion_name
-                        ,community
-                        ,community_name
-                        ,sub_community
-                        ,sub_community_name
-                        ,mother_tongue
-                        ,mother_tongues_name
-                        ,is_caste_no_bar
+                        
                         ,marital_status
                         ,marital_status_name
-                        ,family_type
-                        ,father_occupation
-                        ,father_occupation_name
-                        ,mother_occupation
-                        ,mother_occupation_name
-                        ,noof_sibling
-                        ,sister_count
-                        ,kids_details
-                        ,brother_count
-                        ,has_children
-                        ,children_count
-                        ,aboutus
-                        ,hobbies
-						,hobbies_name
-                        ,height
-                        ,weight
-                        ,blood_group
-                        ,qualification
-                        ,qualification_name
-                        ,college
-                        ,income
-                        ,income_name
-                        ,work_with
-                        ,work_with_name
-                        ,working_as
-                        ,company_name
+                         
                         ,others
                         ,file_name
+                        ,IsActive
+                        ,IsVerified
                     FROM V_Profile
 				ORDER BY updated_at DESC 
 				LIMIT 10";

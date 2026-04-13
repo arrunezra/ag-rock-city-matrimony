@@ -8,8 +8,10 @@ import profileService from '@/src/services/profileService';
 import { API_BASE_URL_DEV_Profiles_Images, API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
 import LottieView from 'lottie-react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { CheckCircle2Icon } from 'lucide-react-native';
-export const ProfileCard = ({ profile, onPress }: any) => {
+import { CheckCircle2Icon, CheckCircleIcon, UsersIcon } from 'lucide-react-native';
+import { formatHeight } from '@/src/utils/common';
+export const ProfileCard = ({ profile, onPress, user }: any) => {
+  console.log('ProfileCard', profile)
   const [isLiked, setIsLiked] = useState(false);
   const [isReady, setIsReady] = useState(false);
   // 1. Get Screen Height to calculate dynamic card size
@@ -27,10 +29,10 @@ export const ProfileCard = ({ profile, onPress }: any) => {
   if (!isReady) {
     return <Box className="flex-1 bg-white" />; // Empty white screen during transition
   }
-  const handleLike = async () => {
+  const sendConnectRequst = async () => {
     try {
       setIsLiked(true);
-      const response = await profileService.sendInterest({ receiver_id: profile.id });
+      const response = await profileService.sendInterest({ receiver_id: profile?.profile_id });
       if (!response.success) {
         setIsLiked(false);
         Alert.alert(response.message);
@@ -41,11 +43,16 @@ export const ProfileCard = ({ profile, onPress }: any) => {
     }
   };
 
+  const handleLike = async () => {
+
+  }
+
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.95} className="mx-2 mb-8">
       <Box
         style={{ height: CARD_HEIGHT }}
-        className="w-full rounded-[40px] overflow-hidden shadow-2xl bg-background-100 border border-white/10"      >
+        className="w-full rounded-[40px] overflow-hidden shadow-2xl bg-background-100 border border-white/20"
+      >
         {/* 1. Background Image */}
         {profile.file_name ? (
           <FastImage
@@ -67,16 +74,21 @@ export const ProfileCard = ({ profile, onPress }: any) => {
           </Box>
         )}
 
-        {/* 2. Top Badges - Improved Spacing */}
-        <HStack className="absolute top-5 left-5 right-5 justify-between items-start">
-          <Box className="bg-black/40 backdrop-blur-md px-4 py-2 rounded-full flex-row items-center gap-2 border border-white/20">
-            <Icon as={CheckCircle2Icon} size="xs" className="text-cyan-400" />
-            <Text className="text-white text-[10px] font-black uppercase tracking-widest">Connect</Text>
-          </Box>
+        {/* 2. Top Action Bar */}
+        <HStack className="absolute top-6 left-6 right-6 justify-between items-center">
+          <TouchableOpacity onPress={sendConnectRequst} activeOpacity={0.8}>
+            {/* Replaced BlurView with a solid/alpha Box */}
+            <Box className="bg-black/50 px-5 py-2.5 rounded-full flex-row items-center gap-2 border border-white/20">
+              <Icon as={CheckCircle2Icon} size="xs" className="text-cyan-400" />
+              <Text className="text-white text-[11px] font-bold uppercase tracking-[1px]">Connect</Text>
+            </Box>
+          </TouchableOpacity>
 
           <Button
             onPress={handleLike}
-            className={`h-14 w-14 rounded-full p-0 shadow-2xl ${isLiked ? 'bg-error-500' : 'bg-white/20'}`}
+            // Increased background opacity for better visibility without blur
+            className={`h-14 w-14 mt-2 rounded-full p-0 shadow-2xl border border-white/30 ${isLiked ? 'bg-error-500' : 'bg-black/40'
+              }`}
           >
             <Icon
               as={Heart}
@@ -86,34 +98,62 @@ export const ProfileCard = ({ profile, onPress }: any) => {
           </Button>
         </HStack>
 
-        {/* 3. The Scrim Gradient - Deepened for "Full Size" look */}
+        {/* 3. Information Scrim */}
         <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.9)']}
-          className="absolute bottom-0 left-0 right-0 h-1/2 justify-end p-8"
+          // Deepened the gradient stops to compensate for the lack of blur
+          colors={['transparent', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.7)', 'rgba(0,0,0,0.98)']}
+          locations={[0, 0.3, 0.6, 1]}
+          className="absolute bottom-0 left-0 right-0 h-[65%] justify-end p-7"
         >
-          <VStack space="lg">
-            {/* Name & Age */}
-            <VStack>
-              <Heading className="text-white text-4xl font-black tracking-tight">
-                {profile.full_name}, {profile.age || '28'}
-              </Heading>
-              {/* Added a subtle location text under name for full-size context */}
-              <Text className="text-white/60 text-sm font-medium">Active recently</Text>
+          <VStack space="md">
+            <VStack space="xs">
+              <HStack className="items-center gap-2">
+                <Heading className="text-white text-4xl font-black tracking-tight">
+                  {profile.full_name}, {profile?.age}
+                </Heading>
+                {profile?.IsVerified === 1 && (
+                  <Icon as={CheckCircleIcon} className="text-blue-400" size="md" />
+                )}
+              </HStack>
+
+              <HStack className="items-center gap-2">
+                {/* Status Dot with Glow */}
+                <Box className="h-2.5 w-2.5 rounded-full bg-green-500 border border-white/20" />
+                <Text className="text-white/80 text-sm font-medium">Recently Active</Text>
+              </HStack>
             </VStack>
 
-            {/* Info Pills */}
+            {/* Profile Details */}
+            <Text className="text-white/90 text-[16px] font-medium leading-6">
+              {formatHeight(profile?.height)}
+              {formatHeight(profile?.height) && profile?.sub_community_name ? `  •  ${profile.sub_community_name}` : ''}
+              {/* {profile?.religion_name ? `  •  ${profile.religion_name}` : ''} */}
+              {profile?.work_with_name ? `  •  ${profile.work_with_name}` : ''}
+
+              {/* {formatHeight(profile?.height)} {formatHeight(profile?.height) && profile?.sub_community_name && (
+                <>  •  {profile?.sub_community_name}</>
+              )}
+
+              {profile?.community && profile?.work_details && (
+                <>  •  {profile?.work_details}</>
+              )} */}
+            </Text>
+
+            {/* Info Pills using alpha colors */}
             <HStack space="sm" className="flex-wrap gap-2">
-              <Box className="bg-white/15 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/20 flex-row items-center space-x-2">
-                <Icon as={MapPin} size="sm" className="text-cyan-300" />
-                <Text className="text-white text-sm font-bold">{profile.city_name}</Text>
+              <Box className="bg-white/20 px-3 py-2 rounded-xl border border-white/10 flex-row items-center gap-2">
+                <Icon as={MapPin} size="xs" className="text-cyan-300" />
+                <Text className="text-white text-xs font-bold">{profile.city_name} , {profile?.state_name}</Text>
               </Box>
 
-              <Box className="bg-white/15 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/20 flex-row items-center space-x-2">
-                <Icon as={Briefcase} size="sm" className="text-cyan-300" />
-                <Text className="text-white text-sm font-bold" numberOfLines={1}>
-                  {profile.work_with}
-                </Text>
-              </Box>
+
+
+              {/* {user?.role === 'member' && (
+                <Box className="bg-indigo-600/40 px-3 py-2 rounded-xl border border-indigo-400/30 flex-row items-center gap-2">
+                  <Icon as={UsersIcon} size="xs" className="text-indigo-300" />
+                  <Text className="text-indigo-100 text-xs font-bold">Great Match</Text>
+                </Box>
+              )} */}
             </HStack>
           </VStack>
         </LinearGradient>

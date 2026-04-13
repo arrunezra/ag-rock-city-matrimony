@@ -14,8 +14,15 @@ api.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('accessToken');
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      // Use set() or ensure headers object exists
+      config.headers = config.headers || {};
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
+
+    // DEBUG: Look at your console! 
+    // If you don't see 'Bearer ...' here, AsyncStorage is returning null.
+    //console.log('Final Headers Sent:', config.headers);
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -33,9 +40,9 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = await AsyncStorage.getItem('refreshToken');
-        
+
         // Attempt to get a new access token from your PHP backend
-        const res = await axios.post(`${API_BASE_URL}/refresh.php`, {
+        const res = await axios.post(`${API_BASE_URL}/helpers/refresh.php`, {
           refresh_token: refreshToken
         });
 

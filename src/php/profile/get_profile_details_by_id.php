@@ -1,14 +1,15 @@
 <?php
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: GET");
-require_once __DIR__ . '/../error_log_config.php'; 
-
+require_once '../helpers/AuthMiddleware.php'; 
 require_once '../config/database.php';
+require_once __DIR__ . '/../error_log_config.php';  
 
 try {
+	$token = AuthMiddleware::check();
+	$tRole = $token->role ?? $token['role'];
+	$tprofile_id = $token->profile_id ?? $token['profile_id'];
+
     $db = Database::getInstance();
-    
+  
     // 1. Validate Input
     $id = $_GET['id'];  
     $action = $_GET['action'] ?? 'view'; 
@@ -62,9 +63,9 @@ $sql = "SELECT
                         ,mother_occupation
                         ,mother_occupation_name
                         ,noof_sibling
-                        ,COALESCE(sister_count, 0) AS sister_count
-                        ,COALESCE(brother_count, 0) AS brother_count
+                        ,sister_count
                         ,kids_details
+                        ,brother_count
                         ,has_children
                         ,children_count
                         ,aboutus
@@ -83,33 +84,65 @@ $sql = "SELECT
                         ,working_as
                         ,company_name
                         ,others
+						,file_name
+						,IsActive
+						,IsVerified
                     FROM V_Profile
-			    WHERE profile_id = :id 
+			    WHERE profile_id = :id   
 			    LIMIT 1";
     
 
      
 
     $stmt = $db->prepare($sql);
-    $stmt->execute(['id' => $id]);
+    $stmt->execute(['id' => $id ]);
     
     // 3. Use fetch() for a single record
     $profile = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($profile) {
-        echo json_encode([
-            "success" => true,
-            "data" => $profile
-        ]);
-    } else {
-        http_response_code(404);
-		    error_log("Profile not found");
+        // 1. Determine the WHERE clause based on the role
+        $profileWhere = "";
+        if ($tRole === "member") {
+            // Members only see Approved (1) or Rejected (3) photos
+            // Note: Usually members shouldn't see Rejected photos, 
+            // but I kept '3' based on your logic.
+            if($tprofile_id == $id){
+                $profileWhere = "profile_id = :id";
 
-        echo json_encode([
-            "success" => false, 
-            "message" => "Profile not found"
-        ]);
-    }
+            }else 
+            $profileWhere = "profile_id = :id AND is_verified IN (1, 3)";
+        } else {
+            // Staff/Admins see everything (Pending, Approved, Rejected)
+            $profileWhere = "profile_id = :id";
+        }
+
+        // 2. Build the SQL string using PHP double quotes
+        $statsSql = "SELECT file_id, profile_id, file_name, is_profile_pic, is_verified, created_at 
+                    FROM profile_files 
+                    WHERE $profileWhere"; 
+
+        // 3. Prepare and Execute
+        $statsStmt = $db->prepare($statsSql); 
+        $statsStmt->execute(['id' => $id]);
+
+        // 4. Fetch all results
+        $images = $statsStmt->fetchAll(PDO::FETCH_ASSOC);
+	
+        if ($profile) {
+            echo json_encode([
+                "success" => true,
+                "data" => $profile,
+                "images" => $images
+            ]);
+        } else {
+            http_response_code(404);
+                error_log("Profile not found");
+
+            echo json_encode([
+                "success" => false, 
+                "message" => "Profile not found"
+            ]);
+        }
 
 } catch (Exception $e) {
     // 4. Log the actual error internally, but show a clean message to the user

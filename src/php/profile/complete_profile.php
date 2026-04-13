@@ -24,16 +24,17 @@ try {
     $db->beginTransaction(); 
 
     // 4. Handle Profile Logic
-    if ($step === 10) {
-        $targetprofile_id = $data['profile_id'] ?? null;
+    if ($step === 11) {
+		$targetprofile_id = $data['profile_id'] ?? null;
         if (!$targetprofile_id) {
             throw new Exception("Profile ID is required for step 10");
         }
 
-        $sql = "UPDATE profiles_family SET hobbies = ? WHERE profile_id = ?";
+        $sql = "UPDATE profiles_family SET hobbies = ?, aboutus = ? WHERE profile_id = ?";
         $stmt = $db->prepare($sql);
         $stmt->execute([
             $data['hobbies'] ?? null, 
+			$data['aboutus'] ?? null,
             $targetprofile_id
         ]);
 
@@ -74,8 +75,9 @@ try {
         $profile_id = generateFormattedID($db, 'profiles', 'profile_id','RCPF');  
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         $role = $data['role'] ?? 'member';
-        $stmtUser = $db->prepare("INSERT INTO users (userid, phoneNumber, email, PasswordHash, role) VALUES (?, ?, ?, ?, ?)");
-        $stmtUser->execute([$generatedUid, $phone, $email, $hashedPassword, $role]);
+        $isActive = 1;
+        $stmtUser = $db->prepare("INSERT INTO users (userid, phoneNumber, email, PasswordHash, role,IsActive) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmtUser->execute([$generatedUid, $phone, $email, $hashedPassword, $role,$isActive] );
 
         // 2. INSERT INTO MAIN PROFILE TABLE
         $dob = ($data['dobYear'] ?? '1900') . "-" . ($data['dobMonth'] ?? '01') . "-" . ($data['dobDay'] ?? '01');

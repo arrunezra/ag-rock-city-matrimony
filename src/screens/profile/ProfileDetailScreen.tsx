@@ -11,15 +11,20 @@ import profileService from '@/src/services/profileService';
 import { ProfileSkeleton } from '@/src/components/common/ProfileSkeleton';
 import { API_BASE_URL_DEV_Profiles_Images } from '@/src/utils/environment';
 import NotFoundScreen from '../common/NotFoundScreen';
-import { BanknoteIcon, Check, CreditCardIcon, X, XIcon, ZapIcon } from 'lucide-react-native';
+import { BanknoteIcon, Briefcase, Calendar, Check, CreditCardIcon, MapPin, User, X, XIcon, ZapIcon } from 'lucide-react-native';
 import { useAuth } from '@/src/context/AuthContext';
 import LoadingScreen from '../common/SuccessScreen';
-
+import { getExtension } from '@/src/utils/common';
+import { useAppToast } from '@/src/context/ToastContext';
+import { useAlert } from '@/src/context/AlertContext';
+import LottieView from 'lottie-react-native';
 
 export default function ProfileDetailScreen({ route }: any) {
     const { user } = useAuth();
     const { profile_id } = route.params; // Data passed from the list
-    console.log('profile_id', profile_id)
+    const { showToast } = useAppToast();
+    const { showAlert, hideAlert } = useAlert();
+
     const [isLoading, setIsLoading] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -35,10 +40,17 @@ export default function ProfileDetailScreen({ route }: any) {
     const fetchProfileDetails = useCallback(async () => {
         setIsReady(false);
         setIsNotFound(false)
-
         try {
             const res = await profileService.fetchProfileDetailsByID(profile_id, 'view');
-            if (res.success) setData(res.data);
+
+            if (res.success) {
+                let items = {
+                    ...res.data,
+                    images: res.images
+                }
+                console.log('items==', items);
+                setData(items);
+            }
             else {
                 if (res.success == false) {
                     setIsNotFound(true);
@@ -95,11 +107,7 @@ export default function ProfileDetailScreen({ route }: any) {
     );
 
     // Dummy data for images
-    const images = [
-        { id: '1', uri: 'https://agrcdev.jeasuns.com/agrcdev/php/uploads/profiles/AG0126-94693_1769585743.jpg' },
-        { id: '2', uri: 'https://agrcdev.jeasuns.com/agrcdev/php/uploads/profiles/AG0126-94693_1769585743.jpg' },
-        { id: '3', uri: 'https://agrcdev.jeasuns.com/agrcdev/php/uploads/profiles/AG0126-94693_1769585743.jpg' },
-    ];
+
     const openGallery = (index: number) => {
         setActiveIndex(index);
         setIsModalVisible(true);
@@ -134,75 +142,142 @@ export default function ProfileDetailScreen({ route }: any) {
 
         //return 'Invalid format';
     };
-    const handleReject = (id: any) => {
+    const confirmApproveOrReject = async (id: any, action: string) => {
+        hideAlert();
+        try {
+            let _action = action === 'approve' ? 1 : 3;
+            const res = await profileService.verifyPhotos(id, _action);
 
+            if (res.success) {
+                showToast("Profile Details", ` ${action === 'approve' ? 'Profile Approved successfully!' : 'Profile rejected successfully!'}`, "success");
+
+            }
+            else {
+                if (res.success == false) {
+                    showToast("Profile Details", ` Something went wrong`, "error");
+
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsReady(true);
+
+        }
     }
-    const handleApprove = (id: any) => {
+    const handleApproveOrReject = async (id: any, action: string) => {
+        try {
+            // 1 - Approve
+            // 3 - Reject
 
+            if (action !== 'approve') {
+                showAlert({
+                    type: 'error',
+                    title: 'Profile Info.',
+                    message: 'Could you please confirm the rejection of this photo?',
+                    confirmText: "Reject",
+                    onConfirm: async () => {
+                        confirmApproveOrReject(id, action)
+                    }
+                });
+            } else confirmApproveOrReject(id, action)
+
+
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsReady(true);
+        }
     }
-    const staffImageApproveRender = ({ item, index }: any) => (
-        <Box className="relative overflow-hidden">
-            {/* 1. Main Profile Image */}
-            <FastImage
-                source={{ uri: item.uri }}
-                style={{ width: windowWidth, height: 450 }}
-                resizeMode="cover"
-            />
+    const getStatusInfo = (status: number) => {
+        switch (status) {
+            case 1:
+                return { label: 'Approved', color: 'bg-green-500', textColor: 'text-white' };
+            case 3:
+                return { label: 'Rejected', color: 'bg-red-500', textColor: 'text-white' };
+            default:
+                return { label: 'Pending', color: 'bg-yellow-500', textColor: 'text-black' };
+        }
+    };
+    const staffImageApproveRender = ({ item, index }: any) => {
+        // Determine Status Badge Data 
+        const status = getStatusInfo(Number(item.is_verified));
+        return (
+            <Box className="relative overflow-hidden">
+                {/* 1. Main Profile Image */}
+                {
 
-            {/* 2. Linear Gradient Scrim (The "Glass" Overlay) */}
-            <LinearGradient
-                // Darker at top and bottom, clear in the middle
-                colors={['rgba(0,0,0,0.4)', 'transparent', 'rgba(0,0,0,0.6)']}
-                locations={[0, 0.4, 1]}
-                style={StyleSheet.absoluteFill}
-            />
+                }
+                <FastImage
+                    source={{ uri: getExtension(item.file_name, 'url') }}
+                    style={{ width: windowWidth, height: 450 }}
+                    resizeMode="cover"
+                />
 
-            {/* 3. Top Right Image Counter */}
-            <Box className="absolute top-4 right-4 bg-black/30 px-3 py-1 rounded-full border border-white/20">
-                <Text className="text-white text-[10px] font-bold">
-                    {index + 1} / {images.length}
-                </Text>
-            </Box>
+                {/* 2. Linear Gradient Overlay */}
+                <LinearGradient
+                    colors={['rgba(0,0,0,0.5)', 'transparent', 'rgba(0,0,0,0.7)']}
+                    locations={[0, 0.4, 1]}
+                    style={StyleSheet.absoluteFill}
+                />
 
-            {/* 4. Floating Action Bar with Animated Approve */}
-            <Box className="absolute bottom-10 left-0 right-0 items-center justify-center">
-                <HStack
-                    space="xl"
-                    className="items-center px-8 py-4 rounded-[40px] border border-white/30"
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
-                >
-                    {/* Reject Button */}
-                    <Pressable
-                        onPress={() => handleReject(item.id)}
-                        className="bg-[#ef4444] h-14 w-14 rounded-full items-center justify-center shadow-lg active:scale-90"
+                {/* NEW: Status Highlight Tag (Top Left) */}
+                <Box className={`absolute top-4 left-4 ${status.color} px-3 py-1 rounded-md shadow-md`}>
+                    <Text className={`${status.textColor} text-[10px] font-bold uppercase tracking-wider`}>
+                        {status.label}
+                    </Text>
+                </Box>
+
+                {/* 3. Top Right Image Counter */}
+                <Box className="absolute top-4 right-4 bg-black/30 px-3 py-1 rounded-full border border-white/20">
+                    <Text className="text-white text-[10px] font-bold">
+                        {index + 1} / {data?.images?.length}
+                    </Text>
+                </Box>
+
+                {/* 4. Floating Action Bar */}
+                {/* Only show buttons if is_verified is NOT approved(1) or rejected(3) */}
+
+                <Box className="absolute bottom-10 left-0 right-0 items-center justify-center">
+                    <HStack
+                        space="xl"
+                        className="items-center px-8 py-4 rounded-[40px] border border-white/30 shadow-2xl"
+                        style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
                     >
-                        <X color="white" size={28} strokeWidth={2.5} />
-                    </Pressable>
-
-                    {/* Approve Button with Pulse */}
-                    <Box className="items-center justify-center">
-                        <MotiView
-                            from={{ scale: 1, opacity: 1 }}
-                            animate={{ scale: 1.6, opacity: 0 }}
-                            transition={{
-                                type: 'timing',
-                                duration: 1800,
-                                loop: true,
-                                repeatReverse: false,
-                            }}
-                            className="absolute h-14 w-14 rounded-full bg-[#22c55e]/50"
-                        />
+                        {/* Reject Button */}
                         <Pressable
-                            onPress={() => handleApprove(item.id)}
-                            className="bg-[#22c55e] h-14 w-14 rounded-full items-center justify-center shadow-lg active:scale-90 z-10"
+                            onPress={() => handleApproveOrReject(item.file_id, 'reject')}
+                            className="bg-[#ef4444] h-14 w-14 rounded-full items-center justify-center shadow-lg active:scale-90"
                         >
-                            <Check color="white" size={28} strokeWidth={2.5} />
+                            <X color="white" size={28} strokeWidth={2.5} />
                         </Pressable>
-                    </Box>
-                </HStack>
+
+                        {/* Approve Button with Pulse */}
+                        <Box className="items-center justify-center">
+                            <MotiView
+                                from={{ scale: 1, opacity: 1 }}
+                                animate={{ scale: 1.6, opacity: 0 }}
+                                transition={{
+                                    type: 'timing',
+                                    duration: 1800,
+                                    loop: true,
+                                    repeatReverse: false,
+                                }}
+                                className="absolute h-14 w-14 rounded-full bg-[#22c55e]/50"
+                            />
+                            <Pressable
+                                onPress={() => handleApproveOrReject(item.file_id, 'approve')}
+                                className="bg-[#22c55e] h-14 w-14 rounded-full items-center justify-center shadow-lg active:scale-90 z-10"
+                            >
+                                <Check color="white" size={28} strokeWidth={2.5} />
+                            </Pressable>
+                        </Box>
+                    </HStack>
+                </Box>
+
             </Box>
-        </Box>
-    )
+        );
+    }
     const handleToggleVerifyUser = (id: any) => {
 
         const newStatus = data?.IsVerified === 1 ? 0 : 1;
@@ -234,12 +309,13 @@ export default function ProfileDetailScreen({ route }: any) {
 
         try {
             const res = await profileService.verifyorStatusUpdate(id, newStatus, aciton);
-            console.log('fetchProfileDetailsByID', res);
             if (res.success) {
+                showToast("Verification", aciton == 'verify' ? "User verification successed" : "Active status updated", "success");
 
             }
             else {
                 if (res.success == false) {
+                    showToast("Verification", "something went wroing", "error");
 
                 }
             }
@@ -249,6 +325,18 @@ export default function ProfileDetailScreen({ route }: any) {
             setIsLoading(false);
 
         }
+    }
+
+    const getNoofSiblings = () => {
+        if (!data?.Noof_sibling) {
+
+            return 'Not Speified';
+
+        } else if (data?.Noof_sibling === 0) return '0';
+        else
+            return `${data?.Noof_sibling || 0}  (${data?.brother_count || 0} Brother${data?.brother_count !== 1 ? 's' : ''}, ${data?.sister_count || 0} Sister${data?.sister_count !== 1 ? 's' : ''})`
+
+
     }
     return (
         isNotFound ? <NotFoundScreen title="Profile Not Found" description={errorMessage} /> :
@@ -276,13 +364,29 @@ export default function ProfileDetailScreen({ route }: any) {
                             />
                         )}
                     /> */}
-                    <FastImage
-                        source={{ uri: API_BASE_URL_DEV_Profiles_Images + "/" + data?.profile_pic }}
-                        style={{ width: windowWidth, height: 450 }}
-                        resizeMode="cover"
-                    />
+                    {data?.file_name ?
+                        <FastImage
+                            source={{ uri: API_BASE_URL_DEV_Profiles_Images + "/" + data?.file_name }}
+                            style={{ width: windowWidth, height: 450 }}
+                            resizeMode="cover"
+                        />
+                        :
+                        (
+                            <Box className="flex-1 justify-center items-center bg-slate-100">
+                                <LottieView
+                                    source={require('../../assets/animations/default_profile.json')}
+                                    autoPlay
+                                    loop
+                                    style={{ width: '70%', height: '70%' }}
+                                />
+                            </Box>
+                        )}
+
+
                     {/* 2. TOP OVERLAY: Photo Count & Menu */}
-                    <VStack className="absolute top-4 right-4 items-center gap-3 z-20">
+
+
+                    {user?.role === 'member' && <VStack className="absolute top-4 right-4 items-center gap-3 z-20">
                         {/* Now wrapped in Pressable to trigger the gallery */}
                         <Pressable
                             onPress={() => openGallery(activeIndex)}
@@ -304,7 +408,7 @@ export default function ProfileDetailScreen({ route }: any) {
                             >
                                 <Icon as={CameraIcon} color="white" size="xs" />
                                 <Text className="text-white text-[10px] font-bold">
-                                    {activeIndex + 1} / {images.length}
+                                    {activeIndex + 1} / {data?.images.length}
                                 </Text>
                             </MotiView>
 
@@ -317,6 +421,7 @@ export default function ProfileDetailScreen({ route }: any) {
                             <Icon as={MoreVerticalIcon} size="md" color="white" />
                         </Pressable>
                     </VStack>
+                    }
                     {/* 3. GRADIENT OVERLAY (The Shadow) */}
                     {/* We use 4 stops to make the transition from image to text seamless */}
                     <LinearGradient
@@ -336,7 +441,7 @@ export default function ProfileDetailScreen({ route }: any) {
                         <VStack space="md">
                             {/* Custom Indicator Bar */}
                             <HStack space="xs" className="mb-1">
-                                {images.map((_, index) => (
+                                {data?.images?.map((_: any, index: number) => (
                                     <Box
                                         key={index}
                                         className={`h-1 rounded-full ${activeIndex === index ? 'w-6 bg-white' : 'w-1.5 bg-white/40'
@@ -357,30 +462,27 @@ export default function ProfileDetailScreen({ route }: any) {
 
                                     {/* Bio Details */}
                                     <Text className="text-white text-[15px] font-medium opacity-95">
-                                        {formatHeight(data?.height)} {formatHeight(data?.height) && data?.community && (
-                                            <>  •  {data?.community}</>
+                                        {/* {formatHeight(data?.height)} {formatHeight(data?.height) && data?.sub_community_name && (
+                                            <>  •  {data?.sub_community_name}</>
                                         )}
 
                                         {data?.community && data?.work_details && (
                                             <>  •  {data?.work_details}</>
-                                        )}
-                                    </Text>
-                                    <Text className="text-white text-[15px] font-medium opacity-95">
-                                        {data?.city_name}, {data?.state_name}
-                                    </Text>
+                                        )} */}
+                                        {formatHeight(data?.height)}
+                                        {formatHeight(data?.height) && data?.sub_community_name ? `  •  ${data.sub_community_name}` : ''}
+                                        {/* {data?.religion_name ? `  •  ${data.religion_name}` : ''} */}
 
-                                    {/* Status Badges - Dark Glass Style */}
-                                    <HStack space="sm" className="mt-3">
-                                        {/* <HStack className="items-center gap-2 bg-black/60 px-3 py-1.5 rounded-full border border-white/10">
-                                        <Box className="h-2 w-2 rounded-full bg-green-500" />
-                                        <Text className="text-white text-[11px] font-bold">Online</Text>
-                                    </HStack> */}
+                                        {data?.work_with_name ? `  •  ${data.work_with_name}` : ''}
 
-                                        <HStack className="items-center gap-2 bg-black/60 px-3 py-1.5 rounded-full border border-white/10">
-                                            <Icon as={UsersIcon} size="2xs" className="text-red-500" />
-                                            <Text className="text-white text-[11px] font-bold">You & Her</Text>
-                                        </HStack>
+                                    </Text>
+                                    <HStack space="sm" className="flex-wrap gap-2">
+                                        <Box className="bg-white/20 px-3 py-2 rounded-xl border border-white/10 flex-row items-center gap-2">
+                                            <Icon as={MapPin} size="xs" className="text-cyan-300" />
+                                            <Text className="text-white text-xs font-bold">{data.city_name} , {data?.state_name}</Text>
+                                        </Box>
                                     </HStack>
+
                                 </VStack>
 
                                 {/* Float Action Like Button */}
@@ -388,7 +490,7 @@ export default function ProfileDetailScreen({ route }: any) {
                                 <Icon as={HeartIcon} color="white" fill="white" size="xl" />
                             </Pressable> */}
                                 {/* Floating Like Button */}
-                                <Pressable onPress={handleLike}>
+                                {user?.role === 'member' && <Pressable onPress={handleLike}>
                                     <MotiView
                                         animate={{
                                             scale: isLiked ? [1, 1.3, 1] : 1, // "Pop" effect when liked
@@ -410,6 +512,7 @@ export default function ProfileDetailScreen({ route }: any) {
                                         />
                                     </MotiView>
                                 </Pressable>
+                                }
                             </HStack>
                         </VStack>
                     </Box>
@@ -430,7 +533,7 @@ export default function ProfileDetailScreen({ route }: any) {
                             >
                                 <Box className="bg-black/40 px-4 py-1.5 rounded-full border border-white/10">
                                     <Text className="text-white font-bold text-sm">
-                                        {activeIndex + 1} / {images.length}
+                                        {activeIndex + 1} / {data?.images?.length}
                                     </Text>
                                 </Box>
 
@@ -448,7 +551,7 @@ export default function ProfileDetailScreen({ route }: any) {
 
                             {/* 2. Pure Gallery Component (Handles Swiping & Zooming) */}
                             <Gallery
-                                data={images}
+                                data={data?.images || []}
                                 initialIndex={activeIndex}
                                 onIndexChange={setActiveIndex}
                                 onSwipeToClose={() => setIsModalVisible(false)}
@@ -459,10 +562,10 @@ export default function ProfileDetailScreen({ route }: any) {
 
                                 // Required for stability
                                 keyExtractor={(_, index) => `img-${index}`}
-                                renderItem={({ item }) => (
+                                renderItem={({ item }: any) => (
                                     <View style={{ width: windowWidth, height: '100%', justifyContent: 'center' }}>
                                         <FastImage
-                                            source={{ uri: item.uri }}
+                                            source={{ uri: getExtension(item.file_name || "", 'addthumnail') }}
                                             style={{ width: '100%', height: '100%' }}
                                             resizeMode="contain"
                                         />
@@ -479,13 +582,10 @@ export default function ProfileDetailScreen({ route }: any) {
 
                     <Box className="relative">
                         <Text
-                            className="text-typography-600 leading-6"
+                            className="text-typography-600 leading-6  text-justify"
                             numberOfLines={isExpanded ? undefined : 3}
                         >
-                            {data?.aboutus || "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's \
-                        standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. \
-                        It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. \
-                        It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages."}
+                            {data?.aboutus}
                         </Text>
 
                         {/* 1. The Gradient Fade-out */}
@@ -505,7 +605,7 @@ export default function ProfileDetailScreen({ route }: any) {
                     </Box>
 
                     {/* 2. Toggle Button */}
-                    <Pressable
+                    {data?.aboutus && <Pressable
                         onPress={toggleExpand}
                         className="flex-row items-center justify-center mt-2 py-1"
                     >
@@ -518,14 +618,15 @@ export default function ProfileDetailScreen({ route }: any) {
                             className="text-cyan-600"
                         />
                     </Pressable>
+                    }
                 </VStack>
 
                 {/* 3. Hobbies & Interests */}
-                {data?.hobbies && <VStack className="p-4 bg-white mt-2">
+                {data?.hobbies_name && <VStack className="p-4 bg-white mt-2">
                     <Heading size="md" className="mb-4">Hobbies & Interests</Heading>
 
                     <HStack className="flex-wrap gap-3">
-                        {data?.hobbies.split(',').map((item: any) => item.trim()).map((items: any, index: number) => (
+                        {data?.hobbies_name.split(',').map((item: any) => item.trim()).map((items: any, index: number) => (
                             <Box key={index} className="rounded-full overflow-hidden border border-outline-100 shadow-sm">
                                 <LinearGradient
                                     // Subtle transition from a very light gray to a slightly darker tint
@@ -563,9 +664,31 @@ export default function ProfileDetailScreen({ route }: any) {
                                 <Text className="text-[10px] text-cyan-700 font-bold uppercase">Public Info</Text>
                             </Box>
                         </HStack>
+                        {/* Row 1: Age & Date of Birth */}
 
                         {/* Info Rows */}
                         <VStack space="xl">
+                            <HStack className="items-center gap-4">
+                                <HStack items-center space="md" className="flex-1">
+                                    <Box className="bg-white p-3 rounded-2xl shadow-sm">
+                                        <Icon as={User} size="sm" className="text-cyan-600" />
+                                    </Box>
+                                    <VStack>
+                                        <Text size="xs" className="text-typography-500 font-medium">Age</Text>
+                                        <Text size="md" className="text-typography-900 font-bold">{data?.age} Years</Text>
+                                    </VStack>
+                                </HStack>
+
+                                <HStack items-center space="md" className="flex-1">
+                                    <Box className="bg-white p-3 rounded-2xl shadow-sm">
+                                        <Icon as={Calendar} size="sm" className="text-cyan-600" />
+                                    </Box>
+                                    <VStack>
+                                        <Text size="xs" className="text-typography-500 font-medium">DOB</Text>
+                                        <Text size="md" className="text-typography-900 font-bold">{data?.dob}</Text>
+                                    </VStack>
+                                </HStack>
+                            </HStack>
                             {/* Marital Status */}
                             <HStack className="items-center gap-4">
                                 <Box className="bg-white p-3 rounded-2xl shadow-sm">
@@ -573,7 +696,7 @@ export default function ProfileDetailScreen({ route }: any) {
                                 </Box>
                                 <VStack className="flex-1">
                                     <Text size="xs" className="text-typography-500 font-medium">Marital Status</Text>
-                                    <Text className="font-bold text-typography-900 text-base">{data?.marital_status}</Text>
+                                    <Text className="font-bold text-typography-900 text-base">{data?.marital_status_name}</Text>
                                 </VStack>
                             </HStack>
                             {/* CONDITIONAL Children Row */}
@@ -607,7 +730,7 @@ export default function ProfileDetailScreen({ route }: any) {
                                 </Box>
                                 <VStack className="flex-1">
                                     <Text size="xs" className="text-typography-500 font-medium">Lives In</Text>
-                                    <Text className="font-bold text-typography-900 text-base"> {data?.city_name}, {data?.state_name}, {data?.country}</Text>
+                                    <Text className="font-bold text-typography-900 text-base"> {data?.city_name}, {data?.state_name}, {data?.country_name}</Text>
                                 </VStack>
                             </HStack>
                         </VStack>
@@ -828,10 +951,10 @@ export default function ProfileDetailScreen({ route }: any) {
                         <Heading size="md" className="mb-4 text-typography-900">Family Background</Heading>
 
                         <VStack space="lg">
-                            <DetailRowStyled icon={UsersIcon} label="Family Type" value={data?.family_type} />
-                            <DetailRowStyled icon={BriefcaseIcon} label="Father's Occupation" value={data?.father_occupation} />
-                            <DetailRowStyled icon={BriefcaseIcon} label="Mother's Occupation" value={data?.mother_occupation} />
-                            <DetailRowStyled icon={UsersIcon} label="No. of Siblings" value={`${data?.Noof_sibling || 0} (${data?.brother_count || 0} Brother${data?.brother_count !== 1 ? 's' : ''}, ${data?.sister_count || 0} Sister${data?.sister_count !== 1 ? 's' : ''})`}
+                            <DetailRowStyled icon={UsersIcon} label="Family Type" value={data?.family_type || 'Not Specified'} />
+                            <DetailRowStyled icon={BriefcaseIcon} label="Father's Occupation" value={data?.father_occupation_name || 'Not Specified'} />
+                            <DetailRowStyled icon={BriefcaseIcon} label="Mother's Occupation" value={data?.mother_occupation_name || 'Not Specified'} />
+                            <DetailRowStyled icon={UsersIcon} label="No. of Siblings" value={getNoofSiblings()}
                             />
                         </VStack>
 
@@ -894,17 +1017,17 @@ export default function ProfileDetailScreen({ route }: any) {
                         <Heading size="sm" className="text-indigo-900 font-bold">Professional Background</Heading>
 
                         <VStack space="lg">
-                            <ProfessionalRow icon={GraduationCapIcon} label="Education" value={data?.qualification} />
-                            <ProfessionalRow icon={SchoolIcon} label="College" value={data?.college} />
+                            <ProfessionalRow icon={GraduationCapIcon} label="Education" value={data?.qualification_name || 'Not Specified'} />
+                            <ProfessionalRow icon={SchoolIcon} label="College" value={data?.college || 'Not Specified'} />
 
                             <Divider className="bg-indigo-100/50 my-1" />
 
-                            <ProfessionalRow icon={BriefcaseIcon} label="Occupation" value={data?.work_with} />
-                            <ProfessionalRow icon={BuildingIcon} label="Employed In" value={data?.working_as} />
+                            <ProfessionalRow icon={BriefcaseIcon} label="Occupation" value={data?.work_with_name || 'Not Specified'} />
+                            <ProfessionalRow icon={BuildingIcon} label="Employed In" value={data?.working_as || 'Not Specified'} />
                             <ProfessionalRow
                                 icon={BanknoteIcon}
                                 label="Annual Income"
-                                value={data?.income ? `${data?.income_currency || '₹'} ${data?.income}` : 'Not Specified'}
+                                value={data?.income ? `${data?.income_currency || '₹'} ${data?.income_name}` : 'Not Specified'}
                             />
                         </VStack>
 
@@ -954,14 +1077,14 @@ export default function ProfileDetailScreen({ route }: any) {
                             end={{ x: 1, y: 1 }}
                         >
                             <VStack className="p-8 items-center">
-                                <Text className="text-primary-700 font-bold text-2xl mb-6">You and Her</Text>
+                                <Text className="text-primary-700 font-bold text-2xl mb-6">You and {data.gender == "Female" ? 'Her' : 'Him'}</Text>
 
                                 <HStack className="items-center justify-center">
                                     {/* User Avatar */}
                                     <Box className="rounded-full p-1 bg-white shadow-sm">
-                                        <Avatar size="xl" className="border-2 border-white">
+                                        <Avatar size="2xl" className="border-2 border-white">
                                             <AvatarFallbackText>User</AvatarFallbackText>
-                                            <AvatarImage source={{ uri: 'https://agrcdev.jeasuns.com/agrcdev/php/uploads/profiles/thumbs/AG0126-94693_1769585743_thumbnail.jpg' }} />
+                                            <AvatarImage source={{ uri: getExtension(user?.profileThumb ?? "", "addthumnail") }} />
                                         </Avatar>
                                     </Box>
 
@@ -972,15 +1095,16 @@ export default function ProfileDetailScreen({ route }: any) {
 
                                     {/* Target Avatar */}
                                     <Box className="rounded-full p-1 bg-white shadow-sm">
-                                        <Avatar size="xl" className="border-2 border-white">
+                                        <Avatar size="2xl" className="border-2 border-white">
                                             <AvatarFallbackText>Target</AvatarFallbackText>
-                                            <AvatarImage source={{ uri: 'https://agrcdev.jeasuns.com/agrcdev/php/uploads/profiles/thumbs/AG0126-94693_1769585743_thumbnail.jpg' }} />
+                                            <AvatarImage source={{ uri: getExtension(data?.file_name, "addthumnail") }} />
                                         </Avatar>
+
                                     </Box>
                                 </HStack>
 
                                 {/* Match Score Badge */}
-                                <Box className="mt-8 overflow-hidden rounded-full shadow-lg">
+                                {/* <Box className="mt-8 overflow-hidden rounded-full shadow-lg">
                                     <LinearGradient
                                         colors={['#0891b2', '#0e7490']}
                                         start={{ x: 0, y: 0 }}
@@ -991,12 +1115,12 @@ export default function ProfileDetailScreen({ route }: any) {
                                             You Match 7/10 of her Preferences
                                         </Text>
                                     </LinearGradient>
-                                </Box>
+                                </Box> */}
                             </VStack>
                         </LinearGradient>
 
-                        {/* 2. Preference List */}
-                        <VStack className="p-6" space="xl">
+                        {/* 2. Preference List  Dont delete */}
+                        {/* <VStack className="p-6" space="xl">
                             <PreferenceRowStyled label="Age" value="33 to 36" matched={true} />
                             <PreferenceRowStyled label="Marital Status" value="Divorced, Awaiting Divorce" matched={true} />
                             <PreferenceRowStyled label="Religion" value="Christian: Born Again, Catholic" matched={true} />
@@ -1005,7 +1129,7 @@ export default function ProfileDetailScreen({ route }: any) {
 
                             <Divider className="my-2 bg-gray-100" />
 
-                            {/* 3. Common Ground (Purple/Violet Theme) */}
+                            
                             <Heading size="xs" className="text-gray-400 uppercase tracking-[2px] font-bold mb-2">
                                 Common Ground
                             </Heading>
@@ -1020,7 +1144,7 @@ export default function ProfileDetailScreen({ route }: any) {
                                     text="You both live in Tamil Nadu"
                                 />
                             </VStack>
-                        </VStack>
+                        </VStack> */}
                     </Box>}
 
                 {/* ActionSheet Component */}
@@ -1198,7 +1322,7 @@ export default function ProfileDetailScreen({ route }: any) {
                                 <HStack className="justify-between items-center px-6 py-4 border-b border-slate-800">
                                     <VStack>
                                         <Heading size="md" className="text-white">Photo Verification</Heading>
-                                        <Text className="text-slate-400 text-xs">Viewing {images.length} High-Res Assets</Text>
+                                        <Text className="text-slate-400 text-xs">Viewing {data?.images.length} High-Res Assets</Text>
                                     </VStack>
                                     <Pressable
                                         onPress={() => setIsPhotoVerifyModalVisible(false)}
@@ -1211,13 +1335,13 @@ export default function ProfileDetailScreen({ route }: any) {
                                 {/* 2. Full-Screen FlatList */}
                                 <Box className="flex-1 justify-center items-center">
                                     <FlatList
-                                        data={images}
+                                        data={data?.images || []}
                                         horizontal
                                         pagingEnabled
+                                        keyExtractor={(item) => item.file_id?.toString()}
                                         showsHorizontalScrollIndicator={false}
                                         onScroll={handleScroll}
                                         scrollEventThrottle={16}
-                                        keyExtractor={(item) => item.id}
                                         snapToAlignment="start"
                                         decelerationRate="fast"
                                         // Use the full windowWidth since there is no outer padding anymore

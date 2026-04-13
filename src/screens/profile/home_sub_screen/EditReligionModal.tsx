@@ -35,10 +35,10 @@ const EditReligionModal = ({
         // 1. Basic Field Validation
         const requiredFields = [
             'religion',
-            'motherTongue',
+            'mother_tongue',
             'community',
             'sub_community',
-            'isCasteNoBar'
+            'is_caste_no_bar'
         ];
 
         for (const field of requiredFields) {
@@ -90,7 +90,6 @@ const EditReligionModal = ({
         <Modal isOpen={isOpen} onClose={onClose} size="full">
             <ModalBackdrop />
             <ModalContent className="bg-white flex-1">
-
                 {/* Header with Close Button */}
                 <ModalHeader className="px-6 pt-10 pb-0 justify-end border-0">
                     <ModalCloseButton className="h-10 w-10 items-center justify-center rounded-full bg-slate-100 active:bg-slate-200">
@@ -101,8 +100,7 @@ const EditReligionModal = ({
                 <ModalBody className="flex-1 p-0">
                     <ScrollView className="px-6 py-4" showsVerticalScrollIndicator={false}>
                         <VStack space="xl">
-
-                            {/* 2026 Futuristic Icon Section */}
+                            {/* Futuristic Icon Section */}
                             <VStack className="items-center mb-8">
                                 <Box className="relative w-20 h-20 items-center justify-center">
                                     <Box className="absolute w-16 h-16 rounded-full bg-indigo-500 blur-2xl opacity-20" />
@@ -111,7 +109,7 @@ const EditReligionModal = ({
                                         style={{ transform: [{ rotate: '-6deg' }] }}
                                     >
                                         <Icon
-                                            as={MoonStar} // Matched to Religion Card
+                                            as={MoonStar}
                                             size='lg'
                                             className="text-indigo-600"
                                             style={{ transform: [{ rotate: '6deg' }] }}
@@ -141,30 +139,26 @@ const EditReligionModal = ({
                                     isInvalid={validationTriggered && !formData?.religion}
                                 />
                                 <AnimateError isVisible={validationTriggered && (!formData?.religion)}>
-                                    {"Please select a religion"}
+                                    Please select a religion
                                 </AnimateError>
-
-
                             </FormControl>
 
                             {/* 2. Mother Tongue Dropdown */}
-                            <FormControl isInvalid={validationTriggered && !formData.motherTongue}>
+                            <FormControl isInvalid={validationTriggered && !formData.mother_tongue}>
                                 <FormControlLabel className="mb-2">
                                     <FormControlLabelText size="sm" className="font-bold">Mother Tongue</FormControlLabelText>
                                 </FormControlLabel>
                                 <FuturisticDropdown
-                                    data={lookups?.mother_tongue}
+                                    data={lookups?.mother_tongue || []}
                                     value={formData.mother_tongue}
                                     onChange={(item: any) => updateForm('mother_tongue', item.value)}
-                                    placeholder="Select Sub mother tongue"
+                                    placeholder="Select mother tongue"
                                     icon={{ icon: Network, color: 'text-typography-400' }}
-
                                     isInvalid={validationTriggered && !formData.mother_tongue}
                                 />
                                 <AnimateError isVisible={validationTriggered && (!formData.mother_tongue)}>
-                                    {"Please select a mother tongue"}
+                                    Please select a mother tongue
                                 </AnimateError>
-
                             </FormControl>
 
                             {/* 3. Community Dropdown */}
@@ -173,38 +167,35 @@ const EditReligionModal = ({
                                     <FormControlLabelText size="sm" className="font-bold">Community</FormControlLabelText>
                                 </FormControlLabel>
                                 <FuturisticDropdown
-                                    data={lookups?.community}
+                                    data={lookups?.community || []}
                                     value={formData.community}
                                     onChange={(item: any) => updateForm('community', item.value)}
                                     placeholder="Select Community"
                                     icon={{ icon: Users2, color: 'text-typography-400' }}
-
                                     search={true}
                                     isInvalid={validationTriggered && !formData.community}
                                 />
                                 <AnimateError isVisible={validationTriggered && (!formData.community)}>
-                                    {"Please select a community"}
+                                    Please select a community
                                 </AnimateError>
-
                             </FormControl>
 
                             {/* 4. Sub Community Dropdown */}
-                            <FormControl>
+                            <FormControl isInvalid={validationTriggered && !formData.sub_community}>
                                 <FormControlLabel className="mb-2">
                                     <FormControlLabelText size="sm" className="font-bold">Sub Community</FormControlLabelText>
                                 </FormControlLabel>
                                 <FuturisticDropdown
-                                    data={lookups?.sub_community}
+                                    data={lookups?.sub_community || []}
                                     value={formData.sub_community}
                                     onChange={(item: any) => updateForm('sub_community', item.value)}
-                                    placeholder="Select Sub Community "
+                                    placeholder="Select Sub Community"
                                     icon={{ icon: Network, color: 'text-typography-400' }}
-
                                     search={true}
                                     isInvalid={validationTriggered && !formData.sub_community}
                                 />
                                 <AnimateError isVisible={validationTriggered && (!formData.sub_community)}>
-                                    {"Please select a sub community"}
+                                    Please select a sub community
                                 </AnimateError>
                             </FormControl>
 
@@ -212,11 +203,9 @@ const EditReligionModal = ({
                             <TouchableOpacity
                                 activeOpacity={0.8}
                                 onPress={() => updateForm('is_caste_no_bar', !formData.is_caste_no_bar)}
-                                className={`mt-2 p-4 rounded-2xl border-2 flex-row items-center ${formData.is_caste_no_bar ? 'border-blue-500 bg-blue-50/50' : 'border-slate-100 bg-slate-50/50'
-                                    }`}
+                                className={`mt-2 p-4 rounded-2xl border-2 flex-row items-center ${formData.is_caste_no_bar ? 'border-blue-500 bg-blue-50/50' : 'border-slate-100 bg-slate-50/50'}`}
                             >
-                                <Box className={`w-6 h-6 rounded-lg items-center justify-center border-2 mr-3 ${formData.is_caste_no_bar ? 'bg-blue-500 border-blue-500' : 'bg-white border-slate-200'
-                                    }`}>
+                                <Box className={`w-6 h-6 rounded-lg items-center justify-center border-2 mr-3 ${formData.is_caste_no_bar ? 'bg-blue-500 border-blue-500' : 'bg-white border-slate-200'}`}>
                                     {formData.is_caste_no_bar && <Icon as={Check} size='lg' className="text-white" />}
                                 </Box>
                                 <VStack className="flex-1">
@@ -228,14 +217,11 @@ const EditReligionModal = ({
                                     </Text>
                                 </VStack>
                             </TouchableOpacity>
-
                         </VStack>
-                        {/* Spacer for scroll visibility above footer */}
                         <Box className="h-20" />
                     </ScrollView>
                 </ModalBody>
 
-                {/* Footer */}
                 <ModalFooter className="p-6 border-t border-outline-100 bg-white">
                     <HStack className="w-full gap-3">
                         <Button variant="outline" action="secondary" onPress={onClose} className="flex-1 rounded-2xl h-14 border-outline-300">

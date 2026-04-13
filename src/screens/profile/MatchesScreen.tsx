@@ -11,8 +11,11 @@ import FailedScreen from '../common/FailedScreen';
 import { SkeletonItem } from '../common/SkeletonItem';
 import { SearchActionsheet } from './home_sub_screen/SearchActionsheet';
 import { ProfileCardSkeleton } from '../common/ProfileCardSkeleton';
+import { useAuth } from '@/src/context/AuthContext';
 
 const MatchesScreen = () => {
+    const { user } = useAuth();
+
     const navigation = useNavigation<any>();
     const [profiles, setProfiles] = useState<any[]>([]);
     const [page, setPage] = useState(1);
@@ -123,6 +126,7 @@ const MatchesScreen = () => {
                 renderItem={({ item }) => (
                     <Box className="px-4">
                         <ProfileCard
+                            user={user}
                             profile={item}
                             onPress={() => navigation.navigate('ProfileDetail', { profile_id: item.profile_id })}
                         />

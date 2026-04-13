@@ -1,30 +1,42 @@
 <?php
 header("Content-Type: application/json");
-//require_once '../helpers/AuthMiddleware.php';
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+require_once '../helpers/AuthMiddleware.php';
 require_once '../config/database.php';
-//AuthMiddleware::check();
 require_once __DIR__ . '/../error_log_config.php'; 
 
-// Test if logging works immediately 
- $db = Database::getInstance();
-
-// Get POST data
-$input = json_decode(file_get_contents("php://input"), true);
-
-$limit = 10;
-$page = isset($input['page']) ? (int)$input['page'] : 1;
-$offset = ($page - 1) * $limit;
 
 try {
-    $whereClauses = [];
-    $params = [];
+	// Test if logging works immediately 
+	$token = AuthMiddleware::check();
+	$tRole = $token->role ?? $token['role'];
+	$tprofile_id = $token->profile_id ?? $token['profile_id'];
+	$gender = $token->gender ?? $token['gender'];
+
+	$db = Database::getInstance();
+
+	// Get POST data
+	$input = json_decode(file_get_contents("php://input"), true);
+
+	$limit = 10;
+	$page = isset($input['page']) ? (int)$input['page'] : 1;
+	$offset = ($page - 1) * $limit;
+
+    $whereClauses[] = "profile_id != ?";
+    $params[] = $tprofile_id;
 
     // 1. Gender Filter
-    if (!empty($input['gender'])) {
-        $whereClauses[] = "gender = ?";
-        $params[] = $input['gender'];
+    if (!empty($gender)) {
+        $whereClauses[] = "gender != ?";
+        $params[] = $gender;
     }
+     
 
+    // 2. Member Restrictions
+    if (!empty($tRole) && $tRole == 'member') {
+         $whereClauses[] = "IsVerified = 1";
+         $whereClauses[] = "IsActive = 1";
+    }
     // 2. Marital Status Filter
     if (!empty($input['marital_status'])) {
         $whereClauses[] = "marital_status = ?";
@@ -43,11 +55,13 @@ try {
         $params[] = (int)$input['min_age'];
         $params[] = (int)$input['max_age'];
     }
-
+     
     $whereSql = !empty($whereClauses) ? "WHERE " . implode(" AND ", $whereClauses) : "";
-
+   
+   
+   
     // Get total count for pagination metadata
-    $countStmt = $db->prepare("SELECT COUNT(*) FROM profiles $whereSql");
+    $countStmt = $db->prepare("SELECT COUNT(*) FROM V_Profile $whereSql");
     $countStmt->execute($params);
     $totalRows = $countStmt->fetchColumn();
     $totalPages = ceil($totalRows / $limit);
@@ -96,13 +110,22 @@ try {
                 ,qualification
                 ,income
                 ,work_with
+				,work_with_name
                 ,company_name
-				,file_name
+				,file_name 
+                ,IsActive
+                ,IsVerified
+				,is_caste_no_bar
             FROM V_Profile 
             $whereSql 
             ORDER BY updated_at DESC 
             LIMIT $limit OFFSET $offset";
+  
+  error_log("SQL Query: " . $sql);
+error_log("Params: " . print_r($params, true));
+
  
+
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     $profiles = $stmt->fetchAll(PDO::FETCH_ASSOC);

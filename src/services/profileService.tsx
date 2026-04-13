@@ -150,6 +150,18 @@ export const profileService = {
       return { success: false, message: "Network connection failed" };
     }
   },
+  verifyPhotos: async (file_id: any, action: any) => {
+    try {
+      const response = await api.get(`/profile/verify_photos.php?action=${action}&file_id=${file_id}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        return error.response.data;
+      }
+      return { success: false, message: "Network connection failed" };
+    }
+
+  }
 
 };
 

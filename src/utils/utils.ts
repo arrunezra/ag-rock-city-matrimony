@@ -1,36 +1,5 @@
 
-export const getProfileCompletionData = (user: any) => {
-  const sections = [
-    {
-      label: 'Profile Photo',
-      weight: 25,
-      isDone: !!user?.profile_thumb,
-      screen: 'PhotoUploadScreen'
-    },
-    {
-      label: 'About Me',
-      weight: 25,
-      isDone: !!user?.about && user.about.length > 10,
-      screen: 'EditAboutScreen'
-    },
-    {
-      label: 'Basics & Lifestyle',
-      weight: 25,
-      isDone: !!user?.marital_status && !!user?.diet,
-      screen: 'EditBasicsScreen'
-    },
-    {
-      label: 'Career Details',
-      weight: 25,
-      isDone: !!user?.work_sector,
-      screen: 'EditCareerScreen'
-    },
-  ];
 
-  const totalStrength = sections.reduce((acc, item) => (item.isDone ? acc + item.weight : acc), 0);
-
-  return { totalStrength, checklist: sections };
-};
 export const RELIGION_DATA = [
   { label: "Christian", value: "Christian" },
   { label: "Hindu", value: "Hindu" },

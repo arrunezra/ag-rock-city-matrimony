@@ -1,5 +1,5 @@
 import { FileArchive, FileSpreadsheet, FileText, File, FileImage } from "lucide-react-native";
-import { API_BASE_URL_DEV_Profiles_Thumbs } from "./environment";
+import { API_BASE_URL_DEV_Profiles_assets_Images, API_BASE_URL_DEV_Profiles_Images, API_BASE_URL_DEV_Profiles_Thumbs } from "./environment";
 
 // --- 1. Dynamic Icon Helper ---
 export const getFileIconConfig = (ext: string = '') => {
@@ -18,9 +18,16 @@ export const getFileIconConfig = (ext: string = '') => {
     }
 };
 
-export const getExtension = (fileName: string, action: 'fileName' | 'dotwithextension' | 'dotwitouthextension' | 'addthumnail') => {
+export const getExtension = (fileName: string, action: 'fileName' | 'dotwithextension' | 'dotwitouthextension' | 'addthumnail' | "url") => {
+
+
+    if (!fileName && (action === 'addthumnail' || action === 'url')) {
+        return `${API_BASE_URL_DEV_Profiles_assets_Images}/default_profile_image.png`
+    }
+    if (!fileName) return fileName;
+
     // Find the last dot index
-    const lastDotIndex = fileName.lastIndexOf('.');
+    const lastDotIndex = fileName?.lastIndexOf('.');
 
     // If no dot is found, return the original string or handle appropriately
     if (lastDotIndex === -1) return fileName;
@@ -43,6 +50,29 @@ export const getExtension = (fileName: string, action: 'fileName' | 'dotwithexte
         const ext = fileName.substring(lastDotIndex);
         return `${API_BASE_URL_DEV_Profiles_Thumbs}/${name}_thumb${ext}`;
     }
+    else if (action === 'url') {
+        // Returns "RCST0326-81912_1774956775.jpg" 
+        return `${API_BASE_URL_DEV_Profiles_Images}/${fileName}`;
+    }
 
     return fileName;
+};
+const cmToFeetInch = (cm: any) => {
+    const totalInches = cm / 2.54;
+    const feet = Math.floor(totalInches / 12);
+    const inches = Math.round(totalInches % 12);
+    return `${feet}' ${inches}"`;
+};
+export const formatHeight = (input: string): string => {
+    // Parse feet and inches from formats like "4ft 5in" or "4' 5""
+    // const match = input?.match(/(\d+)\s*(?:ft|')\s*(\d+)\s*(?:in|")/i);
+
+    // if (match) {
+    //     const feet = match[1];
+    //     const inches = match[2];
+    //     return `${feet}' ${inches}"`;
+    // }
+    return cmToFeetInch(input)
+
+    //return 'Invalid format';
 };

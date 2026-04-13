@@ -5,11 +5,11 @@ import { useKeyboardAnimation } from 'react-native-keyboard-controller';
 
 // New Imports (Points to your local UI components) 
 
-import { Image, Link, LinkText, ButtonSpinner, Center, ScrollView, Box, VStack, Input, InputField, Button, ButtonText, Text, FormControl, FormControlError, FormControlErrorText, FormControlLabel, FormControlLabelText, HStack, Checkbox, CheckboxIndicator, CheckboxIcon, CheckboxLabel } from '@/src/components/common/GluestackUI';
+import { Image, Link, LinkText, ButtonSpinner, Center, ScrollView, Box, VStack, Input, InputField, Button, ButtonText, Text, FormControl, FormControlError, FormControlErrorText, FormControlLabel, FormControlLabelText, HStack, Checkbox, CheckboxIndicator, CheckboxIcon, CheckboxLabel, InputSlot, InputIcon } from '@/src/components/common/GluestackUI';
 
 import authService from '@/src/services/authService';
 import { useAuth } from '@/src/context/AuthContext';
-import { CheckIcon } from '@/src/components/common/IconUI';
+import { CheckIcon, Eye, EyeOff } from '@/src/components/common/IconUI';
 import { AnimateError } from '../common/AnimateError';
 
 export default function LoginScreen({ navigation }: any) {
@@ -21,6 +21,7 @@ export default function LoginScreen({ navigation }: any) {
   const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const validateForm = () => {
     const newErrors: any = {};
     if (!email) {
@@ -69,7 +70,9 @@ export default function LoginScreen({ navigation }: any) {
       setLoading(false);
     }
   };
-
+  const handleState = () => {
+    setShowPassword((showState) => !showState);
+  };
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -120,19 +123,29 @@ export default function LoginScreen({ navigation }: any) {
                 <FormControlLabel className="mb-1">
                   <FormControlLabelText size='lg'>Password</FormControlLabelText>
                 </FormControlLabel>
-                <Input className="h-16" size='lg'>
+
+                <Input className="h-16 flex-row items-center" size='lg'>
                   <InputField
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={password}
                     onChangeText={setPassword}
-                    secureTextEntry
+                    className="flex-1" // Enforce that the input field leaves room for the icon
                   />
+
+                  {/* Ensure InputSlot is inside Input but after InputField */}
+                  <InputSlot className="pr-4" onPress={handleState}>
+                    <InputIcon
+                      as={showPassword ? Eye : EyeOff}
+                      className="text-primary-800" // Use tailwind class or the color prop
+                      size="xl"
+                    />
+                  </InputSlot>
                 </Input>
+
                 <AnimateError isVisible={errors.password}>
                   {errors.password}
                 </AnimateError>
-
               </FormControl>
 
               {/* Remember Me & Forgot Password Row */}
