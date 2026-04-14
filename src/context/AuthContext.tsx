@@ -29,15 +29,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
+      const rememberMe = await AsyncStorage.getItem('rememberMe');
       // Updated keys to match our new logic
       const access = await AsyncStorage.getItem('accessToken');
       const userData = await AsyncStorage.getItem('userData');
 
-      if (access && userData) {
+      if (rememberMe === 'true' && access && userData) {
         setAccessToken(access);
         setUser(JSON.parse(userData));
         setIsAuthenticated(true);
+      } else {
+        // Otherwise, force them to the Login screen
+        setIsAuthenticated(false);
       }
+      console.log('checkAuthStatus rememberMe', rememberMe)
     } catch (error) {
       console.error('Auth status check error:', error);
     } finally {
@@ -49,7 +54,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const { phoneNumber, password, rememberMe } = credentials;
       const response = await authService.login({ phoneNumber, password });
-      console.log('Login response:', response);
+      //console.log('Login response', response)
       if (response.access_token) {
         // 1. Always update memory state so user is redirected to Home immediately
         setAccessToken(response.access_token);
@@ -59,18 +64,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           setUser(response.user);
         }
-
-        // 2. Conditional Persistence based on "Remember Me"
+        await AsyncStorage.multiSet([
+          ['accessToken', response.access_token],
+          ['refreshToken', response.refresh_token || '']
+        ]);
         if (rememberMe) {
-          // Save to permanent storage (persists after app close)
-          await AsyncStorage.setItem('accessToken', response.access_token);
-          await AsyncStorage.setItem('refreshToken', response.refresh_token || '');
+          await AsyncStorage.setItem('rememberMe', 'true');
           if (response.user) {
             await AsyncStorage.setItem('userData', JSON.stringify(response.user));
           }
         } else {
-          // Clear permanent storage so they are logged out on next app restart
-          await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'userData']);
+          //console.log("errro");
+          //await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'userData']);
+          await AsyncStorage.setItem('rememberMe', 'false');
         }
 
         return { success: true };

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useRef } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { HeartIcon, HomeIcon, Icon, LockIcon, MessageCircleIcon } from "../components/common/IconUI";
@@ -27,6 +27,10 @@ import DMSUploadScreen from "../screens/DMS/DMSUploadScreen";
 import DMSSummaryScreen from "../screens/DMS/DMSSummaryScreen";
 import UserDocumentUpload from "../screens/members/UserDocumentUpload";
 import ShowProfileGalleryScreen from "../screens/profile/ShowProfileGalleryScreen";
+import FavoritesScreen from "../screens/favorites/FavoritesScreen";
+import { useFocusEffect } from "@react-navigation/native";
+import { Alert, BackHandler, Platform, ToastAndroid } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 const Stack = createNativeStackNavigator();
@@ -64,7 +68,7 @@ const TAB_CONFIG = {
   member: [
     { name: "Home", component: ProfileHomeScreen, icon: HomeIcon, title: "Home" },
     { name: "Matches", component: MatchesScreen, icon: HeartIcon, title: "Matches" },
-    { name: "Favourites", component: InboxScreen, icon: MessageCircleIcon, title: "Favourites" },
+    { name: "Favourites", component: FavoritesScreen, icon: MessageCircleIcon, title: "Favourites" },
   ],
 };
 
@@ -101,6 +105,49 @@ const SHARED_STACKS = (role: string) => (
 
 // 3. Dynamic Tab Component
 const DynamicTabs = ({ route }: any) => {
+
+  const lastBackPressed = useRef<number>(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        const currentTime = Date.now();
+        // 1. Check if this is the second press (within 2 seconds)
+        if (lastBackPressed.current && currentTime - lastBackPressed.current < 2000) {
+          (async () => {
+            try {
+              const rememberMe = await AsyncStorage.getItem('rememberMe');
+              if (rememberMe === 'false') {
+                await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'userData']);
+              }
+            } catch (e) {
+              console.error("Exit cleanup error:", e);
+            } finally {
+              BackHandler.exitApp();
+            }
+          })();
+
+          return true;
+        }
+
+        // 4. Handle first press
+        lastBackPressed.current = currentTime;
+
+        if (Platform.OS === 'android') {
+          ToastAndroid.show("Press back again to exit", ToastAndroid.SHORT);
+        }
+
+        return true; // Tells the system: "I've handled this, don't close yet."
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+      return () => {
+        subscription.remove();
+        lastBackPressed.current = 0;
+      };
+    }, [])
+  );
   const { role } = route.params;
   const tabs = TAB_CONFIG[role as keyof typeof TAB_CONFIG] || TAB_CONFIG.staff;
   const firstTabName = role === 'member' ? 'Matches' : tabs[0]?.name;

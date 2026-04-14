@@ -4,101 +4,104 @@ require_once '../config/database.php';
 require_once __DIR__ . '/../error_log_config.php';  
 
 try {
-	$token = AuthMiddleware::check();
-	$tRole = $token->role ?? $token['role'];
-	$tprofile_id = $token->profile_id ?? $token['profile_id'];
+        $token = AuthMiddleware::check();
+        $tRole = $token->role ?? $token['role'];
+        $tprofile_id = $token->profile_id ?? $token['profile_id'];
 
-    $db = Database::getInstance();
-  
-    // 1. Validate Input
-    $id = $_GET['id'];  
-    $action = $_GET['action'] ?? 'view'; 
-	
-    if (!$id) {
-        http_response_code(400);
-        echo json_encode(["success" => false, "message" => "Invalid or missing Profile ID"]);
-		error_log("Invalid or missing Profile ID");
-
-        exit;
-    }
-
-    if ($action === 'edit') {
-		    }
-		else if ($action === 'view') {
-			
-		}
-$sql = "SELECT 
-						 profile_id
-                        ,userid
-                        ,first_name
-                        ,last_name
-                        ,full_name
-                        ,dob
-                        ,age
-                        ,gender
-                        ,email
-                        ,phone
-                        ,address
-                        ,city
-                        ,city_name
-                        ,state
-                        ,state_name
-                        ,country
-                        ,updated_at
-                        ,country_name
-                        ,religion
-                        ,religion_name
-                        ,community
-                        ,community_name
-                        ,sub_community
-                        ,sub_community_name
-                        ,mother_tongue
-                        ,mother_tongues_name
-                        ,is_caste_no_bar
-                        ,marital_status
-                        ,marital_status_name
-                        ,family_type
-                        ,father_occupation
-                        ,father_occupation_name
-                        ,mother_occupation
-                        ,mother_occupation_name
-                        ,noof_sibling
-                        ,sister_count
-                        ,kids_details
-                        ,brother_count
-                        ,has_children
-                        ,children_count
-                        ,aboutus
-                        ,hobbies
-						,hobbies_name
-                        ,height
-                        ,weight
-                        ,blood_group
-                        ,qualification
-                        ,qualification_name
-                        ,college
-                        ,income
-                        ,income_name
-                        ,work_with
-                        ,work_with_name
-                        ,working_as
-                        ,company_name
-                        ,others
-						,file_name
-						,IsActive
-						,IsVerified
-                    FROM V_Profile
-			    WHERE profile_id = :id   
-			    LIMIT 1";
+        $db = Database::getInstance();
     
+        // 1. Validate Input
+        $id = $_GET['id'];  
+        $action = $_GET['action'] ?? 'view'; 
+        
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Invalid or missing Profile ID"]);
+            error_log("Invalid or missing Profile ID");
 
-     
+            exit;
+        }
 
-    $stmt = $db->prepare($sql);
-    $stmt->execute(['id' => $id ]);
-    
-    // 3. Use fetch() for a single record
-    $profile = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        $sql = "SELECT 
+                    p.profile_id
+                    ,p.userid
+                    ,p.first_name
+                    ,p.last_name
+                    ,p.full_name
+                    ,p.dob
+                    ,p.age
+                    ,p.gender
+                    ,p.email
+                    ,p.phone
+                    ,p.address
+                    ,p.city
+                    ,p.city_name
+                    ,p.state
+                    ,p.state_name
+                    ,p.country
+                    ,p.updated_at
+                    ,p.country_name
+                    ,p.religion
+                    ,p.religion_name
+                    ,p.community
+                    ,p.community_name
+                    ,p.sub_community
+                    ,p.sub_community_name
+                    ,p.mother_tongue
+                    ,p.mother_tongues_name
+                    ,p.is_caste_no_bar
+                    ,p.marital_status
+                    ,p.marital_status_name
+                    ,p.family_type
+                    ,p.father_occupation
+                    ,p.father_occupation_name
+                    ,p.mother_occupation
+                    ,p.mother_occupation_name
+                    ,p.noof_sibling
+                    ,p.sister_count
+                    ,p.kids_details
+                    ,p.brother_count
+                    ,p.has_children
+                    ,p.children_count
+                    ,p.aboutus
+                    ,p.hobbies
+                    ,p.hobbies_name
+                    ,p.height
+                    ,p.weight
+                    ,p.blood_group
+                    ,p.qualification
+                    ,p.qualification_name
+                    ,p.college
+                    ,p.income
+                    ,p.income_name
+                    ,p.work_with
+                    ,p.work_with_name
+                    ,p.working_as
+                    ,p.company_name
+                    ,p.others
+                    ,p.file_name
+                    ,p.IsActive
+                    ,p.IsVerified
+                    ,p.disability
+
+                    ,IF(l.id IS NULL, 0, 1) AS is_liked_by_me  
+                FROM 
+                    V_Profile p
+                LEFT JOIN profile_likes l ON l.profile_id = p.profile_id AND l.sender_id =  :sender_id
+
+			    WHERE 
+                    p.profile_id = :profile_id   
+			    LIMIT 1"; 
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([
+            'profile_id' => $id ,
+            'sender_id' => $id 
+        ]);
+        
+        // 3. Use fetch() for a single record
+        $profile = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // 1. Determine the WHERE clause based on the role
         $profileWhere = "";
@@ -144,13 +147,13 @@ $sql = "SELECT
             ]);
         }
 
-} catch (Exception $e) {
-    // 4. Log the actual error internally, but show a clean message to the user
-    error_log($e->getMessage());
-    http_response_code(500);
-	
-    echo json_encode([
-        "success" => false, 
-        "message" => "An internal server error occurred"
-    ]);
+    } catch (Exception $e) {
+        // 4. Log the actual error internally, but show a clean message to the user
+        error_log($e->getMessage());
+        http_response_code(500);
+        
+        echo json_encode([
+            "success" => false, 
+            "message" => "An internal server error occurred"
+        ]);
 }

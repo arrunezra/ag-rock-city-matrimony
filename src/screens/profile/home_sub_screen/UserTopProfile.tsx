@@ -1,26 +1,35 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, VStack, HStack, Text, Heading, Avatar, AvatarImage, AvatarFallbackText } from '@/src/components/common/GluestackUI';
 import { Pressable } from 'react-native';
 import { AddIcon, CheckIcon, EditIcon, Icon, StarIcon } from '@/components/ui/icon';
 import { API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
+import { getExtension } from '@/src/utils/common';
 
 const UserTopProfile = ({ profile, onEdit, onAddPhoto }: any) => {
-    const profileImage = API_BASE_URL_DEV_Profiles_Thumbs + '/' + profile?.profileThumb;
+    const [profiles, setProfiles] = useState<any>('')
+    useEffect(() => {
+        setProfiles(getExtension(profile?.profilePic, 'addthumnail'))
+    }, [profile?.profilePic])
     return (
         <VStack className="px-4 py-6 bg-white gap-6">
             <HStack space="md" className="items-center">
                 <Box className="relative">
                     <Pressable onPress={onAddPhoto}>
-                        <Avatar size="xl" className="border-2 border-outline-100 bg-background-200 " >
-                            <AvatarFallbackText> {profile?.firstName} {profile?.lastName}</AvatarFallbackText>
-                            <AvatarImage
-                                source={{
-                                    uri: profileImage,
-                                }}
-                            />
-                            <Box
-                                className="absolute bottom-0 right-0 bg-cyan-500 p-1.5 rounded-full border-2 border-white shadow-sm active:opacity-80"
-                            >
+                        <Avatar size="xl" className="border-2 border-outline-100 bg-background-200">
+                            <AvatarFallbackText>
+                                {profile?.firstName} {profile?.lastName}
+                            </AvatarFallbackText>
+
+                            {/* ONLY render the image if profiles is not empty or null */}
+                            {profiles ? (
+                                <AvatarImage
+                                    source={{
+                                        uri: profiles,
+                                    }}
+                                />
+                            ) : null}
+
+                            <Box className="absolute bottom-0 right-0 bg-cyan-500 p-1.5 rounded-full border-2 border-white shadow-sm active:opacity-80">
                                 <Icon as={AddIcon} color="white" size="xs" />
                             </Box>
                         </Avatar>

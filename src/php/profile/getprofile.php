@@ -9,6 +9,8 @@ require_once __DIR__ . '/../error_log_config.php';
 try {
 	// Test if logging works immediately 
 	$token = AuthMiddleware::check();
+	error_log("Full Token Data: " . print_r($token, true));
+	
 	$tRole = $token->role ?? $token['role'];
 	$tprofile_id = $token->profile_id ?? $token['profile_id'];
 	$gender = $token->gender ?? $token['gender'];
@@ -22,7 +24,7 @@ try {
 	$page = isset($input['page']) ? (int)$input['page'] : 1;
 	$offset = ($page - 1) * $limit;
 
-    $whereClauses[] = "profile_id != ?";
+    $whereClauses[] = "p.profile_id != ?";
     $params[] = $tprofile_id;
 
     // 1. Gender Filter
@@ -61,72 +63,84 @@ try {
    
    
     // Get total count for pagination metadata
-    $countStmt = $db->prepare("SELECT COUNT(*) FROM V_Profile $whereSql");
+    $countStmt = $db->prepare("SELECT COUNT(*) FROM V_Profile p $whereSql");
     $countStmt->execute($params);
     $totalRows = $countStmt->fetchColumn();
     $totalPages = ceil($totalRows / $limit);
 
     // Fetch paginated and filtered data
     $sql = "SELECT 
-				profile_id
-                ,userid
-                ,first_name
-                ,last_name
-                ,full_name
-                ,dob
-                ,age
-                ,gender
-                ,email
-                ,phone
-                ,city
-                ,city_name
-                ,state
-                ,state_name
-                ,country
-                ,updated_at
-                ,country_name
-                ,religion
-                ,community
-                ,sub_community
-                ,mother_tongue
-                ,mother_tongues_name
-                ,marital_status
-                ,marital_status_name
-                ,family_type
-                ,father_occupation
-                ,mother_occupation
-                ,noof_sibling
-                ,sister_count
-                ,kids_details
-                ,brother_count
-                ,has_children
-                ,children_count
-                ,aboutus
-                ,hobbies
-                ,height
-                ,disability
-                ,weight
-                ,blood_group
-                ,qualification
-                ,income
-                ,work_with
-				,work_with_name
-                ,company_name
-				,file_name 
-                ,IsActive
-                ,IsVerified
-				,is_caste_no_bar
-            FROM V_Profile 
-            $whereSql 
-            ORDER BY updated_at DESC 
+				p.profile_id
+                ,p.userid
+                ,p.first_name
+                ,p.last_name
+                ,p.full_name
+                ,p.dob 
+                ,p.age
+                ,p.gender
+                ,p.email
+                ,p.phone
+                ,p.city
+                ,p.city_name
+                ,p.state
+                ,p.state_name
+                ,p.country
+                ,p.updated_at
+                ,p.country_name
+                ,p.religion
+                ,p.community
+                ,p.sub_community
+                ,p.mother_tongue
+                ,p.mother_tongues_name
+                ,p.marital_status
+                ,p.marital_status_name
+                ,p.family_type
+                ,p.father_occupation
+                ,p.mother_occupation
+                ,p.noof_sibling
+                ,p.sister_count
+                ,p.kids_details
+                ,p.brother_count
+                ,p.has_children
+                ,p.children_count
+                ,p.aboutus
+                ,p.hobbies
+                ,p.height
+                ,p.disability
+                ,p.weight
+                ,p.blood_group
+                ,p.qualification
+                ,p.income
+                ,p.work_with
+				,p.work_with_name
+                ,p.company_name
+				,p.file_name 
+                ,p.IsActive
+                ,p.IsVerified
+				,p.is_caste_no_bar
+				,p.sub_community_name
+				,p.religion_name
+
+                ,i_sent.status AS sent_status
+            	,i_received.status AS received_status
+				
+				,IF(l.id IS NULL, 0, 1) AS is_liked_by_me  
+            FROM V_Profile p
+            -- JOIN 1: Did I send them a request?
+            LEFT JOIN interests i_sent ON i_sent.receiver_id = p.profile_id AND i_sent.sender_id = ?
+            -- JOIN 2: Did they send me a request?
+            LEFT JOIN interests i_received ON i_received.sender_id = p.profile_id AND i_received.receiver_id = ?
+			LEFT JOIN profile_likes l ON l.profile_id = p.profile_id AND l.sender_id = ? 
+             $whereSql  
+            ORDER BY p.updated_at DESC 
             LIMIT $limit OFFSET $offset";
-  
-  error_log("SQL Query: " . $sql);
-error_log("Params: " . print_r($params, true));
+	
+	// error_log("SQL Query: " . $sql);
+	// error_log("Params: " . print_r($params, true));
 
- 
-
-    $stmt = $db->prepare($sql);
+    // Add your ID twice at the beginning for the two JOIN placeholders
+	array_unshift($params, $tprofile_id, $tprofile_id, $tprofile_id);
+	$stmt = $db->prepare($sql);
     $stmt->execute($params);
     $profiles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

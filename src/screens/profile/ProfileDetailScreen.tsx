@@ -48,7 +48,8 @@ export default function ProfileDetailScreen({ route }: any) {
                     ...res.data,
                     images: res.images
                 }
-                console.log('items==', items);
+                setIsLiked(res.data?.is_liked_by_me);
+                //console.log('items==', items);
                 setData(items);
             }
             else {
@@ -117,11 +118,29 @@ export default function ProfileDetailScreen({ route }: any) {
         const index = Math.round(scrollPosition / windowWidth);
         setActiveIndex(index);
     };
+    const handleLike = async () => {
+        try {
+            // 1. Optimistic Update (make it feel fast)
+            const previousState = isLiked;
+            setIsLiked(!previousState);
 
-    const handleLike = () => {
-        setIsLiked(!isLiked);
-        // Add your API call here to save the like
-    };
+            // 2. Call API
+            const res = await profileService.toggleLike({ profile_id: profile_id });
+
+            if (!res.success) {
+                // Rollback if API fails
+                setIsLiked(previousState);
+                Alert.alert("Error", "Could not update like status");
+            } else {
+                // Set the actual state from server (true or false)
+                setIsLiked(res.isLiked);
+            }
+        } catch (error) {
+            setIsLiked(!isLiked); // Rollback
+            console.error(error);
+        }
+    }
+
     const handleClose = () => setShowActionsheet(false);
     const cmToFeetInch = (cm: any) => {
         const totalInches = cm / 2.54;

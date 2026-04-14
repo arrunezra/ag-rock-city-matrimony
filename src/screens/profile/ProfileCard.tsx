@@ -8,15 +8,38 @@ import profileService from '@/src/services/profileService';
 import { API_BASE_URL_DEV_Profiles_Images, API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
 import LottieView from 'lottie-react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { CheckCircle2Icon, CheckCircleIcon, UsersIcon } from 'lucide-react-native';
+import { Check, CheckCircle2Icon, CheckCircleIcon, HeartIcon, UserPlus, UsersIcon, X, XCircleIcon } from 'lucide-react-native';
 import { formatHeight } from '@/src/utils/common';
-export const ProfileCard = ({ profile, onPress, user }: any) => {
-  console.log('ProfileCard', profile)
+import { useFocusEffect } from '@react-navigation/native';
+import _, { constant } from 'lodash';
+import { MotiView } from 'moti';
+export const ProfileCard = ({ profile, onPress, user, showToast, onActionComplete, comingFrom }: any) => {
+
+  profile = _.cloneDeep(profile);
+  const [cardComingFrom, setCardComingFrom] = useState<boolean>(false)
   const [isLiked, setIsLiked] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [connectStatus, setConnectStatus] = useState(profile?.connection_status);
+  const [sent, setSent] = useState(profile.sent_status);
+  const [received, setReceived] = useState(profile.received_status);
+
+
   // 1. Get Screen Height to calculate dynamic card size
   const { height: SCREEN_HEIGHT } = Dimensions.get('window');
   const CARD_HEIGHT = SCREEN_HEIGHT * 0.72; // 70% of screen height
+
+  useEffect(() => {
+    let comingFroms = comingFrom || "";
+
+    // console.log('comingFrom', comingFrom)
+    if (comingFroms === 'accepted') {
+      setCardComingFrom(true)
+    } else setCardComingFrom(false)
+
+  }, [comingFrom]);
+
+
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -26,26 +49,127 @@ export const ProfileCard = ({ profile, onPress, user }: any) => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    setTimeout(() => {
+      setIsLiked(profile.is_liked_by_me === 1);
+    }, 100);
+  }, [profile.is_liked_by_me]);
+
+
+
+  useEffect(() => {
+    setConnectStatus(profile.connection_status);
+  }, [profile.connection_status]);
+
   if (!isReady) {
     return <Box className="flex-1 bg-white" />; // Empty white screen during transition
   }
   const sendConnectRequst = async () => {
     try {
-      setIsLiked(true);
+      if (connectStatus) return;
       const response = await profileService.sendInterest({ receiver_id: profile?.profile_id });
-      if (!response.success) {
-        setIsLiked(false);
-        Alert.alert(response.message);
+      if (response.success) {
+        // status could be 'Pending' or 'Accepted' (if it was a mutual match)
+        setConnectStatus(response.status);
+
+        if (response.status === 'Accepted') {
+          showToast("Match", "You are now connected!", "success");
+        }
+        else if (response.status === 'Pending') {
+          showToast("Request", "Request has been sent successfully!", "success");
+
+        }
+        setSent(response.status);
+      } else {
+        // If server returned an error (e.g., 1062 duplicate)
+        showToast("Note", response.message, "error");
+
       }
+
     } catch (error) {
-      setIsLiked(false);
       console.error("Like failed", error);
     }
   };
+  const handleResponse = async (action: 'Accepted' | 'Rejected') => {
+    try {
+      // 1. Call the API and wait for the result
+      const res = await profileService.respondToInterest({
+        sender_id: profile.profile_id,
+        action: action
+      });
 
+      if (res.success) {
+        // 2. Update the local UI state
+        // This will trigger your getStatusUI() helper to re-render the button
+        setConnectStatus(action);
+
+        // 3. Optional Feedback
+        if (action === 'Accepted') {
+          showToast("Success", "Connection established! You can now message them.", "success");
+
+        } else {
+          showToast("Declined", "Request removed.", "success");
+        }
+        setReceived(action);
+      } else {
+        showToast("Note", res.message || "Failed to process request", "error");
+
+      }
+    } catch (error) {
+      console.error("HandleResponse Error:", error);
+    }
+  };
+  const getStatusUI = () => {
+    // 1. Check if either direction is "Accepted"
+    if (sent === 'Accepted' || received === 'Accepted') {
+      return { text: 'Connected', color: 'bg-emerald-600', icon: CheckCircleIcon, disabled: true };
+    }
+
+    // 2. Check for Rejections (Handle this early to lock the button)
+    if (sent === 'Rejected' || received === 'Rejected') {
+      return { text: 'Declined', color: 'bg-slate-500', icon: XCircleIcon, disabled: true };
+    }
+
+    // 3. Check if you sent a request
+    if (sent === 'Pending') {
+      return { text: 'Requested', color: 'bg-orange-500', icon: CheckCircle2Icon, disabled: true };
+    }
+
+    // 4. Check if they sent you a request
+    if (received === 'Pending') {
+      return { text: 'Wants to Connect', color: 'bg-indigo-600', icon: UserPlus, disabled: false };
+    }
+
+    // 5. No relationship
+    return { text: 'Connect', color: 'bg-black/50', icon: CheckCircle2Icon, disabled: false };
+  };
   const handleLike = async () => {
+    try {
+      // 1. Optimistic Update (make it feel fast)
+      const previousState = isLiked;
+      setIsLiked(!previousState);
 
+      // 2. Call API
+      const res = await profileService.toggleLike({ profile_id: profile.profile_id });
+
+      if (!res.success) {
+        // Rollback if API fails
+        setIsLiked(previousState);
+        Alert.alert("Error", "Could not update like status");
+      } else {
+        // Set the actual state from server (true or false)
+        setIsLiked(res.isLiked);
+      }
+      if (onActionComplete) {
+        onActionComplete();
+
+      }
+    } catch (error) {
+      setIsLiked(!isLiked); // Rollback
+      console.error(error);
+    }
   }
+  const ui = getStatusUI();
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.95} className="mx-2 mb-8">
@@ -75,28 +199,89 @@ export const ProfileCard = ({ profile, onPress, user }: any) => {
         )}
 
         {/* 2. Top Action Bar */}
-        <HStack className="absolute top-6 left-6 right-6 justify-between items-center">
-          <TouchableOpacity onPress={sendConnectRequst} activeOpacity={0.8}>
-            {/* Replaced BlurView with a solid/alpha Box */}
-            <Box className="bg-black/50 px-5 py-2.5 rounded-full flex-row items-center gap-2 border border-white/20">
-              <Icon as={CheckCircle2Icon} size="xs" className="text-cyan-400" />
-              <Text className="text-white text-[11px] font-bold uppercase tracking-[1px]">Connect</Text>
-            </Box>
-          </TouchableOpacity>
+        {!cardComingFrom ? <HStack className="absolute top-6 left-6 right-6 justify-between items-center">
+          {/* CASE 1: They sent YOU a request -> Show Accept/Reject */}
+          {received === 'Pending' && !sent && (
+            <HStack space="md" className="items-center">
+              <TouchableOpacity
+                onPress={() => handleResponse('Rejected')}
+                className="bg-slate-200/90 p-3 rounded-full border border-white/20 shadow-sm"
+              >
+                <Icon as={X} size="xs" className="text-slate-800" />
+              </TouchableOpacity>
 
-          <Button
-            onPress={handleLike}
-            // Increased background opacity for better visibility without blur
-            className={`h-14 w-14 mt-2 rounded-full p-0 shadow-2xl border border-white/30 ${isLiked ? 'bg-error-500' : 'bg-black/40'
+              <TouchableOpacity
+                onPress={() => handleResponse('Accepted')}
+                className="bg-indigo-600 px-5 py-2.5 rounded-full flex-row items-center gap-2 shadow-lg border border-indigo-400"
+              >
+                <Icon as={Check} size="xs" className="text-white" />
+                <Text className="text-white text-[11px] font-bold uppercase">Accept</Text>
+              </TouchableOpacity>
+            </HStack>
+          )}
+
+          {/* CASE 2: No incoming request -> Show standard Connect/Requested/Connected button */}
+          {!(received === 'Pending' && !sent) && (
+            <TouchableOpacity
+              onPress={sendConnectRequst}
+              activeOpacity={0.8}
+              disabled={ui.disabled}
+            >
+              <Box className={`${ui.color} px-5 py-2.5 rounded-full flex-row items-center gap-2 border border-white/20`}>
+                <Icon as={ui.icon} size="xs" className="text-white" />
+                <Text className="text-white text-[11px] font-bold uppercase tracking-[1px]">
+                  {ui.text}
+                </Text>
+              </Box>
+            </TouchableOpacity>
+          )}
+          {isLiked && !cardComingFrom ?
+            <Button
+              onPress={handleLike}
+              // Increased background opacity for better visibility without blur
+              className={`h-14 w-14 mt-2 rounded-full p-0 shadow-2xl border border-white/30 bg-error-500
               }`}
-          >
-            <Icon
-              as={Heart}
-              size="lg"
-              className={isLiked ? 'text-white fill-white' : 'text-white'}
-            />
-          </Button>
+            >
+              <MotiView
+                animate={{
+                  scale: isLiked ? [1, 1.3, 1] : 1, // "Pop" effect when liked
+                  backgroundColor: isLiked ? '#ef4444' : 'rgba(0,0,0,0.5)',
+                }}
+                transition={{
+                  type: 'spring',
+                  damping: 15,
+                  stiffness: 150,
+                }}
+                className="p-4 rounded-full shadow-2xl mb-2 border border-white/20"
+                style={{ backgroundColor: isLiked ? '#ef4444' : 'rgba(0,0,0,0.5)' }}
+              >
+                <Icon
+                  as={HeartIcon}
+                  color="white"
+                  fill={isLiked ? "white" : "none"}
+                  size="xl"
+                />
+              </MotiView>
+
+            </Button>
+
+
+
+            : <Button
+              onPress={handleLike}
+              // Increased background opacity for better visibility without blur
+              className={`h-14 w-14 mt-2 rounded-full p-0 shadow-2xl border border-white/30 bg-black/40
+              }`}
+            >
+              <Icon
+                as={Heart}
+                size="lg"
+                className='text-white'
+              />
+            </Button>
+          }
         </HStack>
+          : null}
 
         {/* 3. Information Scrim */}
         <LinearGradient

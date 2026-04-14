@@ -13,6 +13,7 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('accessToken');
+    //console.log('token', token)
     if (token) {
       // Use set() or ensure headers object exists
       config.headers = config.headers || {};

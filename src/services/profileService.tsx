@@ -161,6 +161,39 @@ export const profileService = {
       return { success: false, message: "Network connection failed" };
     }
 
+  },
+  respondToInterest: async ({ sender_id, action }: any) => {
+    try {
+      // action should be either 'Accepted' or 'Rejected'
+      const response = await api.post('/interest/respond_interest.php', {
+        sender_id,
+        action
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error(`Error during ${action} action:`, error);
+      return error.response?.data || { success: false, message: "Server connection failed" };
+    }
+  },
+  toggleLike: async (body: any) => {
+    try {
+      // action should be either 'Accepted' or 'Rejected'
+      const response = await api.post('/interest/toggle_like.php', body);
+
+      return response.data;
+    } catch (error: any) {
+      console.error(`Error during action:`, error);
+      return error.response?.data || { success: false, message: "Server connection failed" };
+    }
+  },
+  getFavorites: async (type: any) => {
+    try {
+      const response = await api.get(`/interest/get_favorites_combined.php?type=${type}`);
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
   }
 
 };

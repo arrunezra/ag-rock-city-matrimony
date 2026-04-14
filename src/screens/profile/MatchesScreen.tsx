@@ -3,7 +3,7 @@ import { FlatList, ActivityIndicator, ScrollView, Pressable, KeyboardAvoidingVie
 import { Box, Spinner, Center, HStack, Text } from '@/src/components/common/GluestackUI';
 import api from '@/src/api/api';
 import { ProfileCard } from './ProfileCard';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { profileService } from '@/src/services/profileService';
 import LottieView from 'lottie-react-native';
 import NotFoundScreen from '../common/NotFoundScreen';
@@ -12,9 +12,11 @@ import { SkeletonItem } from '../common/SkeletonItem';
 import { SearchActionsheet } from './home_sub_screen/SearchActionsheet';
 import { ProfileCardSkeleton } from '../common/ProfileCardSkeleton';
 import { useAuth } from '@/src/context/AuthContext';
+import { useAppToast } from '@/src/context/ToastContext';
 
 const MatchesScreen = () => {
     const { user } = useAuth();
+    const { showToast } = useAppToast();
 
     const navigation = useNavigation<any>();
     const [profiles, setProfiles] = useState<any[]>([]);
@@ -105,7 +107,11 @@ const MatchesScreen = () => {
             </Center>
         );
     };
-
+    useFocusEffect(
+        React.useCallback(() => {
+            fetchProfiles(1, true);
+        }, [])
+    );
     const renderContent = () => {
         if (loading && profiles.length === 0) {
             return (
@@ -129,6 +135,7 @@ const MatchesScreen = () => {
                             user={user}
                             profile={item}
                             onPress={() => navigation.navigate('ProfileDetail', { profile_id: item.profile_id })}
+                            showToast={showToast}
                         />
                     </Box>
                 )}
