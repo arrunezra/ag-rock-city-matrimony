@@ -13,7 +13,11 @@ import { SearchActionsheet } from './home_sub_screen/SearchActionsheet';
 import { ProfileCardSkeleton } from '../common/ProfileCardSkeleton';
 import { useAuth } from '@/src/context/AuthContext';
 import { useAppToast } from '@/src/context/ToastContext';
-
+import {
+    CaptureProtection,
+    useCaptureProtection,
+    CaptureEventType
+} from 'react-native-capture-protection';
 const MatchesScreen = () => {
     const { user } = useAuth();
     const { showToast } = useAppToast();
@@ -34,6 +38,23 @@ const MatchesScreen = () => {
         min_age: 24,
         max_age: 54
     });
+
+    useFocusEffect(
+        useCallback(() => {
+            // Prevent all capture events
+            // CaptureProtection.prevent();
+
+            // Or prevent specific events
+            CaptureProtection.prevent({
+                screenshot: true,
+                record: true,
+                appSwitcher: true
+            });
+            return () => {
+                CaptureProtection.allow();
+            };
+        }, [])
+    );
 
     // Added 'currentFilters' argument to prevent stale state issues
     const fetchProfiles = async (pageNumber: number, shouldRefresh = false, currentFilters = filters) => {
@@ -115,10 +136,6 @@ const MatchesScreen = () => {
     const renderContent = () => {
         if (loading && profiles.length === 0) {
             return (
-                //Its working but not mathch this scenario i want card view so i commented this
-                // <Box className="px-4 py-2">
-                //     {[1, 2, 3, 4, 5].map((i) => <SkeletonItem key={i} />)}
-                // </Box>
                 <Box className="px-4 py-2">
                     <ProfileCardSkeleton />
                 </Box>

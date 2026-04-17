@@ -16,63 +16,6 @@ const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 // --- TABS BASED ON ROLE ---
 
-//#region Member Router
-const MemberStackRouter = () => (
-    <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false }}>
-        {/* The Tabs stay as the main entry point */}
-        <Stack.Screen name="Tabs" component={MemberTabs} />
-
-        {/* The Detail screen is pushed on top of the tabs */}
-        <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
-        <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
-    </Stack.Navigator>
-);
-const MemberTabs = () => (
-    <Tab.Navigator
-        initialRouteName="Matches"
-        screenOptions={({ route }) => ({
-            headerShown: false,
-            tabBarHideOnKeyboard: true,
-            tabBarActiveTintColor: "#16a34a", // Emerald/Green 600
-            tabBarInactiveTintColor: "#6b7280", // Gray 500
-            tabBarIcon: ({ color, size }) => {
-                let iconAsset;
-
-                if (route.name === "Home") {
-                    iconAsset = HomeIcon;
-                } else if (route.name === "Matches") {
-                    iconAsset = HeartIcon;
-                } else if (route.name === "Inbox") {
-                    iconAsset = MessageCircleIcon;
-                }
-
-                // Gluestack v3 Icon component
-                return (
-                    <Icon
-                        as={iconAsset}
-                        color={color}
-                        size="lg" // 'xs' | 'sm' | 'md' | 'lg' | 'xl'
-                    />
-                );
-            },
-            tabBarLabelStyle: {
-                fontSize: 12,
-                paddingBottom: 5,
-            },
-            tabBarStyle: {
-                height: 65,
-                paddingTop: 5,
-            },
-        })}
-    >
-        <Tab.Screen name="Home" component={ProfileHomeScreen} options={{ title: 'Home' }} />
-        <Tab.Screen name="Matches" component={MatchesScreen} options={{ title: 'Matches' }} />
-        <Tab.Screen name="Inbox" component={InboxScreen} options={{ title: 'Inbox' }} />
-
-    </Tab.Navigator>
-);
-
-//#endregion
 
 
 // --- MAIN DRAWER (The Wrapper) ---
@@ -81,7 +24,7 @@ export function RoleBasedNavigator({ userRole, user, logout }: any) {
         <Drawer.Navigator
             drawerContent={(props) => <CustomDrawerContent {...props} userRole={userRole} user={user} logout={logout} />}
         >
-            <Drawer.Screen name="Main" options={{ title: userRole === 'admin' ? 'Admin Dashboard' : userRole === 'staff' ? 'Staff Dashboard' : 'Member Dashboard' }}>
+            <Drawer.Screen name="Main" options={{ title: userRole === 'admin' ? 'Admin Dashboard' : userRole === 'staff' ? 'Staff Dashboard' : 'My Profile' }}>
                 {() => <DynamicStackRouter userRole={userRole} logout={logout} />}
             </Drawer.Screen>
 

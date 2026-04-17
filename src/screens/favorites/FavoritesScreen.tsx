@@ -9,6 +9,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { Icon } from '@/src/components/common/IconUI';
 import { Heart, HeartIcon, Star } from 'lucide-react-native';
 import { StarIcon } from '@/components/ui/icon';
+import NotFoundScreen from '../common/NotFoundScreen';
 
 const FavoritesScreen = () => {
     // 1. Add a safety check for navigation
@@ -148,7 +149,7 @@ const FavoritesScreen = () => {
                     <Spinner size="large" />
                     <Text className="mt-2">Loading...</Text>
                 </Center>
-            ) : (
+            ) : profiles.length !== 0 ? (
                 <FlatList
                     // 1. Ensure data is always an array and filter out nulls
                     data={profiles || []}
@@ -185,7 +186,9 @@ const FavoritesScreen = () => {
                         </Center>
                     }
                 />
-            )}
+            ) : <NotFoundScreen title={activeTab === 'liked' ? "No Liked Profiles Yet" : "No Active Connections"} description={activeTab === 'liked' ? `Start exploring! Profiles you've shown interest in will appear here for you to find easily.` : 'Your connections will appear here once you and another member have both shown interest in each others'} />
+
+            }
         </Box>
     );
 };

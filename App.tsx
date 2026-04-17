@@ -16,7 +16,7 @@ import { AuthProvider } from './src/context/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ThemeProvider } from './components/ui/ThemeProvider/ThemeProvider';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { PermissionTypes, requestPermission } from './src/utils/permissionHandler';
 import { openSettings } from 'react-native-permissions';
 import { AlertProvider } from './src/context/AlertContext';
@@ -25,8 +25,11 @@ import { LookupProvider } from './src/context/LookupContext';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from './src/screens/common/ToastConfig';
 import { AppToastProvider } from './src/context/ToastContext';
+
 function App() {
+
   const [isAllPermissionGranted, setIsAllPermissionGranted] = useState(false);
+
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const checkPermission = async () => {
@@ -37,6 +40,10 @@ function App() {
     };
     checkPermission();
   }, [])
+
+
+
+
   if (loading) {
     return (
       <View  >

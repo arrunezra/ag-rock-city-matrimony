@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ScrollView, Pressable, LayoutAnimation, Dimensions, FlatList, Modal, Alert, View, StyleSheet, SafeAreaView } from 'react-native';
+import { ScrollView, Pressable, LayoutAnimation, Dimensions, FlatList, Modal, Alert, View, StyleSheet, SafeAreaView, Share } from 'react-native';
 import { Box, VStack, HStack, Heading, Modal as ModalGUI, Text, BadgeText, Divider, Button, ButtonText, Avatar, AvatarFallbackText, AvatarImage, Actionsheet, ActionsheetBackdrop, ActionsheetDragIndicatorWrapper, ActionsheetDragIndicator, ActionsheetContent, ActionsheetItem, ActionsheetIcon, ActionsheetItemText, Switch, ModalContent, ModalBackdrop, } from '@/src/components/common/GluestackUI';
 import { ArrowLeftRightIcon, Badge, BanIcon, BriefcaseIcon, BuildingIcon, CameraIcon, CrownIcon, FlagIcon, GraduationCapIcon, HeartIcon, HomeIcon, Icon, MapPinIcon, MoreVerticalIcon, SchoolIcon, UserIcon, UsersIcon, UtensilsIcon } from '@/src/components/common/IconUI';
 import FastImage from "@d11/react-native-fast-image";
@@ -18,14 +18,19 @@ import { getExtension } from '@/src/utils/common';
 import { useAppToast } from '@/src/context/ToastContext';
 import { useAlert } from '@/src/context/AlertContext';
 import LottieView from 'lottie-react-native';
+import ReportProfileModal from './home_sub_screen/ReportProfileModal';
+import { useNavigation } from '@react-navigation/native';
 
 export default function ProfileDetailScreen({ route }: any) {
     const { user } = useAuth();
     const { profile_id } = route.params; // Data passed from the list
     const { showToast } = useAppToast();
+    const navigation = useNavigation<any>();
+
     const { showAlert, hideAlert } = useAlert();
 
     const [isLoading, setIsLoading] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
     const windowWidth = Dimensions.get('window').width;
@@ -142,6 +147,69 @@ export default function ProfileDetailScreen({ route }: any) {
     }
 
     const handleClose = () => setShowActionsheet(false);
+    const handleBlock = () => {
+        handleClose();
+        showAlert({
+            type: 'warning',
+            title: 'Block Member?',
+            message: `Are you sure you want to block ${data?.full_name}? you won't see their profile again.`,
+            confirmText: "Block",
+            onConfirm: async () => {
+                hideAlert();
+                try {
+                    let body = {
+                        action: 'block',
+                        user_id: user?.profile_id,
+                        target_id: profile_id
+                    }
+                    const res = await profileService.handle_member_actions(body);
+
+                    if (res.success) {
+                        showToast("Bloced", `${data?.full_name} has been blocked`, "success");
+                        navigation.goBack();
+                    }
+                    else {
+                        showToast("Error", `Something wnet wrong`, "error");
+
+                    }
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    handleClose();
+                }
+
+            }
+        });
+
+    };
+
+    const onReportSubmit = async (reason: string, remarks: string,) => {
+
+        try {
+            let body = {
+                action: 'report',
+                user_id: user?.profile_id,
+                target_id: profile_id,
+                reason: reason,
+                remarks: remarks
+            }
+            const res = await profileService.handle_member_actions(body);
+
+            if (res.success) {
+                showToast("Thank you", `Your report has been submitted for review.`, "success");
+
+            }
+            else {
+                showToast("Error", `Something wnet wrong`, "error");
+
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            handleClose();
+        }
+
+    };
     const cmToFeetInch = (cm: any) => {
         const totalInches = cm / 2.54;
         const feet = Math.floor(totalInches / 12);
@@ -385,7 +453,7 @@ export default function ProfileDetailScreen({ route }: any) {
                     /> */}
                     {data?.file_name ?
                         <FastImage
-                            source={{ uri: API_BASE_URL_DEV_Profiles_Images + "/" + data?.file_name }}
+                            source={{ uri: getExtension(data?.file_name, 'url') }}
                             style={{ width: windowWidth, height: 450 }}
                             resizeMode="cover"
                         />
@@ -1176,33 +1244,55 @@ export default function ProfileDetailScreen({ route }: any) {
 
                         <VStack className="w-full" space="xs">
                             {/* 1. Header Share Section - Centered Icon & Text */}
-                            <VStack className="items-center py-6 border-b border-outline-50">
+                            {/* <VStack className="items-center py-6 border-b border-outline-50">
                                 <Pressable
                                     className="items-center justify-center mb-2"
-                                    onPress={() => { /* Add share logic here */ }}
+                                    onPress={
+                                        async () => {
+                                        try {
+                                            const shareUrl = `https://agrcdev.jeasuns.com/agrcdev/php/profile/get_profile_details_by_id.php?id=${profile_id}&action=view`;
+
+                                            await Share.share({
+                                                message: `Check out ${data?.full_name}'s profile on our Matrimony App!\n\nView Profile: ${shareUrl}`,
+                                            });
+                                        } catch (error: any) {
+                                            Alert.alert(error.message);
+                                        }
+                                    }}
                                 >
                                     <Icon as={ShareIcon} size="xl" className="text-typography-900" />
                                     <Text className="text-typography-700 font-medium mt-2 text-lg">Share</Text>
                                 </Pressable>
-                            </VStack>
+                            </VStack> */}
 
                             {/* 2. Menu Items Section */}
                             <VStack className="px-4 py-2" space="sm">
 
-                                {/* Block Member */}
+                                {/* Hide this profile */}
                                 <ActionsheetItem
-                                    onPress={handleClose}
+                                    onPress={handleBlock}
                                     className="flex-row items-center p-4 active:bg-background-50 rounded-2xl"
                                 >
                                     <ActionsheetIcon as={BanIcon} size="lg" className="text-typography-900 mr-4" />
                                     <ActionsheetItemText className="text-typography-800 text-lg font-medium">
-                                        Block Member
+                                        Hide Profile
+                                    </ActionsheetItemText>
+                                </ActionsheetItem>
+
+                                {/* Block Member */}
+                                <ActionsheetItem
+                                    onPress={handleBlock}
+                                    className="flex-row items-center p-4 active:bg-background-50 rounded-2xl"
+                                >
+                                    <ActionsheetIcon as={BanIcon} size="lg" className="text-typography-900 mr-4" />
+                                    <ActionsheetItemText className="text-typography-800 text-lg font-medium">
+                                        Block Profile
                                     </ActionsheetItemText>
                                 </ActionsheetItem>
 
                                 {/* Report Profile */}
                                 <ActionsheetItem
-                                    onPress={handleClose}
+                                    onPress={() => setShowReportModal(true)}
                                     className="flex-row items-center p-4 active:bg-red-50 rounded-2xl"
                                 >
                                     <ActionsheetIcon as={FlagIcon} size="lg" className="text-red-500 mr-4" />
@@ -1387,6 +1477,15 @@ export default function ProfileDetailScreen({ route }: any) {
                         </ModalGUI></>
                 }
                 {isLoading && <LoadingScreen />}
+
+
+                {showReportModal && <ReportProfileModal
+                    isOpen={showReportModal}
+                    onClose={() => setShowReportModal(false)}
+                    onSubmit={onReportSubmit}
+                    targetMemberName={data?.full_name}
+                />
+                }
                 {/* Bottom Spacer */}
                 <Box className="h-20" />
             </ScrollView >

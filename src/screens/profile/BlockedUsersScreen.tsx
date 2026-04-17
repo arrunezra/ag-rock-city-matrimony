@@ -12,8 +12,11 @@ import { getExtension } from '@/src/utils/common';
 import { useAlert } from '@/src/context/AlertContext';
 import { useAppToast } from '@/src/context/ToastContext';
 import NotFoundScreen from '../common/NotFoundScreen';
+import { useNavigation } from '@react-navigation/native';
 
-const AcceptedScreen = () => {
+const BlockedUsersScreen = () => {
+    const navigation = useNavigation<any>();
+
     const { showAlert, hideAlert } = useAlert();
     const { showToast } = useAppToast();
     const { user } = useAuth();
@@ -96,21 +99,26 @@ const AcceptedScreen = () => {
                         }
                         renderItem={({ item }) => (
                             <HStack className="justify-between items-center p-3 border-b border-outline-100">
-                                <Pressable className="items-center flex-1">
-                                    <HStack space="md"  >
+                                <Pressable className="items-center flex-1" onPress={() => { navigation.navigate('ProfileEdit') }}>
+                                    <HStack space="md" >
                                         <Avatar size="lg">
                                             <AvatarFallbackText>{item.first_name}</AvatarFallbackText>
                                             <AvatarImage
-                                                source={{ uri: getExtension(item.file_name, 'addthumnail') }}
+                                                source={
+                                                    item.file_name
+                                                        ? { uri: getExtension(item.file_name, 'addthumnail') }
+                                                        : undefined
+                                                }
                                             />
                                         </Avatar>
 
                                         <VStack className="flex-1">
                                             <Text size="xl" className="font-bold text-typography-900" numberOfLines={1}>
-                                                {item.full_name}
+                                                {item.full_name || ''}
                                             </Text>
+
                                             <Text size="md" className="text-typography-500" numberOfLines={1}>
-                                                {item.city_name}, {item.state_name}
+                                                {[item.city_name, item.state_name].filter(Boolean).join(', ')}
                                             </Text>
                                         </VStack>
                                     </HStack>
@@ -144,5 +152,4 @@ const AcceptedScreen = () => {
     );
 };
 
-
-export default AcceptedScreen
+export default BlockedUsersScreen;

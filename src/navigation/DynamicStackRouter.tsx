@@ -31,6 +31,10 @@ import FavoritesScreen from "../screens/favorites/FavoritesScreen";
 import { useFocusEffect } from "@react-navigation/native";
 import { Alert, BackHandler, Platform, ToastAndroid } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import BlockedUsersScreen from "../screens/profile/BlockedUsersScreen";
+import SettingsScreen from "../screens/settings/SettingsScreen";
+import ContactPrivacyScreen from "../screens/settings/privacy/PrivacyScreen";
+import SummryListViewScreen from "../screens/profile/dashboard/SummryListViewScreen";
 
 
 const Stack = createNativeStackNavigator();
@@ -43,10 +47,9 @@ export const ROLE_DRAWER_CONFIG: Record<string, any[]> = {
   member: [
     { name: "ReceivedRequests", component: ReceivedScreen },
     { name: "AcceptedRequests", component: AcceptedScreen },
-    { name: "MyPhotos", component: MyPhotos, options: { title: "My Photos" } },
+    // { name: "MyPhotos", component: MyPhotos, options: { title: "My Photos" } }, Dont delete 
     { name: "PartnerPreferences", component: PartnerPreferences, options: { title: "Partner Preferences" } },
     { name: "UserDocumentUpload", component: UserDocumentUpload, options: { title: "My Documents" } },
-
   ],
   staff: [
     { name: "BaptismRecords", component: BaptismScreen, options: { title: "Baptism Records" } },
@@ -95,9 +98,16 @@ const SHARED_STACKS = (role: string) => (
     {role === 'member' && (
       <>
         <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
+        <Stack.Screen name="MemberSettings" component={SettingsScreen} />
+        <Stack.Screen name="ContactPrivacy" component={ContactPrivacyScreen} options={{ title: 'Contact Privacy' }} />
+        <Stack.Screen name="BlockedUsersScreen" component={BlockedUsersScreen} options={{ title: 'Blocked Profile' }} />
+        <Stack.Screen name="SummryListView" component={SummryListViewScreen} options={{ title: 'Profile Summary' }} />
+
+
 
       </>
     )}
+
     <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
     <Stack.Screen name="ShowProfileGallery" component={ShowProfileGalleryScreen} />
   </Stack.Group>

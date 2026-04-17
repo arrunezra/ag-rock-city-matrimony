@@ -3,7 +3,7 @@ export interface User {
   name: string;
   email: string;
   phone: string;
-  department:string;
+  department: string;
   role?: 'member' | 'staff' | 'admin' | 'super admin';
   employeeId?: string;
   position?: string;
@@ -13,9 +13,10 @@ export interface User {
   profilePic?: string;
   firstName?: string;
   lastName?: string;
-  userid?:string;
-  profile_id?:string;
-  isVerified?:string;
+  userid?: string;
+  profile_id?: string;
+  isVerified?: string;
+  is_visible?: number
 }
 
 export interface AuthResponse {
@@ -32,5 +33,5 @@ export interface AuthContextType {
   updateUser: (updatedData: User) => Promise<void>;
   login: (credentials: any) => Promise<{ success: boolean; message?: any }>;
   signup: (userData: any) => Promise<{ success: boolean; message?: any }>;
-  logout: () => Promise<{success: boolean; message?: any}>; 
+  logout: () => Promise<{ success: boolean; message?: any }>;
 }

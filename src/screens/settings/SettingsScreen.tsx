@@ -1,67 +1,147 @@
 import React from 'react';
-import { Pressable, ScrollView } from 'react-native';
+import { Pressable, ScrollView, TouchableOpacity } from 'react-native';
 //import { Box, VStack, HStack, Text, Heading, Icon, Pressable, Divider, ChevronRightIcon } from '@/components/ui';
-import { User, Lock, Bell, Shield, Trash2 } from 'lucide-react-native';
-import { Box, VStack, HStack, Text , Divider } from '@/src/components/common/GluestackUI';
+import { User, Lock, Bell, Shield, Trash2, Eye, Calendar, Ban, Heart, Sparkles, LogOut, Info } from 'lucide-react-native';
+import { Box, VStack, HStack, Text, Divider, Heading } from '@/src/components/common/GluestackUI';
 import { ChevronRightIcon, Icon } from '@/src/components/common/IconUI';
- 
-export default function SettingsScreen({ navigation }: any) {
-  const settingsSections = [
-    {
-      header: "Profile Settings",
-      items: [
-        { label: "Edit Personal Info", icon: User, route: "EditProfile" },
-        { label: "Update Preferences", icon: Shield, route: "PartnerPreferences" },
-      ]
-    },
-    {
-      header: "Security",
-      items: [
-        { label: "Change Password", icon: Lock, route: "ChangePassword" },
-        { label: "Push Notifications", icon: Bell, type: 'toggle' },
-      ]
-    }
-  ];
+import LinearGradient from 'react-native-linear-gradient';
+import { useAuth } from '@/src/context/AuthContext';
 
+export default function SettingsScreen({ navigation }: any) {
+
+  const { logout } = useAuth();
+  const SettingsGradientCard = ({ title, icon, children, gradientColors }: any) => (
+    <Box className="mb-6 px-5">
+      <LinearGradient
+        colors={gradientColors || ['#f0f9ff', '#ffffff']}
+        style={{ borderRadius: 32, padding: 20, borderWidth: 1, borderColor: '#e0f2fe' }}
+      >
+        <HStack className="items-center" space="md"  >
+          <Box className="p-2 rounded-lg bg-blue-100/50">
+            <Icon as={icon} size="sm" className="text-blue-600" />
+          </Box>
+          <Heading size="md" className="text-typography-900">{title}</Heading>
+        </HStack>
+        {children}
+      </LinearGradient>
+    </Box >
+  );
   return (
-    <Box className="flex-1 bg-background-50">
-      <ScrollView>
-        {settingsSections.map((section, idx) => (
-          <VStack key={idx} className="mt-6">
-            <Text className="px-6 mb-2 text-xs font-bold uppercase text-typography-400">
-              {section.header}
-            </Text>
-            <Box className="bg-white border-y border-outline-50">
-              {section.items.map((item, itemIdx) => (
-                <VStack key={itemIdx}>
-                  <Pressable 
-                    onPress={() => item.route && navigation.navigate(item.route)}
-                    className="px-6 py-4 active:bg-background-50"
-                  >
-                    <HStack className="items-center justify-between">
-                      <HStack className="items-center gap-4">
-                        <Icon as={item.icon} size="sm" className="text-typography-500" />
-                        <Text className="text-md font-medium text-typography-800">{item.label}</Text>
-                      </HStack>
-                      <Icon as={ChevronRightIcon} size="xs" className="text-typography-300" />
-                    </HStack>
-                  </Pressable>
-                  {itemIdx < section.items.length - 1 && <Divider className="ml-16 mr-6" />}
-                </VStack>
-              ))}
-            </Box>
+    <Box className="flex-1 bg-white">
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 20, paddingBottom: 40 }}>
+
+        <VStack className="px-8 pb-6">
+          <Heading size="2xl" className="text-slate-900 font-extrabold tracking-tighter">Settings</Heading>
+          <Text size="sm" className="text-slate-500">Manage your account and preferences</Text>
+        </VStack>
+
+        {/* Section 1: Contact & Privacy */}
+        <SettingsGradientCard title="Account Details" icon={Shield} gradientColors={['#f0f9ff', '#ffffff']}>
+          <VStack className='mt-4' space="lg">
+            {/* Item 1 */}
+            <Pressable onPress={() => {
+              navigation.navigate('Main', {
+                screen: 'ProfileEdit'
+              })
+              // navigation.navigate('EditProfile')}
+            }}>
+              <HStack className='items-center justify-between'>
+                <HStack className='items-center' space="md">
+                  <Box className="p-2.5 rounded-xl bg-blue-50"><Icon as={User} size="lg" className="text-blue-600" /></Box>
+                  <VStack>
+                    <Text size="xs" className="text-typography-500 font-medium uppercase">Personal Info</Text>
+                    <Text size="md" className="text-typography-900 font-bold">Profile Details</Text>
+                  </VStack>
+                </HStack>
+                <Icon as={ChevronRightIcon} size="sm" className="text-blue-300" />
+              </HStack>
+            </Pressable>
+
+            <Box className="h-[1px] bg-blue-100/50 w-full" />
+
+            {/* Item 2 */}
+            <Pressable onPress={() => navigation.navigate('ContactPrivacy')}>
+              <HStack className='items-center justify-between'>
+                <HStack className='items-center' space="md">
+                  <Box className="p-2.5 rounded-xl bg-blue-50"><Icon as={Eye} size="lg" className="text-blue-600" /></Box>
+                  <VStack>
+                    <Text size="xs" className="text-typography-500 font-medium uppercase">Visibility</Text>
+                    <Text size="md" className="text-typography-900 font-bold">Profile Privacy</Text>
+                  </VStack>
+                </HStack>
+                <Icon as={ChevronRightIcon} size="sm" className="text-blue-300" />
+              </HStack>
+            </Pressable>
+
+            <Box className="h-[1px] bg-blue-100/50 w-full" />
+
+            {/* Item 3 */}
+            <Pressable onPress={() => navigation.navigate('BlockedUsersScreen')}>
+              <HStack className='items-center justify-between'>
+                <HStack className='items-center' space="md">
+                  <Box className="p-2.5 rounded-xl bg-blue-50"><Icon as={Ban} size="lg" className="text-blue-600" /></Box>
+                  <VStack>
+                    <Text size="xs" className="text-typography-500 font-medium uppercase">Restrictions</Text>
+                    <Text size="md" className="text-typography-900 font-bold">Blocked Profiles</Text>
+                  </VStack>
+                </HStack>
+                <Icon as={ChevronRightIcon} size="sm" className="text-blue-300" />
+              </HStack>
+            </Pressable>
           </VStack>
-        ))}
+        </SettingsGradientCard>
+
+        {/* Section 2: Smart Preferences */}
+        <SettingsGradientCard title="Smart Preferences" icon={Sparkles} gradientColors={['#f5f3ff', '#ffffff']}>
+          <VStack className='mt-4' space="lg">
+            <Pressable onPress={() => navigation.navigate('PartnerPreferences')}>
+              <HStack className='items-center justify-between'  >
+                <HStack className='items-center' space="md">
+                  <Box className="p-2.5 rounded-xl bg-purple-50"><Icon as={Heart} size="lg" className="text-purple-600" /></Box>
+                  <VStack>
+                    <Text size="xs" className="text-typography-500 font-medium uppercase">Matchmaking</Text>
+                    <Text size="md" className="text-typography-900 font-bold">Partner Preferences</Text>
+                  </VStack>
+                </HStack>
+                <Icon as={ChevronRightIcon} size="sm" className="text-purple-300" />
+              </HStack>
+            </Pressable>
+
+            <HStack space="xs" items-center className="bg-purple-50/50 p-3 rounded-2xl mt-2 border border-purple-100">
+              <Icon as={Info} size='sm' className="text-purple-400" />
+              <Text size="xs" className="text-purple-600 italic">Adjust preferences to get better suggestions.</Text>
+            </HStack>
+          </VStack>
+        </SettingsGradientCard>
+
+        {/* Section 3: Security & Logout */}
+        <SettingsGradientCard title="Security" icon={Lock} gradientColors={['#f8fafc', '#ffffff']}>
+          <VStack className='mt-4' space="lg">
+            <TouchableOpacity onPress={() => logout()}>
+              <HStack className='items-center justify-between'>
+                <HStack className='items-center' space="md">
+                  <Box className="p-2.5 rounded-xl bg-slate-100"><Icon as={LogOut} size="lg" className="text-slate-600" /></Box>
+                  <VStack>
+                    <Text size="xs" className="text-typography-500 font-medium uppercase">Session</Text>
+                    <Text size="md" className="text-typography-900 font-bold">Logout</Text>
+                  </VStack>
+                </HStack>
+                <Icon as={ChevronRightIcon} size="sm" className="text-slate-300" />
+              </HStack>
+            </TouchableOpacity>
+          </VStack>
+        </SettingsGradientCard>
 
         {/* Danger Zone */}
-        <VStack className="mt-10 mb-10">
-          <Pressable className="bg-white border-y border-outline-50 px-6 py-4 active:bg-error-50">
-            <HStack className="items-center gap-4">
-              <Icon as={Trash2} size="sm" className="text-error-600" />
-              <Text className="text-md font-medium text-error-600">Delete Account</Text>
+        <Box className="px-5 mt-4">
+          <Pressable className="bg-red-50 rounded-[32px] p-6 border border-red-100 items-center">
+            <HStack space="md" className='items-center '>
+              <Icon as={Trash2} size="sm" className="text-red-500" />
+              <Text className="text-red-600 font-bold">Delete Account Permanently</Text>
             </HStack>
           </Pressable>
-        </VStack>
+        </Box>
+
       </ScrollView>
     </Box>
   );

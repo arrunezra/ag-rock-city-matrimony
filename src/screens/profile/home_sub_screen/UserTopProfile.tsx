@@ -1,77 +1,297 @@
 import React, { useEffect, useState } from 'react';
-import { Box, VStack, HStack, Text, Heading, Avatar, AvatarImage, AvatarFallbackText } from '@/src/components/common/GluestackUI';
-import { Pressable } from 'react-native';
+import { Box, VStack, HStack, Text, Heading, Avatar, AvatarImage, AvatarFallbackText, Center } from '@/src/components/common/GluestackUI';
+import { Pressable, TouchableOpacity } from 'react-native';
 import { AddIcon, CheckIcon, EditIcon, Icon, StarIcon } from '@/components/ui/icon';
 import { API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
 import { getExtension } from '@/src/utils/common';
+import LinearGradient from 'react-native-linear-gradient';
+import { Briefcase, Camera, CheckCircle, CheckCircle2, ChevronRight, Edit3, Eye, GraduationCap, Heart, HeartHandshake, MapPin, Share2, Star, TrendingUp, Users, Zap } from 'lucide-react-native';
+import profileService from '@/src/services/profileService';
+import { useNavigation } from '@react-navigation/native';
 
-const UserTopProfile = ({ profile, onEdit, onAddPhoto }: any) => {
-    const [profiles, setProfiles] = useState<any>('')
+const UserTopProfile = ({ user, onEdit, onAddPhoto }: any) => {
+    //console.log('user==', user)
+    const navigation = useNavigation<any>();
+
+    const [profiles, setProfiles] = useState<any>('');
+    const [summary, setSummary] = useState<any>();
     useEffect(() => {
-        setProfiles(getExtension(profile?.profilePic, 'addthumnail'))
-    }, [profile?.profilePic])
+
+        setProfiles(getExtension(user?.profilePic, 'addthumnail'))
+    }, [user?.profilePic]);
+    const fetchSummaryDetails = async () => {
+
+        const response = await profileService.fetchSummaryDetails(
+            {
+                profile_id: user?.profile_id,
+                role: 'Profile',
+                view_mode: 'COUNT',
+                filter_by: ''
+            });
+        if (response.success) {
+            setSummary(response?.summary);
+        } else {
+
+        }
+
+
+    };
+    useEffect(() => {
+        fetchSummaryDetails()
+    }, [])
     return (
-        <VStack className="px-4 py-6 bg-white gap-6">
-            <HStack space="md" className="items-center">
+        <VStack className="px-5 py-8 bg-[#f8fafc] gap-8">
+            {/* Profile Card Overlay */}
+            <HStack space="lg" className="items-center bg-white p-6 rounded-[32px] shadow-sm border border-slate-100">
                 <Box className="relative">
-                    <Pressable onPress={onAddPhoto}>
-                        <Avatar size="xl" className="border-2 border-outline-100 bg-background-200">
-                            <AvatarFallbackText>
-                                {profile?.firstName} {profile?.lastName}
-                            </AvatarFallbackText>
-
-                            {/* ONLY render the image if profiles is not empty or null */}
-                            {profiles ? (
-                                <AvatarImage
-                                    source={{
-                                        uri: profiles,
-                                    }}
-                                />
-                            ) : null}
-
-                            <Box className="absolute bottom-0 right-0 bg-cyan-500 p-1.5 rounded-full border-2 border-white shadow-sm active:opacity-80">
-                                <Icon as={AddIcon} color="white" size="xs" />
-                            </Box>
-                        </Avatar>
+                    <Pressable onPress={onAddPhoto} className="active:scale-95 transition-transform">
+                        <Box className="p-1 rounded-full bg-indigo-50 border border-indigo-100">
+                            <Avatar size="2xl" className="rounded-full bg-slate-200">
+                                <AvatarFallbackText className="font-bold text-slate-600" >
+                                    {user?.firstName} {user?.lastName}
+                                </AvatarFallbackText>
+                                {profiles && (
+                                    <AvatarImage source={{ uri: profiles }} />
+                                )}
+                            </Avatar>
+                        </Box>
+                        {/* 2026 Floating Action Button */}
+                        <Box
+                            className="absolute -bottom-1 -right-1 bg-white p-2 rounded-full shadow-md border border-slate-50"
+                            style={{ elevation: 4 }}
+                        >
+                            <Center className="bg-indigo-600 p-1.5 rounded-full">
+                                <Icon as={Camera} size="xs" color="white" />
+                            </Center>
+                        </Box>
                     </Pressable>
                 </Box>
 
-                {/* User Identity */}
                 <VStack className="flex-1">
-                    <HStack className="items-center gap-1">
-                        <Heading size="lg" className="text-typography-900">
-                            {profile?.firstName} {profile?.lastName}
+                    <HStack items-center space="xs">
+                        <Heading size="xl" className="text-slate-900 font-black tracking-tight">
+                            {user?.firstName}
                         </Heading>
-                        <Box className="bg-blue-500 rounded-full p-0.5">
-                            <Icon as={CheckIcon} size="2xs" color="white" />
-                        </Box>
+                        <Icon as={CheckCircle2} size="sm" className="text-blue-500 fill-blue-50" />
                     </HStack>
-                    <Text size="sm" className="text-typography-500">
-                        {profile?.userid || 'SH51627923'}
-                    </Text>
-                    <Text size="sm" className="text-typography-400 font-medium">
-                        {profile?.account_type || 'Free Account'}
-                    </Text>
+
+                    <Box className="bg-slate-100 self-start px-2.5 py-1 rounded-lg mt-1">
+                        <Text size="xs" className="text-slate-600 font-bold tracking-tighter uppercase">
+                            ID: {user?.role === 'member' ? user?.profile_id : user?.userid}
+                        </Text>
+                    </Box>
+
+                    <HStack items-center space="xs" className="mt-2">
+                        <Box className="w-2 h-2 rounded-full bg-emerald-500" />
+                        <Text size="sm" className="text-slate-500 font-semibold italic">
+                            {user?.account_type || "Premium Plus"}
+                        </Text>
+                    </HStack>
                 </VStack>
             </HStack>
 
+            {/* Action Buttons Row */}
             <HStack space="md" className="w-full">
-                <Pressable
-                    onPress={onEdit}
-                    className="flex-1 flex-row justify-center items-center gap-2 bg-background-50 border border-outline-200 py-3 rounded-xl active:bg-background-100"
-                >
-                    <Icon as={EditIcon} size="sm" className="text-typography-700" />
-                    <Text className="font-bold text-typography-700">Edit Profile</Text>
+                <Pressable onPress={onEdit} className="flex-1">
+                    {({ pressed }) => (
+                        <Box
+                            className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden"
+                            style={{ transform: [{ scale: pressed ? 0.97 : 1 }] }}
+                        >
+                            <HStack space="sm" className="justify-center items-center py-4">
+                                <Icon as={Edit3} size="sm" className="text-slate-600" />
+                                <Text className="font-bold text-slate-700">Edit Profile</Text>
+                            </HStack>
+                        </Box>
+                    )}
                 </Pressable>
 
-                {/* <Pressable
-                    onPress={onUpgrade}
-                    className="flex-1 flex-row justify-center items-center gap-2 bg-cyan-500 py-3 rounded-xl shadow-sm active:bg-cyan-600"
-                >
-                    <Icon as={StarIcon} size="sm" color="white" />
-                    <Text className="font-bold text-white">Upgrade Now</Text>
-                </Pressable> */}
+
             </HStack>
+
+            {/* Add this below the Edit Profile button */}
+            {/* <HStack space="md" className="mx-6 mt-6">
+                <Box className="flex-1 p-4 rounded-3xl bg-indigo-50 border border-indigo-100 items-center">
+                    <Text className="text-indigo-600 font-black text-lg">12</Text>
+                    <Text className="text-indigo-400 text-[10px] uppercase font-bold">Requests</Text>
+                </Box>
+                <Box className="flex-1 p-4 rounded-3xl bg-emerald-50 border border-emerald-100 items-center">
+                    <Text className="text-emerald-600 font-black text-lg">48</Text>
+                    <Text className="text-emerald-400 text-[10px] uppercase font-bold">Matches</Text>
+                </Box>
+            </HStack> */}
+
+            <VStack className="flex-1 bg-white px-6 pt-4 pb-10">
+
+                {/* 1. Quick Stats: The "Activity Bento Grid" */}
+                <Box className="mb-8">
+                    {/* Top Row: Matches & Views */}
+                    <HStack space="md" className="mb-4">
+                        {/* Matches Card */}
+                        <VStack className="flex-1 p-5 rounded-[32px] bg-indigo-50/50 border border-indigo-100 items-center relative">
+                            <TouchableOpacity className='items-center ' onPress={() => {
+                                navigation.navigate('SummryListView', {
+                                    filter: 'Likes'
+                                });
+                            }}          >
+                                <Center className="w-10 h-10 rounded-2xl bg-indigo-100 mb-2">
+                                    <Icon as={Users} size="sm" className="text-indigo-600" />
+                                </Center>
+                                <Text className="text-indigo-900 font-black text-xl">{summary?.likes} </Text>
+                                <Text className="text-indigo-400 text-[9px] font-bold uppercase tracking-widest">Likes</Text>
+                            </TouchableOpacity>
+                        </VStack>
+
+                        {/* Views Card */}
+
+                        <VStack className="flex-1 p-5 rounded-[32px] bg-emerald-50/50 border border-emerald-100 items-center relative">
+                            <TouchableOpacity className='items-center ' onPress={() => {
+                                navigation.navigate('SummryListView', {
+                                    filter: 'Views'
+                                });
+                            }}>
+                                <Center className="w-10 h-10 rounded-2xl bg-emerald-100 mb-2">
+                                    <Icon as={Eye} size="sm" className="text-emerald-600" />
+                                </Center>
+                                <Text className="text-emerald-900 font-black text-xl">{summary?.views}</Text>
+                                <Text className="text-emerald-400 text-[9px] font-bold uppercase tracking-widest">Views</Text>
+                                {/* Micro-badge for new views */}
+                                <Box className="absolute top-4 right-4 bg-emerald-500 w-2 h-2 rounded-full border-2 border-white" />
+                            </TouchableOpacity>
+                        </VStack>
+                    </HStack>
+
+                    {/* Bottom Row: Accepted & Requests */}
+                    <HStack space="md">
+                        {/* Accepted Card */}
+                        {/* Accepted Card - Now in Royal Violet */}
+                        <VStack className="flex-1 p-5 rounded-[32px] bg-purple-50/50 border border-purple-100 items-center">
+                            <TouchableOpacity className='items-center ' onPress={() => {
+                                navigation.navigate('SummryListView', {
+                                    filter: 'Accepted'
+                                });
+                            }}>
+                                <Center className="w-10 h-10 rounded-2xl bg-purple-100 mb-2 shadow-sm shadow-purple-200">
+                                    {/* Using a star or check-ribbon for a 'Success' feel */}
+                                    <Icon as={CheckCircle2} size="sm" className="text-purple-600" />
+                                </Center>
+                                <Text className="text-purple-900 font-black text-xl">{summary?.accepted}</Text>
+                                <Text className="text-purple-400 text-[9px] font-bold uppercase tracking-widest">Accepted</Text>
+
+                                {/* Optional: Add a tiny "growth" indicator */}
+                                <HStack className="items-center mt-1">
+                                    <Icon as={TrendingUp} size={'md'} className="text-purple-400 mr-1" />
+                                    <Text className="text-purple-400 font-bold text-[8px]">+3 Today</Text>
+                                </HStack>
+                            </TouchableOpacity>
+                        </VStack>
+
+                        {/* Requests Card - With Activity Batch */}
+                        <VStack className="flex-1 p-5 rounded-[32px] bg-rose-50/50 border border-rose-100 items-center relative">
+                            {/* The "Batch" (Notification Badge) */}
+                            {/* <Box className="absolute -top-2 -right-1 bg-rose-600 px-2 py-0.5 rounded-lg shadow-sm border-2 border-white">
+                                <Text className="text-white font-black text-[8px]">12 NEW</Text>
+                            </Box> */}
+                            <TouchableOpacity className='items-center ' onPress={() => {
+                                navigation.navigate('SummryListView', {
+                                    filter: 'Requests'
+                                });
+                            }}>
+                                <Center className="w-10 h-10 rounded-2xl bg-rose-100 mb-2">
+                                    <Icon as={HeartHandshake} size="sm" className="text-rose-600" />
+                                </Center>
+                                <Text className="text-rose-900 font-black text-xl">{summary?.requests}</Text>
+                                <Text className="text-rose-400 text-[9px] font-bold uppercase tracking-widest">Requests</Text>
+                            </TouchableOpacity>
+                        </VStack>
+                    </HStack>
+                </Box>
+
+                {/* 4. The 'Visual Floor' */}
+                {/* <Box className="mt-auto mb-10 p-8 rounded-[40px] bg-slate-50/80 border border-dashed border-slate-200">
+                    <VStack space="xl" className="items-center">
+                        <Center className="w-12 h-12 rounded-full bg-white shadow-sm">
+                            <Icon as={Heart} size="sm" className="text-rose-400" />
+                        </Center>
+
+                        <VStack className="items-center" space="xs">
+                            <Text className="text-slate-500 text-[15px] italic text-center font-medium leading-6">
+                                "Let all that you do be done in love."
+                            </Text>
+                            <Text className="font-black text-slate-400 text-[10px] uppercase tracking-[2px]">
+                                — 1 Corinthians 16:14
+                            </Text>
+                        </VStack>
+
+                        <Pressable className="mt-2 px-8 py-3 rounded-2xl bg-white border border-slate-200 shadow-sm active:scale-95 transition-all">
+                            <HStack space="xs" className="items-center">
+                                <Icon as={Share2} size="xs" className="text-slate-600" />
+                                <Text className="text-slate-600 font-black text-[10px] uppercase tracking-widest">
+                                    Share Profile
+                                </Text>
+                            </HStack>
+                        </Pressable>
+                    </VStack>
+                </Box> */}
+
+
+                <Box className="mt-auto mb-10  relative">
+                    {/* 1. The Radiant Glow Layer (Soft Backlight) */}
+                    <LinearGradient
+                        colors={['#10b981', '#3b82f6', '#6366f1']} // Emerald to Blue to Indigo
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{
+                            position: 'absolute',
+                            inset: -1,
+                            borderRadius: 40,
+                            opacity: 0.3,
+                        }}
+                    />
+
+                    {/* 2. The Main Minimalist Box */}
+                    <Box className="bg-white rounded-[38px] p-10 shadow-2xl shadow-slate-200 items-center">
+                        <VStack space="xl" className="items-center">
+
+                            {/* 3. Floating Heart Icon with Micro-Glow */}
+                            <Box className="relative mb-2">
+                                <Center className="w-14 h-14 rounded-[22px] bg-slate-50 border border-slate-100 shadow-sm">
+                                    <Icon as={Heart} size="sm" className="text-rose-500" />
+                                </Center>
+                                {/* Subtle pulse dot */}
+                                <Box className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
+                            </Box>
+
+                            {/* 4. The Message Layer */}
+                            <VStack className="items-center" space="md">
+                                <Text className="text-slate-400 font-black text-[9px] uppercase tracking-[5px]">
+                                    Daily Verse
+                                </Text>
+
+                                <Text className="text-slate-800 text-[20px] text-center font-bold leading-8 tracking-tight">
+                                    "Let all that you do{"\n"}
+                                    <Text className="text-emerald-600 italic">be done in love.</Text>"
+                                </Text>
+                                <Box className="mt-4 px-3 py-1 rounded-full bg-slate-100/50">
+                                    <Text className="font-bold text-slate-500 text-[10px] uppercase tracking-widest">
+                                        1 Corinthians 16:14
+                                    </Text>
+                                </Box>
+
+                            </VStack>
+
+                            {/* 5. Clean Signature (Replaces the Action Stage) */}
+                            <VStack className="items-center mt-4">
+                                <Text className="text-slate-300 font-black text-[8px] uppercase tracking-[3px]">
+                                    Roct City AG Church
+                                </Text>
+                            </VStack>
+                        </VStack>
+                    </Box>
+                </Box>
+
+
+            </VStack>
         </VStack>
     );
 };

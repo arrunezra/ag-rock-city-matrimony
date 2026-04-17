@@ -2,6 +2,7 @@ import { createContext, useState, useContext, useEffect, ReactNode } from 'react
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import authService from '../services/authService';
 import { AuthContextType, User } from '../utils/models';
+import { Alert } from 'react-native';
 
 
 
@@ -42,7 +43,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Otherwise, force them to the Login screen
         setIsAuthenticated(false);
       }
-      console.log('checkAuthStatus rememberMe', rememberMe)
     } catch (error) {
       console.error('Auth status check error:', error);
     } finally {
@@ -91,6 +91,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
   const logout = async () => {
+    Alert.alert('');
     try {
       // 1. Notify Backend (Optional)
       await authService.logout();

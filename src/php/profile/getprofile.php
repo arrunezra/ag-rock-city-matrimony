@@ -9,7 +9,7 @@ require_once __DIR__ . '/../error_log_config.php';
 try {
 	// Test if logging works immediately 
 	$token = AuthMiddleware::check();
-	error_log("Full Token Data: " . print_r($token, true));
+	//error_log("Full Token Data: " . print_r($token, true));
 	
 	$tRole = $token->role ?? $token['role'];
 	$tprofile_id = $token->profile_id ?? $token['profile_id'];
@@ -29,31 +29,39 @@ try {
 
     // 1. Gender Filter
     if (!empty($gender)) {
-        $whereClauses[] = "gender != ?";
+        $whereClauses[] = "p.gender != ?";
         $params[] = $gender;
     }
      
 
     // 2. Member Restrictions
-    if (!empty($tRole) && $tRole == 'member') {
-         $whereClauses[] = "IsVerified = 1";
-         $whereClauses[] = "IsActive = 1";
+    if (!empty($tRole) && $tRole == 'member') { 
+                    $whereClauses[] = "p.IsVerified = 1 
+                                        AND p.IsActive = 1 
+                                        AND p.is_visible = 1  ";
+                                        $whereClauses[] = "p.profile_id NOT IN (
+        SELECT blocked_id 
+        FROM profiles_blocks 
+        WHERE blocker_id = ?
+    )";
+    $params[] = $tprofile_id;
+                    
     }
     // 2. Marital Status Filter
     if (!empty($input['marital_status'])) {
-        $whereClauses[] = "marital_status = ?";
+        $whereClauses[] = "p.marital_status = ?";
         $params[] = $input['marital_status'];
     }
 
     // 3. Annual Income Filter (Assuming simple "Greater than or equal to")
     if (!empty($input['annual_income'])) {
-        $whereClauses[] = "annual_income >= ?";
+        $whereClauses[] = "p.annual_income >= ?";
         $params[] = $input['annual_income'];
     }
 
     // 4. Age Filter (Calculated from DOB)
     if (!empty($input['min_age']) && !empty($input['max_age'])) {
-        $whereClauses[] = "TIMESTAMPDIFF(YEAR, dob, CURDATE()) BETWEEN ? AND ?";
+        $whereClauses[] = "TIMESTAMPDIFF(YEAR, STR_TO_DATE(p.dob, '%d-%m-%Y'), CURDATE())  BETWEEN ? AND ?";
         $params[] = (int)$input['min_age'];
         $params[] = (int)$input['max_age'];
     }
@@ -131,12 +139,12 @@ try {
             -- JOIN 2: Did they send me a request?
             LEFT JOIN interests i_received ON i_received.sender_id = p.profile_id AND i_received.receiver_id = ?
 			LEFT JOIN profile_likes l ON l.profile_id = p.profile_id AND l.sender_id = ? 
-             $whereSql  
+              $whereSql   
             ORDER BY p.updated_at DESC 
             LIMIT $limit OFFSET $offset";
 	
-	// error_log("SQL Query: " . $sql);
-	// error_log("Params: " . print_r($params, true));
+	 error_log("SQL Query: " . $sql);
+	 error_log("Params: " . print_r($params, true));
 
     // Add your ID twice at the beginning for the two JOIN placeholders
 	array_unshift($params, $tprofile_id, $tprofile_id, $tprofile_id);

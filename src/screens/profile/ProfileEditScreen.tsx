@@ -26,6 +26,7 @@ import { ProfileSkeleton } from '@/src/components/common/ProfileSkeleton';
 import { LookupContext } from '@/src/context/LookupContext';
 import { useAppToast } from '@/src/context/ToastContext';
 import NoDataScreen from '../common/NoDataScreen';
+import { Plus } from 'lucide-react-native';
 
 
 export default function ProfileEditScreen({ navigation, route }: any) {
@@ -562,9 +563,9 @@ export default function ProfileEditScreen({ navigation, route }: any) {
             <Heading size="sm" className="text-error-500 font-bold uppercase tracking-wider">
               {title}
             </Heading>
-            <TouchableOpacity onPress={onEdit} className="bg-white p-2 rounded-full shadow-sm border border-outline-50">
+            {title !== 'Contact Details' && <TouchableOpacity onPress={onEdit} className="bg-white p-2 rounded-full shadow-sm border border-outline-50">
               <Icon as={EditIcon} size="xs" className="text-gray-500" />
-            </TouchableOpacity>
+            </TouchableOpacity>}
           </HStack>
           {children}
         </VStack>
@@ -1012,7 +1013,9 @@ export default function ProfileEditScreen({ navigation, route }: any) {
               <GradientCard
                 title="Contact Details"
                 icon={Phone}
-                onEdit={() => setShowContactModal(true)}
+                onEdit={() =>
+                  setShowContactModal(true)
+                }
                 // A clean Cyan-to-White gradient for a fresh communication feel
                 gradientColors={['#ecfeff', '#ffffff']}
               >
@@ -1290,19 +1293,55 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                 title="Hobbies & Interests"
                 icon={Sparkles}
                 onEdit={() => setShowHobbiesModal(true)}
-                gradientColors={['#ecfdf5', '#ffffff']} // Emerald-50 to White
+                gradientColors={['#f0fdf4', '#ffffff']}
               >
-                <HStack className="flex-wrap gap-2 mt-2">
-                  {profileData?.hobbies_name.length > 0 ? (
-                    profileData?.hobbies_name.map((hobby: any) => (
-                      <Box key={hobby} className="px-3 py-1 rounded-full bg-emerald-100 border border-emerald-200">
-                        <Text size="xs" className="text-emerald-700 font-bold">{hobby}</Text>
-                      </Box>
-                    ))
+                <Box className="mt-4">
+                  {profileData?.hobbies_name?.length > 0 ? (
+                    <HStack className="flex-wrap gap-3">
+                      {profileData?.hobbies_name.map((hobby: any, index: number) => (
+                        <Box key={hobby} className="relative">
+
+                          {/* 1. The "Aura" Shadow Layer (Colored Glow) */}
+                          <Box
+                            className="absolute inset-0 bg-emerald-400/20 blur-md rounded-2xl"
+                            style={{ transform: [{ translateY: 4 }] }}
+                          />
+
+                          {/* 2. The Glass Chip */}
+                          <Box
+                            className="flex-row items-center px-4 py-2 rounded-[18px] bg-white/70 border border-white"
+                            style={{
+
+                              shadowColor: '#3b3e3dff',
+                              shadowOffset: { width: 0, height: 1 },
+                              shadowOpacity: 0.1,
+                              shadowRadius: 4,
+                            }}
+                          >
+                            {/* Pulsing Detail */}
+                            <Box className="w-2 h-2 rounded-full bg-emerald-500 mr-2 shadow-sm shadow-emerald-400" />
+
+                            <Text className="text-emerald-900 font-black text-[11px] uppercase tracking-[1px]">
+                              {hobby}
+                            </Text>
+                          </Box>
+                        </Box>
+                      ))}
+
+
+                    </HStack>
                   ) : (
-                    <Text size="sm" className="text-typography-400 italic">No hobbies added yet</Text>
+                    /* Empty State Effect */
+                    <Box className="py-10 items-center bg-white/40 rounded-[32px] border border-white/60 border-dashed">
+                      <Box className="p-4 bg-emerald-50 rounded-full mb-3">
+                        <Icon as={Sparkles} size="xl" className="text-emerald-300" />
+                      </Box>
+                      <Text className="text-slate-400 font-black text-[10px] uppercase tracking-[2px]">
+                        Discover your vibe
+                      </Text>
+                    </Box>
                   )}
-                </HStack>
+                </Box>
               </GradientCard>
               {showHobbiesModal && <EditHobbiesModal
                 isOpen={showHobbiesModal}

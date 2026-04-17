@@ -194,8 +194,32 @@ export const profileService = {
     } catch (error: any) {
       return { success: false, message: error.message };
     }
-  }
-
+  },
+  handle_member_actions: async (body: any) => {
+    try {
+      const response = await api.post('/profile/profile_block_report_actions.php', body);
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  },
+  fetchBlockedUsers: async () => {
+    try {
+      const response = await api.get(`/profile/get_blocked_users.php`);
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  },
+  fetchSummaryDetails: async (body: any) => {
+    try {
+      console.log('body', body)
+      const response = await api.post(`/profile/get_profile_home_summary.php`, body);
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  },
 };
 
 export default profileService;

@@ -15,7 +15,7 @@ const ProfileHomeScreen = () => {
             case 'USER_HEADER':
                 return (
                     <UserTopProfile
-                        profile={user}
+                        user={user}
                         onAddPhoto={() => navigation.navigate('ShowProfileGallery')}
                         onEdit={() => navigation.navigate('ProfileEdit')}
                     />
