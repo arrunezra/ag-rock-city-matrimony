@@ -76,3 +76,46 @@ export const formatHeight = (input: string): string => {
 
     //return 'Invalid format';
 };
+
+export const getFilterConfig = (filter: string) => {
+    filter = filter?.toLowerCase();
+    const configs: Record<string, { title: string; subText: string; buttonText: string; buttonColors: string[] }> = {
+        likes: {
+            title: "Interests",
+            subText: "Liked your profile",
+            buttonText: "Unlike",
+            buttonColors: ['#f87171', '#ef4444', '#dc2626'], // Red gradient
+        },
+        views: {
+            title: "Profile Visitors",
+            subText: "Viewed your profile",
+            buttonText: "Remove",
+            buttonColors: ['#94a3b8', '#64748b', '#475569'], // Slate gradient
+        },
+        accepted: {
+            title: "Connections",
+            subText: "Mutually connected",
+            buttonText: "Disconnect",
+            buttonColors: ['#6366f1', '#4f46e5', '#4338ca'], // Indigo gradient
+        },
+        requests: {
+            title: "Pending Requests",
+            subText: "Wants to connect",
+            buttonText: "Accept",
+            buttonColors: ['#10b981', '#059669', '#047857'], // Emerald gradient
+        },
+        blocks: {
+            title: "Blocked Users",
+            subText: "No access to profile",
+            buttonText: "Unblock",
+            buttonColors: ['#10b981', '#059669', '#047857'], // Emerald (Positive action)
+        }
+    };
+
+    return configs[filter] || {
+        title: "Profiles",
+        subText: "Member",
+        buttonText: "Action",
+        buttonColors: ['#10b981', '#059669', '#047857']
+    };
+};

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Dimensions, Image, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
 import FastImage from "@d11/react-native-fast-image";
 
@@ -13,14 +13,17 @@ import { formatHeight } from '@/src/utils/common';
 import { useFocusEffect } from '@react-navigation/native';
 import _, { constant } from 'lodash';
 import { MotiView } from 'moti';
-export const ProfileCard = ({ profile, onPress, user, showToast, onActionComplete, comingFrom }: any) => {
-
+import { useAlert } from '@/src/context/AlertContext';
+import { useIsFocused } from '@react-navigation/native'; // Add this import
+export const ProfileCard = ({ profile, onPress, user, showToast, onActionComplete, comingFrom, reload }: any) => {
+  const { showAlert, hideAlert } = useAlert();
+  const isFocused = useIsFocused();
   profile = _.cloneDeep(profile);
   const [cardComingFrom, setCardComingFrom] = useState<boolean>(false)
   const [isLiked, setIsLiked] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [connectStatus, setConnectStatus] = useState(profile?.connection_status);
-  const [sent, setSent] = useState(profile.sent_status);
+  const [sent, setSent] = useState('');
   const [received, setReceived] = useState(profile.received_status);
 
 
@@ -31,7 +34,6 @@ export const ProfileCard = ({ profile, onPress, user, showToast, onActionComplet
   useEffect(() => {
     let comingFroms = comingFrom || "";
 
-    // console.log('comingFrom', comingFrom)
     if (comingFroms === 'accepted') {
       setCardComingFrom(true)
     } else setCardComingFrom(false)
@@ -58,90 +60,126 @@ export const ProfileCard = ({ profile, onPress, user, showToast, onActionComplet
 
 
   useEffect(() => {
+    // console.log('Syncing status:', profile.sent_status, profile.received_status);
+    setSent(profile.sent_status);
+    setReceived(profile.received_status);
+  }, [profile.sent_status, profile.received_status]);
+
+
+
+  useEffect(() => {
     setConnectStatus(profile.connection_status);
   }, [profile.connection_status]);
 
   if (!isReady) {
     return <Box className="flex-1 bg-white" />; // Empty white screen during transition
   }
-  const sendConnectRequst = async () => {
-    try {
-      if (connectStatus) return;
-      const response = await profileService.sendInterest({ receiver_id: profile?.profile_id });
-      if (response.success) {
-        // status could be 'Pending' or 'Accepted' (if it was a mutual match)
-        setConnectStatus(response.status);
+  const commonapicall = async (action: string) => {
+    // Use 'dislike' action to delete the row in profiles_interests
+    //{ profile_id: profile.profile_id }
+    console.log('bosy', {
+      action: action?.toLowerCase(),
+      target_id: profile?.profile_id
+    })
+    const response = await profileService.handle_interest_block_actions({
+      action: action?.toLocaleLowerCase(),
+      target_id: profile?.profile_id
+    });
 
-        if (response.status === 'Accepted') {
-          showToast("Match", "You are now connected!", "success");
-        }
-        else if (response.status === 'Pending') {
-          showToast("Request", "Request has been sent successfully!", "success");
+    if (response.success) {
+      setSent(response?.status); // Reset local status
+      setConnectStatus(null);
+      if (action != 'likes') {
+        setIsLiked(response.isLiked);
+        showToast(action, response.message, "success");
 
-        }
-        setSent(response.status);
       } else {
-        // If server returned an error (e.g., 1062 duplicate)
-        showToast("Note", response.message, "error");
+        return response;
+      }
+    } else {
 
+    }
+  }
+  const sendConnectRequst = async (action: string) => {
+    try {
+      // 1. WITHDRAW LOGIC: If already 'Pending', clicking again triggers a withdrawal
+      if (sent === 'Pending' || action == 'Rejected') { //sent_status
+        showAlert({
+          type: 'success',
+          title: action == 'Rejected' ? 'Rejected' : 'Withdraw Request?',
+          message: `Would you like to cancel your connection request to ${profile.full_name}?`,
+          confirmText: action == 'Rejected' ? 'Rejected' : 'Yes, Withdraw',
+          onConfirm: async () => {
+            hideAlert();
+            await commonapicall(action == 'Rejected' ? action : 'cancel_request')
+          }
+        });
+        return;
+      } else {
+        await commonapicall(action)
       }
 
+
     } catch (error) {
-      console.error("Like failed", error);
+      console.error("Connection action failed", error);
+      showToast("Error", "Something went wrong", "error");
     }
   };
-  const handleResponse = async (action: 'Accepted' | 'Rejected') => {
-    try {
-      // 1. Call the API and wait for the result
-      const res = await profileService.respondToInterest({
-        sender_id: profile.profile_id,
-        action: action
-      });
+  // const handleResponse = async (action: 'Accepted' | 'Rejected') => {
+  //   try {
+  //     // 1. Call the API and wait for the result
+  //     const res = await profileService.respondToInterest({
+  //       sender_id: profile.profile_id,
+  //       action: action
+  //     });
 
-      if (res.success) {
-        // 2. Update the local UI state
-        // This will trigger your getStatusUI() helper to re-render the button
-        setConnectStatus(action);
+  //     if (res.success) {
+  //       // 2. Update the local UI state
+  //       // This will trigger your getStatusUI() helper to re-render the button
+  //       setConnectStatus(action);
 
-        // 3. Optional Feedback
-        if (action === 'Accepted') {
-          showToast("Success", "Connection established! You can now message them.", "success");
+  //       // 3. Optional Feedback
+  //       if (action === 'Accepted') {
+  //         showToast("Success", "Connection established! You can now message them.", "success");
 
-        } else {
-          showToast("Declined", "Request removed.", "success");
-        }
-        setReceived(action);
-      } else {
-        showToast("Note", res.message || "Failed to process request", "error");
+  //       } else {
+  //         showToast("Declined", "Request removed.", "success");
+  //       }
+  //       setReceived(action);
+  //     } else {
+  //       showToast("Note", res.message || "Failed to process request", "error");
 
-      }
-    } catch (error) {
-      console.error("HandleResponse Error:", error);
-    }
-  };
+  //     }
+  //   } catch (error) {
+  //     console.error("HandleResponse Error:", error);
+  //   }
+  // };
   const getStatusUI = () => {
+
     // 1. Check if either direction is "Accepted"
+    // 2. sent = sent_status
+    // 3. received = received_status
     if (sent === 'Accepted' || received === 'Accepted') {
-      return { text: 'Connected', color: 'bg-emerald-600', icon: CheckCircleIcon, disabled: true };
+      return { text: 'Connected', color: 'bg-emerald-600', icon: CheckCircleIcon, disabled: true, showLabel: false };
     }
 
     // 2. Check for Rejections (Handle this early to lock the button)
     if (sent === 'Rejected' || received === 'Rejected') {
-      return { text: 'Declined', color: 'bg-slate-500', icon: XCircleIcon, disabled: true };
+      return { text: 'Declined', color: 'bg-slate-500', icon: XCircleIcon, disabled: true, showLabel: true };
     }
 
     // 3. Check if you sent a request
     if (sent === 'Pending') {
-      return { text: 'Requested', color: 'bg-orange-500', icon: CheckCircle2Icon, disabled: true };
+      return { text: 'Cancel Req.', color: 'bg-black/50', icon: CheckCircle2Icon, disabled: false, showLabel: true };
     }
 
     // 4. Check if they sent you a request
     if (received === 'Pending') {
-      return { text: 'Wants to Connect', color: 'bg-indigo-600', icon: UserPlus, disabled: false };
+      return { text: 'Wants to Connect', color: 'bg-indigo-600', icon: UserPlus, disabled: false, showLabel: true };
     }
 
     // 5. No relationship
-    return { text: 'Connect', color: 'bg-black/50', icon: CheckCircle2Icon, disabled: false };
+    return { text: 'Connect', color: 'bg-black/50', icon: CheckCircle2Icon, disabled: false, showLabel: true };
   };
   const handleLike = async () => {
     try {
@@ -150,7 +188,8 @@ export const ProfileCard = ({ profile, onPress, user, showToast, onActionComplet
       setIsLiked(!previousState);
 
       // 2. Call API
-      const res = await profileService.toggleLike({ profile_id: profile.profile_id });
+      const res = await commonapicall('likes')
+      //const res = await profileService.toggleLike({ profile_id: profile.profile_id });
 
       if (!res.success) {
         // Rollback if API fails
@@ -160,7 +199,7 @@ export const ProfileCard = ({ profile, onPress, user, showToast, onActionComplet
         // Set the actual state from server (true or false)
         setIsLiked(res.isLiked);
       }
-      if (onActionComplete) {
+      if (onActionComplete) { // Coming from FavoritesScreen
         onActionComplete();
 
       }
@@ -199,19 +238,19 @@ export const ProfileCard = ({ profile, onPress, user, showToast, onActionComplet
         )}
 
         {/* 2. Top Action Bar */}
-        {!cardComingFrom ? <HStack className="absolute top-6 left-6 right-6 justify-between items-center">
+        {!cardComingFrom ? <HStack className="absolute top-2 left-6 right-6 justify-between items-center">
           {/* CASE 1: They sent YOU a request -> Show Accept/Reject */}
           {received === 'Pending' && !sent && (
             <HStack space="md" className="items-center">
               <TouchableOpacity
-                onPress={() => handleResponse('Rejected')}
+                onPress={() => sendConnectRequst('Rejected')}
                 className="bg-slate-200/90 p-3 rounded-full border border-white/20 shadow-sm"
               >
                 <Icon as={X} size="xs" className="text-slate-800" />
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => handleResponse('Accepted')}
+                onPress={() => sendConnectRequst('Accepted')}
                 className="bg-indigo-600 px-5 py-2.5 rounded-full flex-row items-center gap-2 shadow-lg border border-indigo-400"
               >
                 <Icon as={Check} size="xs" className="text-white" />
@@ -223,15 +262,21 @@ export const ProfileCard = ({ profile, onPress, user, showToast, onActionComplet
           {/* CASE 2: No incoming request -> Show standard Connect/Requested/Connected button */}
           {!(received === 'Pending' && !sent) && (
             <TouchableOpacity
-              onPress={sendConnectRequst}
+              onPress={() => sendConnectRequst('send_request')}
               activeOpacity={0.8}
               disabled={ui.disabled}
             >
-              <Box className={`${ui.color} px-5 py-2.5 rounded-full flex-row items-center gap-2 border border-white/20`}>
+              <Box
+                className={`${ui.color} rounded-full flex-row items-center justify-center border border-white/20 ${ui.showLabel ? 'px-5 py-2.5' : 'p-3' // Use equal padding for a circular icon-only look
+                  }`}
+              >
                 <Icon as={ui.icon} size="xs" className="text-white" />
-                <Text className="text-white text-[11px] font-bold uppercase tracking-[1px]">
-                  {ui.text}
-                </Text>
+                {/* Conditionally render the Text Label */}
+                {ui.showLabel && (
+                  <Text className="text-white text-[11px] font-bold uppercase tracking-[1px] ml-2">
+                    {ui.text}
+                  </Text>
+                )}
               </Box>
             </TouchableOpacity>
           )}

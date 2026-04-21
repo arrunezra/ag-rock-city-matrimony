@@ -17,7 +17,8 @@ import {
   RadioIndicator,
   RadioGroup,
   Textarea,
-  TextareaInput
+  TextareaInput,
+  Switch
 } from '@/src/components/common/GluestackUI';
 import { Icon, ChevronLeftIcon, ChevronDownIcon, CheckIcon, SearchIcon, CalendarDays, UserCheck, User, Globe, ChevronDown, Users, Church, ShieldCheck, Phone, Mail, CheckCircle2, Check, Fingerprint, Building2, MapPin, Trash2, Baby, Heart, Ruler, BookOpen, School, GraduationCap, UserRound, Briefcase, Banknote, Building, Sparkles, X, Lightbulb } from '@/src/components/common/IconUI';
 //import { launchImageLibrary } from 'react-native-image-picker';
@@ -41,6 +42,8 @@ import { HEIGHT_DATA } from '@/src/utils/utils';
 import { UploadProgressModal } from '../common/UploadProgressModal';
 import FuturisticDropdown from '@/src/components/common/FuturisticDropdown';
 import { LookupContext } from '@/src/context/LookupContext';
+import { CameraIcon, CheckCircleIcon, CreditCardIcon, Droplets, Flame, User2, UserIcon, Wind, ZapIcon } from 'lucide-react-native';
+import ChruchService from '@/src/services/ChruchService';
 
 // --- DATA SOURCES ---
 
@@ -83,10 +86,10 @@ export default function SignupWizardScreen() {
   const cityRef = React.useRef<any>(null);
   // State Variables
 
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(9);
 
 
-  const totalSteps = 11;
+  const totalSteps = 12;
   const progress = (step / totalSteps) * 100;
 
   const [isUploading, setIsUploading] = useState(false);
@@ -650,6 +653,21 @@ export default function SignupWizardScreen() {
       }
     });
   }, [MAX_HOBBIES]);
+  const selectedChurchData: any = useMemo(async () => {
+
+    try {
+
+      const res = await ChruchService.getChurchDetails({ action: 'all', id: '' });
+
+      if (res.success) {
+        return res.churches;
+      } else[];
+    } catch (err) {
+      console.error(err);
+      //return selectedChurchData ?? [];
+    }
+
+  }, []);
   return (
     <KeyboardAvoidingView behavior="padding" className="flex-1">
       <Box className="flex-1 bg-white">
@@ -861,21 +879,6 @@ export default function SignupWizardScreen() {
                     search={false}
                     isInvalid={validationTriggered && !formData.religion}
                   />
-
-
-                  {/* <Dropdown
-                    style={[styles.dropdown, { height: 64, borderRadius: 16, paddingHorizontal: 16, backgroundColor: 'white', borderWidth: 1, borderColor: '#e2e8f0' }]}
-                    placeholderStyle={{ color: '#94a3b8', fontSize: 16 }}
-                    selectedTextStyle={{ color: '#1e293b', fontWeight: '600', fontSize: 16 }}
-                    data={RELIGION_DATA}
-                    labelField="label"
-                    valueField="value"
-                    placeholder="Religion"
-                    value={formData.religion}
-                    renderLeftIcon={() => <Icon as={Church} size="sm" className="mr-3 text-blue-500" />}
-                    renderRightIcon={() => <Icon as={ChevronDown} size="xs" className="text-slate-400" />}
-                    onChange={item => updateForm('religion', item.value)}
-                  /> */}
                   <FormControlError>
                     <FormControlErrorText>Religion is required</FormControlErrorText>
                   </FormControlError>
@@ -912,10 +915,6 @@ export default function SignupWizardScreen() {
                     <FormControlLabel className="mb-2">
                       <FormControlLabelText className="font-bold text-slate-700">Select Living In</FormControlLabelText>
                     </FormControlLabel>
-
-
-
-
                     <FuturisticDropdown
                       data={lookups?.country || []}
                       value={formData.livingIn}
@@ -928,7 +927,6 @@ export default function SignupWizardScreen() {
                       search={false}
                       isInvalid={validationTriggered && !formData.livingIn}
                     />
-
 
                     <FormControlError>
                       <FormControlErrorText>Living In is required</FormControlErrorText>
@@ -1283,7 +1281,6 @@ export default function SignupWizardScreen() {
             </VStack>
           )}
 
-
           {/* STEP 7: Education & Qualification */}
           {step === 7 && (
             <VStack className="gap-8 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -1346,9 +1343,8 @@ export default function SignupWizardScreen() {
               </VStack>
             </VStack>
           )}
+
           {/* STEP 8: Work & Income */}
-
-
           {step === 8 && (
             <VStack className="gap-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <VStack space="xs">
@@ -1472,8 +1468,168 @@ export default function SignupWizardScreen() {
             </VStack>
           )}
 
+          {/* STEP 8: Church details And Spirtual Details */}
+          {step === 9 && selectedChurchData && (
+            <><VStack
+              space="lg"
+              className="bg-blue-50/40 p-5 rounded-[32px] border border-blue-100/50 mt-2 shadow-sm shadow-blue-200/20"
+            >
+              <HStack className="justify-between items-center mb-1">
+                <Text className="text-xs font-bold text-blue-600 tracking-widest uppercase">Church Info</Text>
+                <Box className="px-3 py-1 bg-white rounded-full border border-blue-100">
+                  <Text className="text-[10px] font-bold text-blue-400">OFFICIAL</Text>
+                </Box>
+              </HStack>
+
+              <Box className="gap-5">
+                <InfoItem icon={BookOpen} label="Denomination" value={selectedChurchData.denomination} />
+                <InfoItem icon={MapPin} label="Address" value={selectedChurchData.address} />
+                <InfoItem icon={Building2} label="City" value={selectedChurchData.city} />
+
+                <HStack space="xl">
+                  <Box className="flex-1">
+                    <InfoItem icon={User2} label="Pastor" value={selectedChurchData.pastor} />
+                  </Box>
+                  <Box className="flex-1">
+                    <InfoItem icon={Phone} label="Contact" value={selectedChurchData.phone} />
+                  </Box>
+                </HStack>
+              </Box>
+
+            </VStack>
+              <Box className="mx-4 my-4 bg-white border border-slate-100 rounded-3xl shadow-lg overflow-hidden">
+                {/* Status Header */}
+                <Box className="bg-orange-400 p-4 flex-row items-center justify-center gap-3">
+                  <Icon as={UserIcon} color="white" size="lg" />
+                  <Text className="text-white font-bold text-center">
+                    Profile verification
+                  </Text>
+                </Box>
+
+                <VStack className="p-5" space="md">
+                  <Heading size="sm" className="text-slate-800">Verification & Account Status</Heading>
+
+                  {/* Status Action Suite */}
+                  <VStack space="sm">
+
+                    {/* 1. Verify User Toggle */}
+                    <HStack className="items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                      <HStack space="sm" className="items-center">
+                        <Box className="bg-blue-100 p-2 rounded-full">
+                          <Icon as={CheckCircleIcon} className="text-blue-500" size="xl" />
+                        </Box>
+                        <VStack>
+                          <Text className="text-sm font-bold text-slate-900">Verify User</Text>
+                          <Text className="text-[10px] text-slate-500">Enable blue badge status</Text>
+                        </VStack>
+                      </HStack>
+                      <Switch
+                        size="lg"
+
+                        onValueChange={(val) => { }}
+                      //           trackColor={{ false: "#cbd5e1", true: "#096437ff" }}
+                      />
+                    </HStack>
+
+                    {/* 2. Active Status Toggle */}
+                    <HStack className="items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                      <HStack space="sm" className="items-center">
+                        <Box className="bg-emerald-100 p-2 rounded-full">
+                          {/* Using a Power or Activity icon for Active status */}
+                          <Icon as={ZapIcon} className="text-emerald-500" size="xl" />
+                        </Box>
+                        <VStack>
+                          <Text className="text-sm font-bold text-slate-900">Active Status</Text>
+                          <Text className="text-[10px] text-slate-500">Control profile visibility</Text>
+                        </VStack>
+                      </HStack>
+                      <Switch
+                        size="lg"
+                        // value={data?.IsActive === 1}
+                        onValueChange={(val) => { }}
+                      //trackColor={{ false: "#cbd5e1", true: "#096437ff" }}
+                      />
+                    </HStack>
+
+                  </VStack>
+
+                  {/* 2. Action Buttons: Photo & Payment */}
+                  <VStack space="sm" className="mt-2">
+                    <HStack space="sm">
+                      {/* Verify Photo Button */}
+                      <Button
+                        className="flex-1 bg-indigo-500 rounded-2xl h-12 shadow-sm active:bg-indigo-600"
+                        onPress={() => { }}
+                      >
+                        <HStack space="xs" className="items-center">
+                          <CameraIcon size={16} color="white" />
+                          <ButtonText className="text-white font-bold text-sm">Verify Photo</ButtonText>
+                        </HStack>
+                      </Button>
+
+                      {/* Payment Button */}
+                      <Button
+                        className="flex-1 bg-emerald-500 rounded-2xl h-12 shadow-sm active:bg-emerald-600"
+                        onPress={() => { }}
+                      >
+                        <HStack space="xs" className="items-center">
+
+                          <CreditCardIcon size={16} color="white" />
+                          <ButtonText className="text-white font-bold text-sm">Payment</ButtonText>
+                        </HStack>
+                      </Button>
+                    </HStack>
+
+                    {/* Main Add Details Button */}
+                    {/* <Button
+                                                    variant="outline"
+                                                    className="border-slate-200 rounded-2xl h-12 mt-2"
+                                                    onPress={() => handleAddDetails()}
+                                                >
+                                                    <ButtonText className="text-slate-600 font-bold">Edit Family Details</ButtonText>
+                                                </Button> */}
+                  </VStack>
+                </VStack>
+              </Box>
+              <VStack space="md" className="mt-6">
+                <Heading size="sm" className="text-slate-900 ml-1">Spiritual Status</Heading>
+
+                <VStack space="sm">
+                  <StatusToggle
+                    icon={Flame}
+                    iconBg="bg-orange-100"
+                    iconColor="text-orange-500"
+                    title="Whether Saved (Born Again)"
+                    desc="Personal commitment to Jesus"
+                    value={formData.isBornAgain}
+                    onToggle={(v: any) => updateForm('isBornAgain', v)}
+                  />
+
+                  <StatusToggle
+                    icon={Droplets}
+                    iconBg="bg-blue-100"
+                    iconColor="text-blue-500"
+                    title="Whether Baptized?"
+                    desc="Water baptism status"
+                    value={formData.isBaptized}
+                    onToggle={(v: any) => updateForm('isBaptized', v)}
+                  />
+
+                  <StatusToggle
+                    icon={Wind}
+                    iconBg="bg-teal-100"
+                    iconColor="text-teal-500"
+                    title="Baptized in the Spirit?"
+                    desc="Experience of Holy Spirit baptism"
+                    value={formData.isSpiritFilled}
+                    onToggle={(v: any) => updateForm('isSpiritFilled', v)}
+                  />
+                </VStack>
+              </VStack></>
+          )}
+
           {/* STEP 9: Photo */}
-          {step === 9 && (
+          {step === 10 && (
             <VStack className="gap-6 items-center">
               <Heading size="xl">Add Profile Photo</Heading>
               <TouchableOpacity onPress={handlePickImage} disabled={isUploading}>
@@ -1490,7 +1646,7 @@ export default function SignupWizardScreen() {
           )}
 
           {/* STEP 10: Hobbies */}
-          {step === 10 && (
+          {step === 11 && (
 
             <ScrollView className="px-6 pb-10" showsVerticalScrollIndicator={false}>
               <VStack className="items-center mb-8">
@@ -1560,7 +1716,7 @@ export default function SignupWizardScreen() {
           )}
 
 
-          {step === 11 &&
+          {step === 12 &&
             <ScrollView
               contentContainerStyle={{ paddingBottom: 40 }}
               className="px-6 py-4"
@@ -1686,6 +1842,45 @@ export default function SignupWizardScreen() {
     </KeyboardAvoidingView >
   );
 }
+
+// 2026 Modern Info Item
+const InfoItem = ({ icon: IconComp, label, value }: any) => (
+  <HStack space="lg" className="items-center py-2">
+    {/* Squircle Icon Container */}
+    <Box className="bg-blue-50/80 p-3 rounded-[18px]">
+      <IconComp size={20} className="text-blue-600" strokeWidth={2.5} />
+    </Box>
+    <VStack className="flex-1">
+      <Text className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">{label}</Text>
+      <Text className="text-[15px] text-slate-800 font-semibold">{value || 'Not Provided'}</Text>
+    </VStack>
+  </HStack>
+);
+
+// 2026 Modern Toggle
+const StatusToggle = ({ icon: IconComp, value, title, desc, onToggle }: any) => (
+  <HStack
+    className={`items-center justify-between p-4 rounded-[28px] border mb-3 transition-all ${value ? 'bg-white border-emerald-100 shadow-md shadow-emerald-50' : 'bg-slate-50/50 border-transparent'
+      }`}
+  >
+    <HStack space="md" className="items-center">
+      {/* Icon glows when active */}
+      <Box className={`p-3 rounded-2xl ${value ? 'bg-emerald-500' : 'bg-slate-200'}`}>
+        <IconComp size={20} className={value ? 'text-white' : 'text-slate-500'} />
+      </Box>
+      <VStack>
+        <Text className={`text-sm font-bold ${value ? 'text-emerald-900' : 'text-slate-900'}`}>{title}</Text>
+        <Text className="text-[10px] text-slate-500">{desc}</Text>
+      </VStack>
+    </HStack>
+    <Switch
+      value={value}
+      onValueChange={onToggle}
+      trackColor={{ false: "#e2e8f0", true: "#10b981" }}
+      thumbColor="#ffffff"
+    />
+  </HStack>
+);
 
 const styles = StyleSheet.create({
   container: {},

@@ -91,7 +91,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
   const logout = async () => {
-    Alert.alert('');
     try {
       // 1. Notify Backend (Optional)
       await authService.logout();

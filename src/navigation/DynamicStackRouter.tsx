@@ -45,8 +45,8 @@ export const ROLE_DRAWER_CONFIG: Record<string, any[]> = {
     { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Overview" } },
   ],
   member: [
-    { name: "ReceivedRequests", component: ReceivedScreen },
-    { name: "AcceptedRequests", component: AcceptedScreen },
+    // { name: "ReceivedRequests", component: ReceivedScreen },
+    // { name: "AcceptedRequests", component: AcceptedScreen },
     // { name: "MyPhotos", component: MyPhotos, options: { title: "My Photos" } }, Dont delete 
     { name: "PartnerPreferences", component: PartnerPreferences, options: { title: "Partner Preferences" } },
     { name: "UserDocumentUpload", component: UserDocumentUpload, options: { title: "My Documents" } },
@@ -93,7 +93,8 @@ const SHARED_STACKS = (role: string) => (
     {/* Admin Only Modals */}
     {role === 'admin' && (
       <><Stack.Screen name="ChurchRegistration" component={ChurchRegistrationScreen} options={{ presentation: 'fullScreenModal' }} />
-        <Stack.Screen name="ChurchSummary" component={ChurchSummary} options={{ title: 'Church Summary' }} /></>
+        <Stack.Screen name="ChurchSummary" component={ChurchSummary} options={{ title: 'Church Summary' }} />
+      </>
     )}
     {role === 'member' && (
       <>

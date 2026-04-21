@@ -8,7 +8,7 @@ import { Alert, FlatList, Pressable, RefreshControl, ScrollView } from 'react-na
 import profileService from '@/src/services/profileService';
 import { useAuth } from '@/src/context/AuthContext';
 import LinearGradient from 'react-native-linear-gradient';
-import { getExtension } from '@/src/utils/common';
+import { getExtension, getFilterConfig } from '@/src/utils/common';
 import { useAlert } from '@/src/context/AlertContext';
 import { useAppToast } from '@/src/context/ToastContext';
 import NotFoundScreen from '../../common/NotFoundScreen';
@@ -17,6 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 
 const SummryListViewScreen = (props: any) => {
     const { filter, mode } = props?.route?.params;
+    const config = getFilterConfig(filter);
     const navigation = useNavigation<any>();
 
     const { showAlert, hideAlert } = useAlert();
@@ -84,32 +85,53 @@ const SummryListViewScreen = (props: any) => {
         await fetchSummaryDetails(true);
         setRefreshing(false);
     }, [filter]);
-    const handleUnblock = (targetId: any, targetName: any) => {
+    const handleProfileAction = (targetId: any, targetName: any) => {
+        const { buttonText } = getFilterConfig(filter);
         showAlert({
             type: 'success',
-            title: 'Unblock Profile?',
-            message: `Are you sure you want to unblock ${targetName}?`,
-            confirmText: "Unblock",
+            title: `${buttonText} User?`,
+            message: `Are you sure you want to ${buttonText.toLowerCase()} ${targetName}?`,
+            confirmText: buttonText,
             onConfirm: async () => {
                 hideAlert();
+                // filter means
+                // 1. accepted
+                // 2. rejected
+                // 3. requests
+                // 4. likes  
+
+                let action = filter;
+                if (filter == "Accepted") {
+                    action = 'disconnect';
+                } else if (filter == "Requests") {
+                    action = 'accepted';
+                } else if (filter == "Likes") {
+                    action = 'likes';
+                } else if (filter == "Views") {
+                    action = 'views';
+                }
+                else action = filter;
                 try {
-                    let body = { action: 'unblock', user_id: user?.profile_id, target_id: targetId }
-                    const res = await profileService.handle_member_actions(body);
+                    let body = {
+                        action: action,
+                        target_id: targetId
+                    };
+                    // console.log('body', body);
+                    const res = await profileService.handle_interest_block_actions(body);
 
                     if (res.success) {
-                        showToast("Unblocked", `${targetName} has been unblocked`, "success");
+                        showToast("Success", `${targetName} action: ${filter} completed.`, "success");
 
-                    }
-                    else {
-                        showToast("Error", `Something wnet wrong`, "error");
+                        // 🔥 THE KEY ADDITION: Update local state so the item disappears
+                        setSummary((prev: any) => prev.filter((item: any) => item.profile_id !== targetId));
 
+                    } else {
+                        showToast("Error", `Something went wrong`, "error");
                     }
                 } catch (err) {
                     console.error(err);
-                } finally {
-
+                    showToast("Error", "Server connection failed", "error");
                 }
-
             }
         });
     };
@@ -118,9 +140,7 @@ const SummryListViewScreen = (props: any) => {
         <Box className="flex-1 bg-white p-4">
             {/* 1. Header Logic */}
             {summary.length !== 0 && (
-                <Heading size="lg" className="mb-4">
-                    {filter} Profiles
-                </Heading>
+                <Heading size="lg" className="mb-4">{config.title}</Heading>
             )}
 
             {/* 2. Main Conditional Content */}
@@ -160,34 +180,32 @@ const SummryListViewScreen = (props: any) => {
                                         navigation.navigate('ProfileDetail', { profile_id: item.profile_id })
                                     }}>
                                         <HStack space="lg" className="items-center">
-
-                                            {/* 1. INCREASED AVATAR: From 'lg' to 'xl' */}
-                                            <Avatar size="xl" className="rounded-full shadow-sm">
+                                            <Avatar size="xl">
                                                 <AvatarFallbackText>{item.full_name}</AvatarFallbackText>
-                                                <AvatarImage
-                                                    source={{ uri: getExtension(item.file_name, 'addthumnail') }}
-                                                />
+                                                <AvatarImage source={{ uri: getExtension(item.file_name, 'addthumnail') }} />
                                             </Avatar>
 
-                                            {/* 2. OPTIMIZED TYPOGRAPHY VStack */}
                                             <VStack className="flex-1" space="xs">
-                                                <Text size="xl" className="font-bold text-typography-900 leading-tight" numberOfLines={1}>
-                                                    {item.full_name}
-                                                </Text>
-
-                                                {/* 3. OPTIMIZED SECONDARY TEXT: Cleaner font size, added opacity */}
-                                                <Text size="sm" className="text-typography-500 font-medium opacity-90" numberOfLines={1}>
-                                                    {item.city_name}, {item.state_name}
-                                                </Text>
+                                                <Text size="xl" className="font-bold text-typography-900">{item.full_name}</Text>
+                                                {/* Dynamic Sub-text based on Filter */}
+                                                <Text size="sm" className="text-typography-500">{item.city_name || config.subText}</Text>
                                             </VStack>
-
-                                            {/* 4. OPTIONAL: Chevron or Interaction Indicator */}
-                                            {/* <Icon as={ChevronRight} size="md" className="text-typography-300 mr-1" /> */}
-
                                         </HStack>
                                     </Pressable>
 
-
+                                    {/* Dynamic Action Button */}
+                                    <Box className="ml-2">
+                                        <Pressable onPress={() => handleProfileAction(item.profile_id, item.full_name)}>
+                                            <LinearGradient
+                                                colors={config.buttonColors}
+                                                style={{ borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8, minWidth: 90, alignItems: 'center' }}
+                                            >
+                                                <Text className="text-white font-bold text-xs">
+                                                    {config.buttonText}
+                                                </Text>
+                                            </LinearGradient>
+                                        </Pressable>
+                                    </Box>
                                 </HStack>
 
 

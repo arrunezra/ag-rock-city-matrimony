@@ -32,6 +32,14 @@ export const ChruchService = {
         } catch (error) {
             console.error("Error getting church branches:", error);
         }
+    },
+    getChurchDetails: async (body: any) => {
+        try {
+            const response = await api.post('/church/get_churches.php', body);
+            return response.data;
+        } catch (error: any) {
+            return { success: false, message: error.message };
+        }
     }
 }
 

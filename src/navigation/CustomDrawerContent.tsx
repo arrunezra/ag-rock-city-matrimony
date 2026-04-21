@@ -25,8 +25,10 @@ export default function CustomDrawerContent(props: any) {
             setProfile(getExtension(user?.profilePic, 'addthumnail'))
         }, [])
     );
-
-
+    const fullName = user?.firstName
+        ? `${user.firstName} ${user.lastName || ''}`.trim()
+        : "Guest User";
+    console.log('fullName', fullName);
     return (
         <DrawerContentScrollView {...props} contentContainerStyle={{ flex: 1, backgroundColor: '#fdfdfd' }}>
 
@@ -43,7 +45,7 @@ export default function CustomDrawerContent(props: any) {
 
                 {/* 2. The Floating Stage (No border, just pure shadow depth) */}
                 <Box
-                    className="mx-6 bg-white rounded-[40px] p-6 shadow-2xl shadow-indigo-900/40"
+                    className="mx-6 bg-white rounded-[40px] p-4 shadow-2xl shadow-indigo-900/40"
                     style={{ marginTop: -80, elevation: 20 }}
                 >
                     <VStack space="xl">
@@ -55,7 +57,7 @@ export default function CustomDrawerContent(props: any) {
                                 <Box className="relative">
                                     <Box className="p-1 rounded-[24px] bg-slate-100 border-2 border-slate-50">
                                         <Avatar size="xl" className="rounded-[20px] bg-indigo-50">
-                                            <AvatarFallbackText className="font-bold text-indigo-700">{user?.firstName}</AvatarFallbackText>
+                                            <AvatarFallbackText className="font-bold text-indigo-700">{fullName}</AvatarFallbackText>
                                             {profile && <AvatarImage source={{ uri: profile }} />}
                                         </Avatar>
                                     </Box>
@@ -75,12 +77,10 @@ export default function CustomDrawerContent(props: any) {
                                 <HStack space="xs" className="items-center">
                                     <Heading
                                         size="md"
-                                        className="text-slate-900 font-black tracking-tighter uppercase flex-shrink"
+                                        className="text-slate-900 font-black tracking-tighter flex-shrink"
                                     // Add flex-shrink so it knows to wrap rather than push the icon out
                                     >
-                                        {user?.firstName || user?.lastName
-                                            ? `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim()
-                                            : 'Guest User'}
+                                        {fullName}
                                     </Heading>
 
                                     {/* Verification Icon */}
@@ -88,14 +88,14 @@ export default function CustomDrawerContent(props: any) {
                                         <Icon as={CheckIcon} size={'md'} className="text-blue-600" />
                                     </Center>
                                 </HStack>
-                                <Text className="text-slate-400 font-medium text-xs mb-2">Member ID: #8829</Text>
+                                <Text className="text-slate-400 font-medium text-xs mb-2"> ID: {user?.role === 'member' ? user?.profile_id : user?.userid}</Text>
 
                                 {/* Pill-style status */}
-                                <Box className="bg-indigo-600 self-start px-3 py-1 rounded-full shadow-md shadow-indigo-200">
+                                {/* <Box className="bg-indigo-600 self-start px-3 py-1 rounded-full shadow-md shadow-indigo-200">
                                     <Text className="text-white font-black uppercase text-[8px] tracking-[1px]">
                                         Verified Account
                                     </Text>
-                                </Box>
+                                </Box> */}
                             </VStack>
                         </HStack>
 
@@ -119,7 +119,7 @@ export default function CustomDrawerContent(props: any) {
                 <Divider className="my-4 mx-4 bg-slate-100" />
 
                 {/* Custom Styled Settings Item */}
-                <Pressable
+                {user.role == 'member' ? <Pressable
                     className="mx-2 p-3 rounded-2xl active:bg-indigo-50"
                     onPress={() => navigation.navigate('Main', { screen: 'MemberSettings' })}
                 >
@@ -128,11 +128,29 @@ export default function CustomDrawerContent(props: any) {
                             <Center className="w-8 h-8 rounded-xl bg-slate-100">
                                 <Icon as={Settings} size="sm" className="text-slate-600" />
                             </Center>
-                            <Text className="font-bold text-slate-700">Settings</Text>
+                            <Text className="font-bold  text-slate-700">Settings</Text>
                         </HStack>
                         <Icon as={ChevronRight} size="xs" className="text-slate-300" />
                     </HStack>
                 </Pressable>
+
+                    :
+                    <Pressable
+                        className="mx-2 p-3 rounded-2xl active:bg-indigo-50"
+                        onPress={() => logout()}
+                    >
+                        <HStack className="items-center justify-between">
+                            <HStack space="md" items-center>
+                                <Center className="w-8 h-8 rounded-xl bg-slate-100">
+                                    {/* <Icon as={} size="sm" className="text-slate-600" /> */}
+                                    <Icon as={LogOut} size="lg" className="text-slate-600" />
+                                </Center>
+                                <Text className="font-bold  text-slate-700">Logout</Text>
+                            </HStack>
+                            <Icon as={ChevronRight} size="xs" className="text-slate-300" />
+                        </HStack>
+                    </Pressable>
+                }
             </Box>
 
             {/* 3. Footer Section */}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { FlatList, ActivityIndicator, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { Box, Spinner, Center, HStack, Text } from '@/src/components/common/GluestackUI';
 import api from '@/src/api/api';
@@ -18,10 +18,15 @@ import {
     useCaptureProtection,
     CaptureEventType
 } from 'react-native-capture-protection';
+import { useIsFocused } from '@react-navigation/native'; // Add this import
+import _ from 'lodash';
 const MatchesScreen = () => {
+
     const { user } = useAuth();
     const { showToast } = useAppToast();
+    const isFocused = useIsFocused(); // This hook returns true/false when focus changes
 
+    const abortControllerRef = useRef<AbortController | null>(null);
     const navigation = useNavigation<any>();
     const [profiles, setProfiles] = useState<any[]>([]);
     const [page, setPage] = useState(1);
@@ -39,100 +44,98 @@ const MatchesScreen = () => {
         max_age: 54
     });
 
-    useFocusEffect(
-        useCallback(() => {
-            // Prevent all capture events
-            // CaptureProtection.prevent();
-
-            // Or prevent specific events
-            CaptureProtection.prevent({
-                screenshot: true,
-                record: true,
-                appSwitcher: true
-            });
-            return () => {
-                CaptureProtection.allow();
-            };
-        }, [])
-    );
 
     // Added 'currentFilters' argument to prevent stale state issues
+    // Place these inside your component
+
     const fetchProfiles = async (pageNumber: number, shouldRefresh = false, currentFilters = filters) => {
+        // 1. Guard against unnecessary calls
         if (loading || (pageNumber > totalPages && !shouldRefresh)) return;
+
+        // 2. Cancel pending requests (Race condition protection)
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        abortControllerRef.current = new AbortController();
 
         setLoading(true);
         try {
-            let postBody = {
+            const postBody = {
                 page: pageNumber,
                 ...currentFilters,
-                filter_type: selectedFilter // Usually needed by backends to distinguish tabs
+                filter_type: selectedFilter
             };
 
-            const response = await profileService.getprofile(postBody);
+            const response = await profileService.getprofile(postBody, abortControllerRef.current.signal);
 
-            if (response.success) {
-                const newData = response.data;
-                // Correctly handling totalPages from response structure
+            if (response?.success) {
+                const newData = response.data || [];
                 setTotalPages(response.totalPages || 1);
-                setProfiles(shouldRefresh ? newData : [...profiles, ...newData]);
+                setProfiles((prev) => (shouldRefresh ? newData : [...prev, ...newData]));
                 setPage(pageNumber);
             } else {
-                if (response.message === "Record not found") {
+                // If refresh failed or no records, clear the list
+                if (shouldRefresh || response?.message === "Record not found") {
                     setProfiles([]);
                 }
             }
-        } catch (error) {
+        } catch (error: any) {
+            if (error.name === 'AbortError' || error.message === 'canceled') return;
             console.error("Fetch Error:", error);
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
     };
+    useFocusEffect(
+        useCallback(() => {
+            // Security logic
+            CaptureProtection.prevent({ screenshot: true, record: true, appSwitcher: true });
 
-    // Initial Load
-    useEffect(() => {
-        fetchProfiles(1, true);
-    }, []);
+            // Fetch fresh data immediately on focus
+            fetchProfiles(1, true);
 
-    // Trigger fetch when tab changes
-    useEffect(() => {
-        fetchProfiles(1, true);
-    }, [selectedFilter]);
+            return () => {
+                CaptureProtection.allow();
+                // Cleanup: Cancel any ongoing fetch when leaving the screen
+                if (abortControllerRef.current) {
+                    abortControllerRef.current.abort();
+                }
+            };
+        }, [selectedFilter]) // Only re-run if the tab changes. 
+        // Don't include 'filters' if you don't want it to reset while typing.
+    );
 
-    const handleRefresh = async () => {
+
+
+    const handleRefresh = useCallback(async () => {
         setRefreshing(true);
-        setPage(1);
         await fetchProfiles(1, true);
-    };
+    }, [filters, selectedFilter]);
 
-    const handleLoadMore = () => {
+    const handleLoadMore = useCallback(async () => {
+        // Ensure we aren't already loading and there is a next page
         if (!loading && page < totalPages) {
-            const nextPage = page + 1;
-            fetchProfiles(nextPage);
+            await fetchProfiles(page + 1, false);
         }
-    };
+    }, [loading, page, totalPages, filters, selectedFilter]);
 
-    // This is what your "Search Now" button should call
     const applyFilters = (newFilters: any) => {
         setFilters(newFilters);
         setShowFilters(false);
-        setPage(1);
-        fetchProfiles(1, true, newFilters); // Pass directly to avoid async state lag
+        // Fetch immediately with newFilters to bypass the state update delay
+        fetchProfiles(1, true, newFilters);
     };
 
     const renderFooter = () => {
-        if (!loading || profiles.length === 0) return null;
+        if (!loading || profiles.length === 0) return <Box className="h-20" />;
         return (
             <Center className="py-10">
                 <Spinner size="large" color="$cyan500" />
             </Center>
         );
     };
-    useFocusEffect(
-        React.useCallback(() => {
-            fetchProfiles(1, true);
-        }, [])
-    );
+
     const renderContent = () => {
         if (loading && profiles.length === 0) {
             return (
@@ -153,6 +156,7 @@ const MatchesScreen = () => {
                             profile={item}
                             onPress={() => navigation.navigate('ProfileDetail', { profile_id: item.profile_id })}
                             showToast={showToast}
+                            reload={() => fetchProfiles(1, true)}
                         />
                     </Box>
                 )}
@@ -160,8 +164,10 @@ const MatchesScreen = () => {
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
                 onEndReached={handleLoadMore}
-                onEndReachedThreshold={0.3} // Better for smooth infinite scroll
+                onEndReachedThreshold={0.5}
                 ListFooterComponent={renderFooter}
+                // FIX: removeClippedSubviews improves performance for large lists
+                removeClippedSubviews={Platform.OS === 'android'}
                 contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}
             />
         );

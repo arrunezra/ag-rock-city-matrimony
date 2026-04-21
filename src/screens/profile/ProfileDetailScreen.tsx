@@ -130,12 +130,15 @@ export default function ProfileDetailScreen({ route }: any) {
             setIsLiked(!previousState);
 
             // 2. Call API
-            const res = await profileService.toggleLike({ profile_id: profile_id });
+            const res = await profileService.handle_interest_block_actions({
+                action: 'likes',
+                target_id: profile_id
+            });
 
             if (!res.success) {
                 // Rollback if API fails
                 setIsLiked(previousState);
-                Alert.alert("Error", "Could not update like status");
+                // Alert.alert("Error", "Could not update like status");
             } else {
                 // Set the actual state from server (true or false)
                 setIsLiked(res.isLiked);

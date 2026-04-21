@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, VStack, HStack, Text, Heading, Avatar, AvatarImage, AvatarFallbackText, Center } from '@/src/components/common/GluestackUI';
 import { Pressable, TouchableOpacity } from 'react-native';
 import { AddIcon, CheckIcon, EditIcon, Icon, StarIcon } from '@/components/ui/icon';
@@ -7,7 +7,7 @@ import { getExtension } from '@/src/utils/common';
 import LinearGradient from 'react-native-linear-gradient';
 import { Briefcase, Camera, CheckCircle, CheckCircle2, ChevronRight, Edit3, Eye, GraduationCap, Heart, HeartHandshake, MapPin, Share2, Star, TrendingUp, Users, Zap } from 'lucide-react-native';
 import profileService from '@/src/services/profileService';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 const UserTopProfile = ({ user, onEdit, onAddPhoto }: any) => {
     //console.log('user==', user)
@@ -15,34 +15,50 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto }: any) => {
 
     const [profiles, setProfiles] = useState<any>('');
     const [summary, setSummary] = useState<any>();
-    useEffect(() => {
+    // 1. Memoize the URL to avoid useEffect entirely if possible
+    // Or, if you need a state, name it specifically to avoid clashing with your list profiles
+    const profilePicUrl = useMemo(() =>
+        setProfiles(getExtension(user?.profilePic, 'addthumnail')),
+        [user?.profilePic]
+    );
 
-        setProfiles(getExtension(user?.profilePic, 'addthumnail'))
-    }, [user?.profilePic]);
-    const fetchSummaryDetails = async () => {
-
-        const response = await profileService.fetchSummaryDetails(
-            {
+    // 2. Optimized Fetch Function
+    const fetchSummaryDetails = useCallback(async () => {
+        // Optional: Add a loading state for the summary if needed
+        try {
+            const response = await profileService.fetchSummaryDetails({
                 profile_id: user?.profile_id,
                 role: 'Profile',
                 view_mode: 'COUNT',
                 filter_by: ''
             });
-        if (response.success) {
-            setSummary(response?.summary);
-        } else {
 
+            if (response?.success) {
+                setSummary(response.summary);
+            }
+        } catch (error) {
+            console.error("Summary Fetch Error:", error);
         }
+    }, [user?.profile_id]); // Only recreate if user ID changes
 
+    // 3. Combined Lifecycle Hook
+    useFocusEffect(
+        useCallback(() => {
+            // useFocusEffect covers both initial mount and coming back to the screen
+            fetchSummaryDetails();
+            return () => {
+                // Cleanup logic if needed
+            };
+        }, [fetchSummaryDetails])
+    );
+    const fullName = user?.firstName
+        ? `${user.firstName} ${user.lastName || ''}`.trim()
+        : "Guest User";
 
-    };
-    useEffect(() => {
-        fetchSummaryDetails()
-    }, [])
     return (
         <VStack className="px-5 py-8 bg-[#f8fafc] gap-8">
             {/* Profile Card Overlay */}
-            <HStack space="lg" className="items-center bg-white p-6 rounded-[32px] shadow-sm border border-slate-100">
+            <HStack space="lg" className="items-center bg-white p-3 rounded-[32px] shadow-sm border border-slate-100">
                 <Box className="relative">
                     <Pressable onPress={onAddPhoto} className="active:scale-95 transition-transform">
                         <Box className="p-1 rounded-full bg-indigo-50 border border-indigo-100">
@@ -69,8 +85,8 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto }: any) => {
 
                 <VStack className="flex-1">
                     <HStack items-center space="xs">
-                        <Heading size="xl" className="text-slate-900 font-black tracking-tight">
-                            {user?.firstName}
+                        <Heading size="xl" className="text-slate-900 font-black ">
+                            {fullName}
                         </Heading>
                         <Icon as={CheckCircle2} size="sm" className="text-blue-500 fill-blue-50" />
                     </HStack>
@@ -81,12 +97,12 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto }: any) => {
                         </Text>
                     </Box>
 
-                    <HStack items-center space="xs" className="mt-2">
+                    {/* <HStack items-center space="xs" className="mt-2">
                         <Box className="w-2 h-2 rounded-full bg-emerald-500" />
                         <Text size="sm" className="text-slate-500 font-semibold italic">
                             {user?.account_type || "Premium Plus"}
                         </Text>
-                    </HStack>
+                    </HStack> */}
                 </VStack>
             </HStack>
 

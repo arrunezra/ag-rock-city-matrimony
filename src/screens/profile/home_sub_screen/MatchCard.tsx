@@ -27,8 +27,8 @@ const MatchCard = memo(({ item, isPremium }: any) => {
                     {item.first_name} {item.last_name?.charAt(0)}
                 </Heading>
                 <Text size="xs" className="text-typography-500 leading-4" numberOfLines={2}>
-                    {item.age} yrs, {item.height || "5' 5\""}, {item.language || "Tamil"},{"\n"}
-                    {item.community || "Christian"}, {item.city || "Chennai"}
+                    {item.age} yrs, {item.height}, {item.language},{"\n"}
+                    {item.community}, {item.city}
                 </Text>
 
                 {/* Action Button */}

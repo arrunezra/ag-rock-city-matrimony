@@ -16,10 +16,10 @@ export const profileService = {
     const response = await api.post('/upload_handler.php', credentials);
     return response.data;
   },
-  sendInterest: async (credentials: any) => {
-    const response = await api.post('/interest/send_interest.php', credentials);
-    return response.data;
-  },
+  // sendInterest: async (credentials: any) => {
+  //   const response = await api.post('/interest/send_interest.php', credentials);
+  //   return response.data;
+  // },
   createProfile: async (profile: any) => {
     const response = await api.post('/profile/complete_profile.php', profile)
     console.log('response', response);
@@ -32,9 +32,10 @@ export const profileService = {
     const response = await api.get(url);
     return response.data;
   },
-  getprofile: async (credentials: any) => {
+  getprofile: async (credentials: any, signal: any) => {
+
     try {
-      const response = await api.post('/profile/getprofile.php', credentials); //For summary
+      const response = await api.post('/profile/getprofile.php', credentials, { signal }); //For summary
       return response.data;
     } catch (error: any) {
       if (error.response && error.response.data) {
@@ -162,31 +163,31 @@ export const profileService = {
     }
 
   },
-  respondToInterest: async ({ sender_id, action }: any) => {
-    try {
-      // action should be either 'Accepted' or 'Rejected'
-      const response = await api.post('/interest/respond_interest.php', {
-        sender_id,
-        action
-      });
+  // respondToInterest: async ({ sender_id, action }: any) => {
+  //   try {
+  //     // action should be either 'Accepted' or 'Rejected'
+  //     const response = await api.post('/interest/respond_interest.php', {
+  //       sender_id,
+  //       action
+  //     });
 
-      return response.data;
-    } catch (error: any) {
-      console.error(`Error during ${action} action:`, error);
-      return error.response?.data || { success: false, message: "Server connection failed" };
-    }
-  },
-  toggleLike: async (body: any) => {
-    try {
-      // action should be either 'Accepted' or 'Rejected'
-      const response = await api.post('/interest/toggle_like.php', body);
+  //     return response.data;
+  //   } catch (error: any) {
+  //     console.error(`Error during ${action} action:`, error);
+  //     return error.response?.data || { success: false, message: "Server connection failed" };
+  //   }
+  // },
+  // toggleLike: async (body: any) => {
+  //   try {
+  //     // action should be either 'Accepted' or 'Rejected'
+  //     const response = await api.post('/interest/toggle_like.php', body);
 
-      return response.data;
-    } catch (error: any) {
-      console.error(`Error during action:`, error);
-      return error.response?.data || { success: false, message: "Server connection failed" };
-    }
-  },
+  //     return response.data;
+  //   } catch (error: any) {
+  //     console.error(`Error during action:`, error);
+  //     return error.response?.data || { success: false, message: "Server connection failed" };
+  //   }
+  // },
   getFavorites: async (type: any) => {
     try {
       const response = await api.get(`/interest/get_favorites_combined.php?type=${type}`);
@@ -215,6 +216,14 @@ export const profileService = {
     try {
       console.log('body', body)
       const response = await api.post(`/profile/get_profile_home_summary.php`, body);
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  },
+  handle_interest_block_actions: async (body: any) => {
+    try {
+      const response = await api.post('/interest/handle_interest_block_actions.php', body);
       return response.data;
     } catch (error: any) {
       return { success: false, message: error.message };
