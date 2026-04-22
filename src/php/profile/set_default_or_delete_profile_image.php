@@ -85,8 +85,28 @@ try {
             }
             break;
 
+        case 'get_default':
+            $stmt = $pdo->prepare("SELECT file_id, is_profile_pic,is_verified FROM profile_files WHERE is_profile_pic = 1 AND profile_id = ?");
+            $stmt->execute([$profile_id]);
+            $profiles = $stmt->fetch(PDO::FETCH_ASSOC);
+
+             // Check if the array is empty
+            if (empty($profiles)) {
+                echo json_encode([
+                    "success" => false, // Set to false to trigger error handling on frontend
+                    "message" => "Record not found",
+                    "data" => null
+                ]);
+            } else {
+                echo json_encode([
+                    "success" => true,
+                    "data" => $profiles 
+                ]);
+            }
+    
+            break;
         default:
-            throw new Exception("Invalid action requested");
+        throw new Exception("Invalid action requested");
     }
 
 } catch (Exception $e) {

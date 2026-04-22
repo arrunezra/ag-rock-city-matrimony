@@ -42,7 +42,7 @@ import { HEIGHT_DATA } from '@/src/utils/utils';
 import { UploadProgressModal } from '../common/UploadProgressModal';
 import FuturisticDropdown from '@/src/components/common/FuturisticDropdown';
 import { LookupContext } from '@/src/context/LookupContext';
-import { CameraIcon, CheckCircleIcon, CreditCardIcon, Droplets, Flame, User2, UserIcon, Wind, ZapIcon } from 'lucide-react-native';
+import { CameraIcon, CheckCircleIcon, ChurchIcon, CreditCardIcon, Droplets, Flame, User2, UserIcon, Wind, ZapIcon } from 'lucide-react-native';
 import ChruchService from '@/src/services/ChruchService';
 
 // --- DATA SOURCES ---
@@ -86,7 +86,7 @@ export default function SignupWizardScreen() {
   const cityRef = React.useRef<any>(null);
   // State Variables
 
-  const [step, setStep] = useState(9);
+  const [step, setStep] = useState(1);
 
 
   const totalSteps = 12;
@@ -100,8 +100,8 @@ export default function SignupWizardScreen() {
   const [validationTriggered, setValidationTriggered] = useState(false);
   const [cities, setCities] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isFocus, setIsFocus] = useState(false);
+  const [selectedChurchData, setSelectedChurchData] = useState<any>({});
+  const [churches, setChurches] = useState<any>([]);
   const [qualification, setQualification] = useState<any>([]);
   const [localSelected, setLocalSelected] = useState<string[]>([]);
   const MAX_HOBBIES = 5;
@@ -152,7 +152,12 @@ export default function SignupWizardScreen() {
     userid: '',
     worksWith: '',
     worksas: '',
-    others: ''
+    others: '',
+    church_id: '',
+    born_again: 0,
+    baptism_details: '',
+    baptized: 0,
+    spirit: 0,
   });
 
 
@@ -322,6 +327,7 @@ export default function SignupWizardScreen() {
 
     const payload = { ...formData, profileFor, casteNoBar: isCasteNoBar, step: 8, alt_phone: '', weight: '' };
     try {
+      console.log('payload', payload);
       const response = await profileService.createProfile(payload).catch((error: any) => {
         if (error.response) {
           // The server responded with a status code outside the 2xx range
@@ -548,6 +554,7 @@ export default function SignupWizardScreen() {
     }
   };
 
+
   //use memo
   const dateErrorMessage = useMemo(() => {
     if (!isDateValid()) return "Enter a valid DD (01-31), MM (01-12), and YYYY";
@@ -555,11 +562,7 @@ export default function SignupWizardScreen() {
     if (getAge() < 18) return "Under age! You must be at least 18 years old.";
     return "";
   }, [formData.dobDay, formData.dobMonth, formData.dobYear]); // Recalculate only when date changes
-  // 3. Update the Input handle
-  const handleSearchChange = (text: string) => {
-    setSearchQuery(text);
-    logicToFetch(text);
-  };
+
   const handleNextAction = () => {
 
     setValidationTriggered(true); // Show red errors if fields are empty
@@ -614,11 +617,16 @@ export default function SignupWizardScreen() {
         setAboutText(aboutas);
 
       }
+    } else if (step === 9) {
+      if (!formData.church_id) {
+        return;
+      }
+
     }
     if (step === 4) {
       validateMobileoremail();
     }
-    else if (step === 8) handleParcialSubmit();
+    else if (step === 9) handleParcialSubmit();
     else if (step === totalSteps) handleFinalSubmit();
     else {
       setValidationTriggered(false);
@@ -653,21 +661,24 @@ export default function SignupWizardScreen() {
       }
     });
   }, [MAX_HOBBIES]);
-  const selectedChurchData: any = useMemo(async () => {
+  useEffect(() => {
+    const fetchChurches = async () => {
+      try {
+        const res = await ChruchService.getChurchDetails({ action: 'all', id: '' });
+        console.log('res', res);
+        if (res.success) {
+          setChurches(res.churches);
+        } else {
+          setChurches([]);
+        }
+      } catch (err) {
+        console.error("Failed to load churches:", err);
+      } finally {
+      }
+    };
 
-    try {
-
-      const res = await ChruchService.getChurchDetails({ action: 'all', id: '' });
-
-      if (res.success) {
-        return res.churches;
-      } else[];
-    } catch (err) {
-      console.error(err);
-      //return selectedChurchData ?? [];
-    }
-
-  }, []);
+    fetchChurches();
+  }, []); // Empty array means this runs once on mount
   return (
     <KeyboardAvoidingView behavior="padding" className="flex-1">
       <Box className="flex-1 bg-white">
@@ -685,7 +696,7 @@ export default function SignupWizardScreen() {
         <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
           <VStack className="mt-6 items-center">
             <Box className={`w-20 h-20 rounded-full items-center justify-center mb-6 ${step % 2 === 0 ? 'bg-emerald-50' : 'bg-orange-50'}`}>
-              <Text size="3xl">{step === 1 ? '👤' : step === 9 ? '📸' : '📝'}</Text>
+              <Text size="3xl">{step === 1 ? '👤' : step == 9 ? '⛪' : step === 10 ? '📸' : '📝'}</Text>
             </Box>
           </VStack>
 
@@ -1468,161 +1479,158 @@ export default function SignupWizardScreen() {
             </VStack>
           )}
 
-          {/* STEP 8: Church details And Spirtual Details */}
+          {/* STEP 9: Church details And Spirtual Details */}
           {step === 9 && selectedChurchData && (
             <><VStack
               space="lg"
-              className="bg-blue-50/40 p-5 rounded-[32px] border border-blue-100/50 mt-2 shadow-sm shadow-blue-200/20"
+              className="bg-blue-50/40 p- rounded-[32px] border border-blue-100/50 mt-2 shadow-sm shadow-blue-200/20"
             >
-              <HStack className="justify-between items-center mb-1">
-                <Text className="text-xs font-bold text-blue-600 tracking-widest uppercase">Church Info</Text>
-                <Box className="px-3 py-1 bg-white rounded-full border border-blue-100">
-                  <Text className="text-[10px] font-bold text-blue-400">OFFICIAL</Text>
-                </Box>
-              </HStack>
+              <FormControl isInvalid={validationTriggered && (!formData.church_id)}>
+                <FormControlLabel className="mb-2">
+                  <FormControlLabelText className="font-bold text-slate-700">Church Details</FormControlLabelText>
+                </FormControlLabel>
+                <FuturisticDropdown
+                  data={churches || []}
+                  value={formData.church_id}
+                  onChange={(item: any) => {
+                    updateForm('church_id', item.value);
+                    setSelectedChurchData(item)
+                  }}
+                  placeholder="Select Church "
+                  icon={{ icon: ChurchIcon, color: 'text-blue-500' }}
+                  search={true}
+                  isInvalid={validationTriggered && !formData.church_id}
+                />
+                <AnimateError isVisible={validationTriggered && (!formData.church_id)}>
+                  {"Church details are required"}
+                </AnimateError>
+              </FormControl>
+              {/* Wrap the details in a conditional block with animation classes */}
+              {formData.church_id && (
+                <Box
+                  // This class handles the "Soft Landing" entrance
+                  className="animate-in fade-in slide-in-from-top-4 duration-500 ease-out mt-4 bg-blue-50/40 p-4 rounded-[28px] border border-blue-100/50"
+                >
+                  <HStack space="sm" className="justify-between items-center mb-4">
+                    <VStack>
+                      <Text className="text-[10px] font-black text-blue-600 tracking-widest uppercase opacity-60">
+                        Church Info
+                      </Text>
+                    </VStack>
+                    <Box className="px-3 py-1 bg-white rounded-full border border-blue-100 shadow-sm shadow-blue-100">
+                      <Text className="text-[10px] font-bold text-blue-500">OFFICIAL</Text>
+                    </Box>
+                  </HStack>
 
-              <Box className="gap-5">
-                <InfoItem icon={BookOpen} label="Denomination" value={selectedChurchData.denomination} />
-                <InfoItem icon={MapPin} label="Address" value={selectedChurchData.address} />
-                <InfoItem icon={Building2} label="City" value={selectedChurchData.city} />
-
-                <HStack space="xl">
-                  <Box className="flex-1">
-                    <InfoItem icon={User2} label="Pastor" value={selectedChurchData.pastor} />
-                  </Box>
-                  <Box className="flex-1">
-                    <InfoItem icon={Phone} label="Contact" value={selectedChurchData.phone} />
-                  </Box>
-                </HStack>
-              </Box>
-
-            </VStack>
-              <Box className="mx-4 my-4 bg-white border border-slate-100 rounded-3xl shadow-lg overflow-hidden">
-                {/* Status Header */}
-                <Box className="bg-orange-400 p-4 flex-row items-center justify-center gap-3">
-                  <Icon as={UserIcon} color="white" size="lg" />
-                  <Text className="text-white font-bold text-center">
-                    Profile verification
-                  </Text>
-                </Box>
-
-                <VStack className="p-5" space="md">
-                  <Heading size="sm" className="text-slate-800">Verification & Account Status</Heading>
-
-                  {/* Status Action Suite */}
                   <VStack space="sm">
+                    {/* Primary Details in a modern Bento grid style */}
+                    <InfoItem icon={User2} label="Pastor Name" value={selectedChurchData?.pastor_name} />
 
-                    {/* 1. Verify User Toggle */}
-                    <HStack className="items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                      <HStack space="sm" className="items-center">
-                        <Box className="bg-blue-100 p-2 rounded-full">
-                          <Icon as={CheckCircleIcon} className="text-blue-500" size="xl" />
-                        </Box>
-                        <VStack>
-                          <Text className="text-sm font-bold text-slate-900">Verify User</Text>
-                          <Text className="text-[10px] text-slate-500">Enable blue badge status</Text>
-                        </VStack>
-                      </HStack>
-                      <Switch
-                        size="lg"
+                    <Box className="h-[1px] bg-blue-100/50 w-full" /> {/* Subtle Divider */}
 
-                        onValueChange={(val) => { }}
-                      //           trackColor={{ false: "#cbd5e1", true: "#096437ff" }}
-                      />
+                    <InfoItem icon={BookOpen} label="Denomination" value={selectedChurchData?.denomination} />
+                    <InfoItem icon={MapPin} label="Address" value={selectedChurchData?.address} />
+
+                    <HStack space="xl">
+                      <Box className="flex-1">
+                        <InfoItem icon={Building2} label="City" value={selectedChurchData?.city} />
+                      </Box>
+                      <Box className="flex-1">
+                        <InfoItem icon={Phone} label="Contact" value={selectedChurchData?.church_phone} />
+                      </Box>
                     </HStack>
-
-                    {/* 2. Active Status Toggle */}
-                    <HStack className="items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                      <HStack space="sm" className="items-center">
-                        <Box className="bg-emerald-100 p-2 rounded-full">
-                          {/* Using a Power or Activity icon for Active status */}
-                          <Icon as={ZapIcon} className="text-emerald-500" size="xl" />
-                        </Box>
-                        <VStack>
-                          <Text className="text-sm font-bold text-slate-900">Active Status</Text>
-                          <Text className="text-[10px] text-slate-500">Control profile visibility</Text>
-                        </VStack>
-                      </HStack>
-                      <Switch
-                        size="lg"
-                        // value={data?.IsActive === 1}
-                        onValueChange={(val) => { }}
-                      //trackColor={{ false: "#cbd5e1", true: "#096437ff" }}
-                      />
-                    </HStack>
-
                   </VStack>
+                </Box>
+              )}
+              {/* {formData.church_id &&
+                <Box>
+                  <HStack className="justify-between items-center mb-1">
+                    <Text className="text-xs font-bold text-blue-600 tracking-widest uppercase">Church Info</Text>
+                    <Box className="px-3 py-1 bg-white rounded-full border border-blue-100">
+                      <Text className="text-[10px] font-bold text-blue-400">OFFICIAL</Text>
+                    </Box>
+                  </HStack>
 
-                  {/* 2. Action Buttons: Photo & Payment */}
-                  <VStack space="sm" className="mt-2">
-                    <HStack space="sm">
-                      {/* Verify Photo Button */}
-                      <Button
-                        className="flex-1 bg-indigo-500 rounded-2xl h-12 shadow-sm active:bg-indigo-600"
-                        onPress={() => { }}
-                      >
-                        <HStack space="xs" className="items-center">
-                          <CameraIcon size={16} color="white" />
-                          <ButtonText className="text-white font-bold text-sm">Verify Photo</ButtonText>
-                        </HStack>
-                      </Button>
+                  <Box className="gap-2">
+                    <InfoItem icon={User2} label="Pastor Name" value={selectedChurchData?.pastor_name} />
+                    <InfoItem icon={BookOpen} label="Denomination" value={selectedChurchData?.denomination} />
+                    <InfoItem icon={MapPin} label="Address" value={selectedChurchData?.address} />
 
-                      {/* Payment Button */}
-                      <Button
-                        className="flex-1 bg-emerald-500 rounded-2xl h-12 shadow-sm active:bg-emerald-600"
-                        onPress={() => { }}
-                      >
-                        <HStack space="xs" className="items-center">
-
-                          <CreditCardIcon size={16} color="white" />
-                          <ButtonText className="text-white font-bold text-sm">Payment</ButtonText>
-                        </HStack>
-                      </Button>
+                    <HStack space="xl">
+                      <Box className="flex-1">
+                        <InfoItem icon={Building2} label="City" value={selectedChurchData?.city} />
+                      </Box>
+                      <Box className="flex-1">
+                        <InfoItem icon={Phone} label="Contact" value={selectedChurchData?.church_phone} />
+                      </Box>
                     </HStack>
+                  </Box>
+                </Box>
+              } */}
+            </VStack>
 
-                    {/* Main Add Details Button */}
-                    {/* <Button
-                                                    variant="outline"
-                                                    className="border-slate-200 rounded-2xl h-12 mt-2"
-                                                    onPress={() => handleAddDetails()}
-                                                >
-                                                    <ButtonText className="text-slate-600 font-bold">Edit Family Details</ButtonText>
-                                                </Button> */}
-                  </VStack>
-                </VStack>
-              </Box>
               <VStack space="md" className="mt-6">
-                <Heading size="sm" className="text-slate-900 ml-1">Spiritual Status</Heading>
+                <Heading size="sm" className="text-slate-900 ml-1">Spiritual Status </Heading>
 
                 <VStack space="sm">
                   <StatusToggle
                     icon={Flame}
-                    iconBg="bg-orange-100"
-                    iconColor="text-orange-500"
+                    iconBg="bg-emerald-400"
+                    iconColor="text-emerald-500"
                     title="Whether Saved (Born Again)"
                     desc="Personal commitment to Jesus"
-                    value={formData.isBornAgain}
-                    onToggle={(v: any) => updateForm('isBornAgain', v)}
+                    value={formData.born_again}
+                    onToggle={(v: any) => updateForm('born_again', v)}
                   />
+                  <VStack
+                    className={`rounded-[32px] transition-all duration-300 border ${formData.baptized ? 'bg-blue-50/30 border-blue-100 p-2' : 'bg-transparent border-transparent'
+                      }`}
+                  >
+                    <StatusToggle
+                      icon={Droplets}
+                      iconBg={formData.baptized ? "bg-blue-500" : "bg-slate-100"}
+                      iconColor={formData.baptized ? "text-white" : "text-slate-500"}
+                      title="Whether Baptized?"
+                      desc="Water baptism status"
+                      value={formData.baptized}
+                      onToggle={(v: any) => {
+                        updateForm('baptized', v);
+                        if (!v) updateForm('baptized', ''); // Clear date if toggled off
+                      }}
+                    />
 
-                  <StatusToggle
-                    icon={Droplets}
-                    iconBg="bg-blue-100"
-                    iconColor="text-blue-500"
-                    title="Whether Baptized?"
-                    desc="Water baptism status"
-                    value={formData.isBaptized}
-                    onToggle={(v: any) => updateForm('isBaptized', v)}
-                  />
-
+                    {formData.baptized && (
+                      <Box className="px-4 pb-4 pt-2 animate-in fade-in zoom-in-95 duration-300">
+                        <VStack space="xs">
+                          <Text className="text-[10px] font-bold text-blue-600 uppercase ml-1 tracking-wider">
+                            Baptism Date / Details
+                          </Text>
+                          <Input
+                            variant="rounded"
+                            className="bg-white border-blue-100 h-12 shadow-sm shadow-blue-200/20"
+                          >
+                            <InputSlot className="pl-3">
+                              <Icon as={CalendarDays} className="text-blue-400" size="sm" />
+                            </InputSlot>
+                            <InputField
+                              placeholder="e.g. June 2022 or 12/05/2021"
+                              className="text-sm text-slate-700"
+                              value={formData.baptism_details}
+                              onChangeText={(txt) => updateForm('baptism_details', txt)}
+                            />
+                          </Input>
+                        </VStack>
+                      </Box>
+                    )}
+                  </VStack>
                   <StatusToggle
                     icon={Wind}
                     iconBg="bg-teal-100"
                     iconColor="text-teal-500"
                     title="Baptized in the Spirit?"
                     desc="Experience of Holy Spirit baptism"
-                    value={formData.isSpiritFilled}
-                    onToggle={(v: any) => updateForm('isSpiritFilled', v)}
+                    value={formData.spirit}
+                    onToggle={(v: any) => updateForm('spirit', v)}
                   />
                 </VStack>
               </VStack></>
@@ -1831,7 +1839,7 @@ export default function SignupWizardScreen() {
             onPress={handleNextAction}
             isDisabled={isUploading}
           >
-            {isUploading ? <Spinner color="$white" /> : <ButtonText className="text-white">{step === totalSteps ? 'Finish' : (step === 4 || step === 8) ? 'Submit' : 'Continue'}</ButtonText>}
+            {isUploading ? <Spinner color="$white" /> : <ButtonText className="text-white">{step === totalSteps ? 'Finish' : (step === 4 || step === 9) ? 'Submit' : 'Continue'}</ButtonText>}
           </Button>
         </Box>
       </Box>
@@ -1858,22 +1866,25 @@ const InfoItem = ({ icon: IconComp, label, value }: any) => (
 );
 
 // 2026 Modern Toggle
-const StatusToggle = ({ icon: IconComp, value, title, desc, onToggle }: any) => (
+const StatusToggle = ({ icon: IconComp, value, iconBg, iconColor, title, desc, onToggle }: any) => (
   <HStack
-    className={`items-center justify-between p-4 rounded-[28px] border mb-3 transition-all ${value ? 'bg-white border-emerald-100 shadow-md shadow-emerald-50' : 'bg-slate-50/50 border-transparent'
+    className={`items-center justify-between p-4 rounded-[28px] border mb-3 transition-all bg-white border-emerald-100 shadow-md shadow-emerald-50 '
       }`}
   >
     <HStack space="md" className="items-center">
+
+
       {/* Icon glows when active */}
-      <Box className={`p-3 rounded-2xl ${value ? 'bg-emerald-500' : 'bg-slate-200'}`}>
-        <IconComp size={20} className={value ? 'text-white' : 'text-slate-500'} />
+      <Box className={`p-3 rounded-2xl ${value ? iconBg + ' ' + iconColor : 'bg-slate-200'}`}>
+        <IconComp size={20} className={value ? 'bg-emerald-500' : 'bg-emerald-500'} />
       </Box>
       <VStack>
-        <Text className={`text-sm font-bold ${value ? 'text-emerald-900' : 'text-slate-900'}`}>{title}</Text>
-        <Text className="text-[10px] text-slate-500">{desc}</Text>
+        <Text className={`text-md font-bold ${value ? 'text-emerald-900' : 'text-slate-900'}`}>{title}</Text>
+        <Text className="text-[12px] text-slate-500">{desc}</Text>
       </VStack>
     </HStack>
     <Switch
+      size='lg'
       value={value}
       onValueChange={onToggle}
       trackColor={{ false: "#e2e8f0", true: "#10b981" }}

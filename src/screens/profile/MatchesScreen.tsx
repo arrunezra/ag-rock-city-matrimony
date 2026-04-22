@@ -20,6 +20,7 @@ import {
 } from 'react-native-capture-protection';
 import { useIsFocused } from '@react-navigation/native'; // Add this import
 import _ from 'lodash';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const MatchesScreen = () => {
 
     const { user } = useAuth();
@@ -43,7 +44,6 @@ const MatchesScreen = () => {
         min_age: 24,
         max_age: 54
     });
-
 
     // Added 'currentFilters' argument to prevent stale state issues
     // Place these inside your component

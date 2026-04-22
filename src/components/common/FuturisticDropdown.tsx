@@ -16,6 +16,8 @@ const FuturisticDropdown = ({
     search = false,
     isInvalid = false,
 }: any) => {
+    data = data || [];
+    console.log('data', data);
     let newDate = new Date();
     return (
         <Dropdown
@@ -60,7 +62,7 @@ const FuturisticDropdown = ({
                 overflow: 'hidden',
                 paddingTop: 0,
             }}
-            data={data}
+            data={data || []}
             search={search}
             maxHeight={300}
             labelField="label"
@@ -82,7 +84,7 @@ const FuturisticDropdown = ({
                     paddingHorizontal: 4
                 },
                 showsVerticalScrollIndicator: true,
-                stickyHeaderIndices: data.map((item: any, index: number) => item.type === 'HEADER' ? index : null).filter((i: any) => i !== null),
+                stickyHeaderIndices: data?.map((item: any, index: number) => item.type === 'HEADER' ? index : null).filter((i: any) => i !== null),
             }}
             renderLeftIcon={() => (
                 <Icon as={icon?.icon} size="sm"

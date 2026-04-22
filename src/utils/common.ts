@@ -18,11 +18,14 @@ export const getFileIconConfig = (ext: string = '') => {
     }
 };
 
-export const getExtension = (fileName: string, action: 'fileName' | 'dotwithextension' | 'dotwitouthextension' | 'addthumnail' | "url") => {
+export const getExtension = (fileName: string = '', action: 'fileName' | 'dotwithextension' | 'dotwitouthextension' | 'addthumnail' | "url") => {
 
 
     if (!fileName && (action === 'addthumnail' || action === 'url')) {
-        return `${API_BASE_URL_DEV_Profiles_assets_Images}/default_profile_image.png`
+        if (fileName == "fake") {
+            return "";
+        }
+        else return `${API_BASE_URL_DEV_Profiles_assets_Images}/default_profile_image.png`
     }
     if (!fileName) return fileName;
 

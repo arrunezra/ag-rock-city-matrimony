@@ -1,12 +1,8 @@
-import { DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
+import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 import { Box, VStack, HStack, Avatar, AvatarImage, Text, Divider, AvatarFallbackText, Center, Heading } from '@/src/components/common/GluestackUI';
 import { Pressable, TouchableOpacity } from 'react-native';
-import { AddIcon, Icon } from '@/components/ui/icon';
-import { LogOutIcon, UsersIcon } from '../components/common/IconUI';
-import { useAuth } from '@/src/context/AuthContext';
-import { API_BASE_URL_DEV_Profiles_Thumbs } from '../utils/environment';
-import { AvatarBadge } from '@/components/ui/avatar';
-import { Camera, CheckIcon, ChevronRight, LayoutDashboard, LogOut, Settings, ShieldCheck } from 'lucide-react-native';
+import { Icon } from '@/components/ui/icon';
+import { Camera, CheckIcon, ChevronRight, LogOut, Settings } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { getExtension } from '../utils/common';
@@ -28,7 +24,7 @@ export default function CustomDrawerContent(props: any) {
     const fullName = user?.firstName
         ? `${user.firstName} ${user.lastName || ''}`.trim()
         : "Guest User";
-    console.log('fullName', fullName);
+
     return (
         <DrawerContentScrollView {...props} contentContainerStyle={{ flex: 1, backgroundColor: '#fdfdfd' }}>
 

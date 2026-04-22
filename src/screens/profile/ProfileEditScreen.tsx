@@ -27,6 +27,7 @@ import { LookupContext } from '@/src/context/LookupContext';
 import { useAppToast } from '@/src/context/ToastContext';
 import NoDataScreen from '../common/NoDataScreen';
 import { Plus } from 'lucide-react-native';
+import { getExtension } from '@/src/utils/common';
 
 
 export default function ProfileEditScreen({ navigation, route }: any) {
@@ -116,13 +117,14 @@ export default function ProfileEditScreen({ navigation, route }: any) {
 
   const [showPreferencesModal, setShowPreferencesModal] = useState(false);
   const [qualification, setQualification] = useState<any>([]);
-
+  const [is_verified_profile, setIs_verified_profile] = useState(true)
 
 
   // 2. Standard useEffect for initial mount
   useEffect(() => {
     loadData();
-    loadLookupData()
+    loadLookupData();
+    getProfileDataFromToken()
   }, []);
 
   useEffect(() => {
@@ -138,6 +140,37 @@ export default function ProfileEditScreen({ navigation, route }: any) {
       return () => clearTimeout(timer);
     }
   }, [totalStrength]);
+
+  const getProfileDataFromToken = async () => {
+    const userData: any = await AsyncStorage.getItem('userData');
+    if (userData && !userData?.profilePic) {
+      getProfileDetails();
+    }
+  }
+  const getProfileDetails = async () => {
+    setLoading(true); // Show loader while refreshing
+    try {
+      const res = await profileService.setDefaultOrDeleteProfileImage(
+        user?.profile_id,
+        '',
+        'get_default'
+      );
+      if (res.success) {
+        if (res?.data?.is_verified == 1) {
+          const updatedProfile: any = {
+            profileThumb: res.data.file_name,
+            profilePic: res.data.file_name,
+          };
+          await updateUser({ ...user, ...updatedProfile });
+        } else setIs_verified_profile(false)
+      }
+    } catch (e) {
+      console.error("Fetch Profile Error:", e);
+    } finally {
+
+    }
+  };
+
   const getProfileCompletionData = (user: any) => {
 
     const sections = [
@@ -182,7 +215,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
 
       if (res.success) {
         let data = res.data;
-
+        console.log('fetchProfileDetailsByID=', res)
         // Handle kids_details parsing safely
         try {
           if (typeof data.kids_details === 'string') {
@@ -623,6 +656,9 @@ export default function ProfileEditScreen({ navigation, route }: any) {
     else { }
 
   }
+
+  const profilePicUrl = getExtension(user?.profilePic == 'boy.png' ? "fake" : user?.profilePic, 'url');
+
   return (
     <Box className="flex-1 bg-[#F1F5F9]">
 
@@ -638,38 +674,57 @@ export default function ProfileEditScreen({ navigation, route }: any) {
           <>
             <Box>
               {/* 1. HERO IMAGE SECTION (Matches ProfileDetailScreen) handlePickImage */}
-              <Box className="h-[350px] w-full bg-gray-900">
-                <Pressable onPress={() => { navigation.navigate('ShowProfileGallery') }} className="flex-1">
-                  <FastImage
-                    source={{
-                      uri: profileImage,
-                      priority: FastImage.priority.high
-                    }}
-                    style={StyleSheet.absoluteFill}
-                    resizeMode="cover"
-                  />
+              <Box className="h-[400px] w-full bg-white-900 relative overflow-hidden">
+                <Pressable
+                  onPress={() => navigation.navigate('ShowProfileGallery')}
+                  className="flex-1"
+                >
+                  {profilePicUrl && profilePicUrl != 'fake' ? (
+                    // Case 1: Image exists
+                    <FastImage
+                      source={{
+                        uri: profilePicUrl,
+                        priority: FastImage.priority.high
+                      }}
+                      style={StyleSheet.absoluteFill}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    // Case 2: No image / Verification Pending
+                    <Box className="flex-1 justify-center items-center bg-white-800">
+                      <LottieView
+                        source={require('../../assets/animations/default_profile.json')}
+                        autoPlay
+                        loop
+                        style={{ width: '60%', height: '60%' }}
+                      />
+                      {!is_verified_profile && <Box className="absolute bottom-32 bg-black/40 px-4 py-1 rounded-full border border-white/10">
+                        <Text className="text-white font-medium text-sm">Verification Pending</Text>
+                      </Box>
+                      }
+                    </Box>
+                  )}
 
-                  {/* Camera Icon moved to Top Right */}
-                  <Box className="absolute top-12 right-6 z-20 bg-black/30 p-2 rounded-full border border-white/20">
+                  {/* Camera Icon - Floating Glass Effect */}
+                  <Box className="absolute top-14 right-6 z-30 bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-xl">
                     <Icon as={CameraIcon} className="text-white" size="xl" />
                   </Box>
                 </Pressable>
 
-                {/* Custom Back Button */}
+                {/* Back Button - Floating Glass Effect */}
                 <TouchableOpacity
                   onPress={() => navigation.goBack()}
-                  className="absolute top-12 left-6 z-20 bg-black/30 p-2 rounded-full border border-white/20"
+                  className="absolute top-14 left-6 z-30 bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-xl"
                 >
                   <Icon as={ChevronLeftIcon} className="text-white" size="xl" />
                 </TouchableOpacity>
 
-                {/* Gradient to blend into the white card */}
+                {/* Bottom Gradient - Deeper and smoother for 2026 aesthetics */}
                 <LinearGradient
-                  colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.9)']}
-                  style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100 }}
+                  colors={['transparent', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)', '#000']}
+                  style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 140 }}
                 />
               </Box>
-
               {/* End Hero Image Section */}
 
               {/* Progress Section */}

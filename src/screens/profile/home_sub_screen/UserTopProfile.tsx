@@ -54,7 +54,7 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto }: any) => {
     const fullName = user?.firstName
         ? `${user.firstName} ${user.lastName || ''}`.trim()
         : "Guest User";
-
+    console.log('fullName', fullName)
     return (
         <VStack className="px-5 py-8 bg-[#f8fafc] gap-8">
             {/* Profile Card Overlay */}
@@ -64,7 +64,7 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto }: any) => {
                         <Box className="p-1 rounded-full bg-indigo-50 border border-indigo-100">
                             <Avatar size="2xl" className="rounded-full bg-slate-200">
                                 <AvatarFallbackText className="font-bold text-slate-600" >
-                                    {user?.firstName} {user?.lastName}
+                                    {fullName}
                                 </AvatarFallbackText>
                                 {profiles && (
                                     <AvatarImage source={{ uri: profiles }} />
