@@ -126,11 +126,12 @@ const UserDocumentUpload = () => {
                     name: file.name
                 } as any);
                 uploadData.append('action', 'dms');
+                uploadData.append('module', 'profile');
                 uploadData.append('userid', user?.userid ?? ""); // Required by your PHP script
                 const response = await FileService.uploadFile(uploadData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
-                        'Authorization': `Bearer ${token}`
+                        //'Authorization': `Bearer ${token}`
                     },
                     onUploadProgress: ({ loaded, total }: any) => {
                         if (total) setUploadProgress(Math.round((loaded * 100) / total));
@@ -185,66 +186,6 @@ const UserDocumentUpload = () => {
             </VStack>
 
             <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20 }}>
-                {/* 1. CHURCH SELECTION SECTION */}
-                <FormControl isInvalid={!!errors.church_id} className="mb-6">
-                    <FormControlLabel>
-                        <FormControlLabelText className="text-slate-600 text-xs uppercase font-bold">
-                            Assigned Church / Branch
-                        </FormControlLabelText>
-                    </FormControlLabel>
-
-                    <Dropdown
-                        style={[
-                            styles.dropdown,
-                            isChurchFocus && { borderColor: '#0891b2' }
-                        ]}
-                        data={churchBranches || []}
-                        labelField="church_name"
-                        valueField="church_id"
-                        placeholder="Select Assigned Church"
-                        value={formData?.church_id}
-                        onFocus={() => setIsChurchFocus(true)}
-                        onBlur={() => setIsChurchFocus(false)}
-                        onChange={item => {
-                            // IMPORTANT: updateForm must save church_id for the API call
-                            updateForm('church_id', item.church_id);
-                            updateForm('selected_pastor', item.pastor_name);
-                            updateForm('selected_address', item.address);
-                        }}
-                        renderLeftIcon={() => (
-                            <Icon as={Home} size="sm" className="mr-2 text-cyan-600" />
-                        )}
-                    />
-
-                    {/* Animated pastor/address display when church is selected */}
-                    {formData?.church_id ? (
-                        <Animated.View entering={FadeIn} className="mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                            <VStack space="md">
-                                <HStack space="sm" className="items-start">
-                                    <Icon as={User} size="xs" className="text-slate-400 mt-1" />
-                                    <VStack>
-                                        <Text className="text-[10px] uppercase font-bold text-slate-400">Head Pastor</Text>
-                                        <Text className="text-sm text-slate-700 font-semibold">
-                                            {formData.selected_pastor || "N/A"}
-                                        </Text>
-                                    </VStack>
-                                </HStack>
-
-                                <HStack space="sm" className="items-start">
-                                    <Icon as={MapPin} size="xs" className="text-slate-400 mt-1" />
-                                    <VStack>
-                                        <Text className="text-[10px] uppercase font-bold text-slate-400">Branch Address</Text>
-                                        <Text className="text-sm text-slate-600 italic">
-                                            {formData.selected_address || "No address provided"}
-                                        </Text>
-                                    </VStack>
-                                </HStack>
-                            </VStack>
-                        </Animated.View>
-                    ) : null}
-
-                    <AnimateError isVisible={errors.church_id}>{errors.church_id}</AnimateError>
-                </FormControl>
 
                 {/* Bento Upload Box */}
                 <Pressable
