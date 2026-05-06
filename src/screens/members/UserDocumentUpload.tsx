@@ -25,10 +25,14 @@ import { useAuth } from '@/src/context/AuthContext';
 import { Dropdown } from 'react-native-element-dropdown';
 import { AnimateError } from '../common/AnimateError';
 import { Icon } from '@/src/components/common/IconUI';
+import { useNavigation } from '@react-navigation/native';
+import { useAppToast } from '@/src/context/ToastContext';
 
 const UserDocumentUpload = () => {
     // State Management
     const { user } = useAuth();
+    const navigation = useNavigation<any>();
+    const { showToast } = useAppToast();
     const [selectedFiles, setSelectedFiles] = useState<DocumentPickerResponse[]>([]);
     const [isUploading, setIsUploading] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -138,16 +142,19 @@ const UserDocumentUpload = () => {
                     }
                 });
                 if (response.success) {
-                    Alert.alert("Success", "File uploaded successfully.");
+                    showToast("File Upload Details", "File uploaded successfully.", "success");
+
                     setSelectedFiles([]);
+                    navigation.navigate("DocumentSummary")
                 } else {
-                    Alert.alert("Error", "File upload failed.");
+                    showToast("Upload Failed", "File upload failed.", "error");
                 }
             }
 
 
         } catch (error) {
-            Alert.alert("Upload Failed", "An error occurred during transfer.");
+            showToast("Upload Failed", "An error occurred during transfer.", "error");
+
         } finally {
             setIsUploading(false);
             setUploadProgress(0);

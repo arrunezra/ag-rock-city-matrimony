@@ -184,20 +184,7 @@ const StaffDashboard = ({ navigation }: any) => {
                                 </MotiView>
                             ))
                             }
-                            <TouchableOpacity
-                                onPress={() => navigation.navigate("DMSUpload")}
-                                className="flex-row items-center justify-center py-4 bg-white rounded-2xl border border-slate-200 shadow-sm active:bg-slate-50"
-                            >
-                                <Text className="text-cyan-600 font-bold mr-2">Upload Documents</Text>
-                                <Icon as={ChevronRight} size="sm" className="text-cyan-600" />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => navigation.navigate("DMSSummary")}
-                                className="flex-row items-center justify-center py-4 bg-white rounded-2xl border border-slate-200 shadow-sm active:bg-slate-50"
-                            >
-                                <Text className="text-cyan-600 font-bold mr-2">View Documents</Text>
-                                <Icon as={ChevronRight} size="sm" className="text-cyan-600" />
-                            </TouchableOpacity>
+
                         </>
                     )}
                 </VStack>

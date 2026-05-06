@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { FlatList, ActivityIndicator } from 'react-native';
 import { Box, Spinner, Center } from '@/src/components/common/GluestackUI';
 import api from '@/src/api/api';
@@ -20,6 +20,8 @@ export default function HomeScreen() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const [filters, setFilters] = useState({
     gender: '',
     marital_status: '',
@@ -38,7 +40,12 @@ export default function HomeScreen() {
         ...filters // Send all filter values in the body
       }
       console.log('getprofiless', post);
-      const response = await profileService.getprofile(post);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+
+      const response = await profileService.getprofile(post, abortControllerRef.current.signal);
 
       if (response.success) {
         const newData = response.data;

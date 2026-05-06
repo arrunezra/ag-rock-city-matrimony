@@ -13,14 +13,22 @@ $userId   = $_POST['userid'] ?? null;
 $fileGuid = $_POST['file_id'] ?? null; // For replacements
 $module   = $_POST['module'] ?? null;
 $action   = $_POST['action'] ?? null;
+//$is_failed = ($action == "dms_delete" && !$profile_id);
+//$result_text = $is_failed ? "True" : "False"; 
+//error_log("Action Failed - Profile: $profile_id, action: $action, result: $result_text");
 
 // 2. Validation Block
-if (!$profile_id || !$userId || !isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+if($action == "dms_delete" && !$profile_id){
+    error_log("Validation Failed - Profile:". $profile_id );
+    echo json_encode(["success" => false, "message" => "Invalid request details."]);
+    exit;
+}
+else if ($action != "dms_delete" && (!$profile_id || !$userId || !isset($_FILES['file']) ||  $_FILES['file']['error'] !== UPLOAD_ERR_OK)) {
     error_log("Validation Failed - Profile: $profile_id, User: $userId, File status: " . (isset($_FILES['file']) ? $_FILES['file']['error'] : 'Missing'));
     echo json_encode(["success" => false, "message" => "Invalid request details."]);
     exit;
 }
-  //  error_log("Validation Failed - module: $module );
+    //error_log("Validation Failed - module:". $module );
 
 // 3. File Metadata
 $file         = $_FILES['file'];
@@ -34,27 +42,57 @@ try {
     $db->beginTransaction();
 
     if ($fileGuid) {
+
         // --- MODE: REPLACE EXISTING FILE ---
-        $stmt = $db->prepare("SELECT file_name FROM file_repo WHERE file_id = ? AND userid = ?");
-        $stmt->execute([$fileGuid, $userId]);
-        $oldFileName = $stmt->fetchColumn();
+        if($action == "dms_replace"){
+            $stmt = $db->prepare("SELECT profiles_docs FROM file_repo WHERE file_id = ? AND profile_id = ?");
+            $stmt->execute([$fileGuid, $profile_id]);
+            $oldFileName = $stmt->fetchColumn();
 
-        if (!$oldFileName) {
-            throw new Exception("File with provided GUID not found.");
+            if (!$oldFileName) {
+                throw new Exception("File with provided GUID not found.");
+            }
+
+            // Delete old file
+            $oldPath = '../uploads/dms/' . $oldFileName;
+            if (file_exists($oldPath)) unlink($oldPath);
+
+            $storedFileName = $fileGuid . '.' . $ext;
+            $tempGuid = $fileGuid;
+
+            $update = $db->prepare("UPDATE file_repo SET 
+                                        file_name = ?, original_name = ?, extension = ?, 
+                                        file_size = ?, created_at = NOW(), mime_type = ?  
+                                    WHERE file_id = ? AND userid = ?");
+            $update->execute([$storedFileName, $originalName, $ext, $fileSize, $mimeType, $fileGuid, $userId]);
+        }else if($action == "dms_delete" && $module == "profile"){
+            $stmt = $db->prepare("SELECT file_id FROM profiles_docs WHERE file_id = ? AND profile_id = ?");
+            $stmt->execute([$fileGuid, $profile_id]);
+            $oldFileName = $stmt->fetchColumn();
+
+            if (!$oldFileName) {
+                throw new Exception("File with provided GUID not found.");
+            }
+
+            // Delete old file
+            $oldPath = '../uploads/dms/' . $oldFileName;
+            if (file_exists($oldPath)) unlink($oldPath); 
+           
+
+            $update = $db->prepare("DELETE FROM profiles_docs WHERE file_id = ? AND profile_id = ?");
+            $update->execute([$fileGuid, $profile_id]);
+            $db->commit();
+
+            echo json_encode([
+                "success" => true,
+                "message" =>  "File deleted successfully",
+                "data" => [
+                    "guid" => $fileGuid 
+                ]
+            ]);
+            exit;
         }
-
-        // Delete old file
-        $oldPath = '../uploads/dms/' . $oldFileName;
-        if (file_exists($oldPath)) unlink($oldPath);
-
-        $storedFileName = $fileGuid . '.' . $ext;
-        $tempGuid = $fileGuid;
-
-        $update = $db->prepare("UPDATE file_repo SET 
-                                    file_name = ?, original_name = ?, extension = ?, 
-                                    file_size = ?, created_at = NOW(), mime_type = ?  
-                                WHERE file_id = ? AND userid = ?");
-        $update->execute([$storedFileName, $originalName, $ext, $fileSize, $mimeType, $fileGuid, $userId]);
+        
 
     } else {
         // --- MODE: NEW UPLOAD ---

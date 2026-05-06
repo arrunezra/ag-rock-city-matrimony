@@ -35,6 +35,9 @@ import BlockedUsersScreen from "../screens/profile/BlockedUsersScreen";
 import SettingsScreen from "../screens/settings/SettingsScreen";
 import ContactPrivacyScreen from "../screens/settings/privacy/PrivacyScreen";
 import SummryListViewScreen from "../screens/profile/dashboard/SummryListViewScreen";
+import DocumentSummary from "../screens/members/DocumentSummary";
+import DocumentViewer from "../screens/common/DocumentViewer";
+import StaffInboxScreen from "../screens/staff/StaffHomeScreen";
 
 
 const Stack = createNativeStackNavigator();
@@ -49,7 +52,9 @@ export const ROLE_DRAWER_CONFIG: Record<string, any[]> = {
     // { name: "AcceptedRequests", component: AcceptedScreen },
     // { name: "MyPhotos", component: MyPhotos, options: { title: "My Photos" } }, Dont delete 
     { name: "PartnerPreferences", component: PartnerPreferences, options: { title: "Partner Preferences" } },
-    { name: "UserDocumentUpload", component: UserDocumentUpload, options: { title: "My Documents" } },
+    { name: "DocumentSummary", component: DocumentSummary, options: { title: "My Files" } },
+
+    // { name: "UserDocumentUpload", component: UserDocumentUpload, options: { title: "My Documents" } },
   ],
   staff: [
     { name: "BaptismRecords", component: BaptismScreen, options: { title: "Baptism Records" } },
@@ -64,9 +69,8 @@ const TAB_CONFIG = {
     { name: "Inbox", component: InboxScreen, icon: MessageCircleIcon, title: "Inbox" },
   ],
   staff: [
-    { name: "Dashboard", component: StaffDashboard, icon: HomeIcon, title: "Staff Home" },
     { name: "Profile", component: ProfileSummary, icon: HeartIcon, title: "Profile" },
-    { name: "Inbox", component: InboxScreen, icon: MessageCircleIcon, title: "Inbox" },
+    { name: "staffInbox", component: StaffInboxScreen, icon: MessageCircleIcon, title: "Recent verification photo" },
   ],
   member: [
     { name: "Home", component: ProfileHomeScreen, icon: HomeIcon, title: "Home" },
@@ -85,6 +89,7 @@ const SHARED_STACKS = (role: string) => (
         <Stack.Screen name="StaffDetail" component={StaffDetailsScreen} />
         <Stack.Screen name="ViewStaffinforamtion" component={ViewStaffinforamtion} />
         <Stack.Screen name="StaffSummaryView" component={StaffSummaryView} />
+        <Stack.Screen name="staffInbox" component={StaffInboxScreen} options={{ title: 'Recent verification photo' }} />
         <Stack.Screen name="DMSUpload" component={DMSUploadScreen} />
         <Stack.Screen name="DMSSummary" component={DMSSummaryScreen} />
 
@@ -111,6 +116,11 @@ const SHARED_STACKS = (role: string) => (
 
     <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen} />
     <Stack.Screen name="ShowProfileGallery" component={ShowProfileGalleryScreen} />
+    <Stack.Screen
+      name="DocumentViewer"
+      component={DocumentViewer}
+      options={{ headerShown: false }}
+    />
   </Stack.Group>
 );
 
