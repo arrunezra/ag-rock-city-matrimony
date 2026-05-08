@@ -25,7 +25,7 @@ import { LookupProvider } from './src/context/LookupContext';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from './src/screens/common/ToastConfig';
 import { AppToastProvider } from './src/context/ToastContext';
-
+import RazorpayCheckout from 'react-native-razorpay';
 function App() {
 
   const [isAllPermissionGranted, setIsAllPermissionGranted] = useState(false);
