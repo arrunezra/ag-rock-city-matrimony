@@ -17,6 +17,11 @@ try {
     $page   = isset($input['page']) ? (int)$input['page'] : 1;
     $offset = ($page - 1) * $limit;
 
+    $action = $input['action'] ?? '';
+ 
+    if($action == "staff_doc"){
+        $profile_id = $input['profile_id'] ?? $profile_id;
+    }
     if (!$profile_id) {
         echo json_encode(["success" => false, "message" => "Profile id is required"]);
         exit;
@@ -25,7 +30,7 @@ try {
 	
 	// We add a search condition to the SQL for server-side filtering
     $searchQuery = "%$search%";
-	
+ 
 	// Total count for pagination
     $countStmt = $db->prepare("SELECT
 								 	COUNT(*) FROM profiles_docs 
@@ -54,6 +59,6 @@ try {
         "hasMore" => ($offset + $limit) < $totalFiles
     ]); 
 } catch (Exception $e) {
-     error_log("Action Error: " . $e->getMessage());
+	 error_log("Action Error: " . $e->getMessage());
     echo json_encode(["success" => false, "message" => $e->getMessage()]);
 }

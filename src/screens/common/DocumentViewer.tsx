@@ -37,7 +37,7 @@ const DocumentViewer = ({ route, navigation }: any) => {
     return (
         <VStack style={styles.container}>
             {/* Header with Share Action */}
-            <Box style={styles.header}>
+            {/* <Box style={styles.header}>
                 <HStack className="items-center justify-between">
                     <HStack space="md" className="items-center flex-1">
                         <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -48,11 +48,11 @@ const DocumentViewer = ({ route, navigation }: any) => {
                         </VStack>
                     </HStack>
 
-                    {/* <Pressable onPress={handleShare} style={styles.shareButton}>
+                     <Pressable onPress={handleShare} style={styles.shareButton}>
                         <Icon as={ShareIcon} size="sm" color="white" />
-                    </Pressable> */}
+                    </Pressable> 
                 </HStack>
-            </Box>
+            </Box> */}
 
             {/* PDF Engine */}
             <View style={styles.pdfWrapper}>

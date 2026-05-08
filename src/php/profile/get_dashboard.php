@@ -13,7 +13,7 @@ try {
                     SUM(CASE WHEN IsVerified = 1 THEN 1 ELSE 0 END) as verified_count,
                     SUM(CASE WHEN IsVerified = 0 THEN 1 ELSE 0 END) as unverified_count,
                     COUNT(*) as total_count
-                 FROM users";
+                 FROM users where role = 'member'";
     $statsStmt = $db->query($statsSql);
     $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
 
@@ -44,7 +44,9 @@ try {
                         ,file_name
                         ,IsActive
                         ,IsVerified
-                    FROM V_Profile
+                    
+                FROM
+					V_Profile
 				ORDER BY updated_at DESC 
 				LIMIT 10";
     $recentStmt = $db->query($recentSql);

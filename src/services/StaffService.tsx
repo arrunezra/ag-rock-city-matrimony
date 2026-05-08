@@ -79,7 +79,19 @@ export const StaffService = {
             }
             return { success: false, message: "Network connection failed" };
         }
-    }
+    },
+    fetechInboxDetails: async (body: any) => {
+        try {
+            const response = await api.post('/staff/staffInbox.php', body);
+            return response.data;
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                return error.response.data;
+            }
+            return { success: false, message: "Network connection failed" };
+        }
+    },
+
 
 }
 

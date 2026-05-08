@@ -18,6 +18,13 @@ const ProfileHomeScreen = () => {
                         user={user}
                         onAddPhoto={() => navigation.navigate('ShowProfileGallery')}
                         onEdit={() => navigation.navigate('ProfileEdit')}
+                        onPayment={() => {
+                            navigation.navigate('Checkout', {
+                                totalAmount: 100, // ₹50.00 in paise
+                                orderId: 'order_987654321', // Generated from your backend
+                                customerName: 'Arun'
+                            });
+                        }}
                     />
                 );
             // case 'PREMIUM_MATCHES':

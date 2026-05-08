@@ -378,7 +378,11 @@ export default function ProfileDetailScreen({ route }: any) {
         updateVerifyandStatusOnServer(id, newStatus, 'verify');
     }
     const handlePaymentUpdate = () => {
-
+        navigation.navigate('Checkout', {
+            totalAmount: 100, // ₹50.00 in paise
+            orderId: 'order_978697050', // Generated from your backend
+            customerName: 'Arun ezra'
+        });
     }
     const handleVerifyPhoto = () => {
         setIsPhotoVerifyModalVisible(true)

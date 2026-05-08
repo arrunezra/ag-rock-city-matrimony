@@ -636,7 +636,7 @@ const StaffRegistration = ({ navigation, route }: any) => {
                                         <HStack className="items-center justify-between p-4 bg-white rounded-2xl border border-slate-200 shadow-sm shadow-slate-100">
                                             <VStack>
                                                 <Text className="font-bold text-slate-700 text-lg">
-                                                    {formData.activeStatus === '1' ? '1' : '0'}
+                                                    {formData.activeStatus}
                                                 </Text>
                                                 <Text className="text-slate-400 text-sm">
                                                     Determines if this staff can access the system

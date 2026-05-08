@@ -37,7 +37,9 @@ import ContactPrivacyScreen from "../screens/settings/privacy/PrivacyScreen";
 import SummryListViewScreen from "../screens/profile/dashboard/SummryListViewScreen";
 import DocumentSummary from "../screens/members/DocumentSummary";
 import DocumentViewer from "../screens/common/DocumentViewer";
-import StaffInboxScreen from "../screens/staff/StaffHomeScreen";
+import StaffInboxScreen from "../screens/staff/StaffInboxScreen";
+import StaffDocumentSummary from "../screens/staff/StaffDocumentSummary";
+import CheckoutScreen from "../screens/Razorpay/CheckoutScreen";
 
 
 const Stack = createNativeStackNavigator();
@@ -69,8 +71,9 @@ const TAB_CONFIG = {
     { name: "Inbox", component: InboxScreen, icon: MessageCircleIcon, title: "Inbox" },
   ],
   staff: [
+    { name: "Home", component: StaffDashboard, icon: HomeIcon, options: { title: "Staff Overview" } },
     { name: "Profile", component: ProfileSummary, icon: HeartIcon, title: "Profile" },
-    { name: "staffInbox", component: StaffInboxScreen, icon: MessageCircleIcon, title: "Recent verification photo" },
+    { name: "staffInbox", component: StaffInboxScreen, icon: MessageCircleIcon, title: "Inbox" },
   ],
   member: [
     { name: "Home", component: ProfileHomeScreen, icon: HomeIcon, title: "Home" },
@@ -92,6 +95,9 @@ const SHARED_STACKS = (role: string) => (
         <Stack.Screen name="staffInbox" component={StaffInboxScreen} options={{ title: 'Recent verification photo' }} />
         <Stack.Screen name="DMSUpload" component={DMSUploadScreen} />
         <Stack.Screen name="DMSSummary" component={DMSSummaryScreen} />
+        <Stack.Screen name="StaffDocumentSummary" component={StaffDocumentSummary} options={{ title: 'Documents' }} />
+
+
 
       </>
     )}
@@ -121,6 +127,7 @@ const SHARED_STACKS = (role: string) => (
       component={DocumentViewer}
       options={{ headerShown: false }}
     />
+    <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Payment' }} />
   </Stack.Group>
 );
 

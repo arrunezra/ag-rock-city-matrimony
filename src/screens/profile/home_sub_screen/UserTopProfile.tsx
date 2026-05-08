@@ -9,7 +9,7 @@ import { Briefcase, Camera, CheckCircle, CheckCircle2, ChevronRight, Edit3, Eye,
 import profileService from '@/src/services/profileService';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
-const UserTopProfile = ({ user, onEdit, onAddPhoto }: any) => {
+const UserTopProfile = ({ user, onEdit, onAddPhoto, onPayment }: any) => {
     //console.log('user==', user)
     const navigation = useNavigation<any>();
 
@@ -118,7 +118,26 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto }: any) => {
                                 <Icon as={Edit3} size="sm" className="text-slate-600" />
                                 <Text className="font-bold text-slate-700">Edit Profile</Text>
                             </HStack>
+
                         </Box>
+
+
+                    )}
+                </Pressable>
+                <Pressable onPress={onPayment} className="flex-1">
+                    {({ pressed }) => (
+                        <Box
+                            className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden"
+                            style={{ transform: [{ scale: pressed ? 0.97 : 1 }] }}
+                        >
+                            <HStack space="sm" className="justify-center items-center py-4">
+                                <Icon as={Edit3} size="sm" className="text-slate-600" />
+                                <Text className="font-bold text-slate-700">Payment</Text>
+                            </HStack>
+
+                        </Box>
+
+
                     )}
                 </Pressable>
 

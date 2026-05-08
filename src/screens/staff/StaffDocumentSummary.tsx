@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     View,
     Text,
@@ -11,7 +11,7 @@ import {
     Alert,
     StyleSheet,
 } from 'react-native';
-import { Search, SlidersHorizontal, Trash2, XCircle } from 'lucide-react-native';
+import { ChevronLeft, Search, SlidersHorizontal, Trash2, XCircle } from 'lucide-react-native';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,15 +19,17 @@ import { useNavigation } from '@react-navigation/native'; // Added navigation
 
 import api from '@/src/api/api';
 import { API_BASE_URL_DEV_DMS } from '@/src/utils/environment';
-import LoadingScreen from '../common/LoadingScreen';
 import { getFileIconConfig } from '@/src/utils/common';
 import { VStack } from '@/src/components/common/GluestackUI';
 import { MotiView } from 'moti';
 import LinearGradient from 'react-native-linear-gradient';
 import { AddIcon, Icon } from '@/src/components/common/IconUI';
 import { useAppToast } from '@/src/context/ToastContext';
+import LoadingScreen from '@/src/screens/common/LoadingScreen';
+import NotFoundScreen from '../common/NotFoundScreen';
 
-const DocumentSummary = () => {
+const StaffDocumentSummary = ({ route }: any) => {
+    const { profile_id } = route.params;
     const navigation = useNavigation<any>();
     const { showToast } = useAppToast();
     const [files, setFiles] = useState([]);
@@ -37,8 +39,9 @@ const DocumentSummary = () => {
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
     const [defaultLoading, setDefaultLoading] = useState(false);
+    const isFirstRender = useRef(true);
 
-    const fetchFiles = useCallback(async (pageNum = 1, isSearching = false, currentSearch = searchQuery) => {
+    const fetchFiles = useCallback(async (pageNum = 1, isSearching = false) => {
         if (loading) return;
         if (pageNum > 1 && !hasMore && !isSearching) return;
 
@@ -46,10 +49,11 @@ const DocumentSummary = () => {
         try {
             const payload = {
                 userid: "1",
-                search: currentSearch,
+                search: "",
                 page: pageNum,
                 limit: 10,
-                action: 'staff'
+                action: 'staff_doc',
+                profile_id: profile_id
             };
             const res = await api.post('/files/profile_myfiles_summary.php', payload);
             if (res.data.success) {
@@ -63,86 +67,156 @@ const DocumentSummary = () => {
             setLoading(false);
             setRefreshing(false);
         }
-    }, [hasMore, loading, searchQuery]);
+    }, [hasMore, loading, profile_id]);
+    useEffect(() => {
+        if (profile_id) {
+            fetchFiles(1, false);
+        }
+    }, [profile_id]); // Trigger when profile_id arrives
 
-    useEffect(() => { fetchFiles(1, false, ""); }, []);
 
     useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+
         const delayDebounceFn = setTimeout(() => {
-            fetchFiles(1, true, searchQuery);
+            fetchFiles(1, true);
         }, 500);
+
         return () => clearTimeout(delayDebounceFn);
-    }, [searchQuery]);
+    }, []);
 
     const onRefresh = () => {
         setRefreshing(true);
-        fetchFiles(1, true, searchQuery);
+        fetchFiles(1, true,);
     };
 
     // --- NEW: Hybrid Preview Logic ---
+    // const handlePreview = async (file: any) => {
+    //     setDefaultLoading(true);
+
+    //     const sourceUrl = `${API_BASE_URL_DEV_DMS}/${file.file_name}`;
+    //     const extension = file.extension.toLowerCase();
+    //     // Create a safe local path
+    //     const sanitizedFileName = file?.original_name.replace(/\s+/g, '_');
+    //     const localPath = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${sanitizedFileName}`;
+    //     try {
+    //         // 1. Download the file via Blob-Util
+    //         const res = await ReactNativeBlobUtil.config({
+    //             path: decodeURI(localPath),
+    //             fileCache: true,
+
+    //         }).fetch('GET', sourceUrl);
+
+    //         setDefaultLoading(false);
+
+    //         // 2. Hybrid Decision Logic
+    //         const internalViewable = ['pdf'];
+
+    //         if (internalViewable.includes(extension)) {
+    //             // Navigate to your Hybrid Viewer Screen
+    //             let localpath = Platform.OS === 'android' ? `file://${res.path()}` : res.path()
+    //             const decodedPath = localpath; // Converts %20 back to spaces
+
+    //             navigation.navigate('Main', {
+    //                 screen: 'DocumentViewer',
+    //                 params: {
+    //                     fileUrl: sourceUrl,
+    //                     // Ensure the path is a clean string and has the file protocol
+    //                     localPath: decodedPath,
+    //                     fileName: file.original_name,
+    //                     mimeType: file.mime_type
+    //                 }
+    //             })
+
+    //         } else if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
+    //             //if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
+    //             // If it's just an image, iOS preview is still best
+    //             if (Platform.OS === 'ios') {
+    //                 ReactNativeBlobUtil.ios.previewDocument(res.path());
+    //             } else {
+    //                 ReactNativeBlobUtil.android.actionViewIntent(res.path(), 'image/*');
+    //             }
+    //         } else {
+    //             // Fallback for archives/others
+    //             ReactNativeBlobUtil.android.actionViewIntent(res.path(), file.mime_type || 'application/octet-stream');
+    //         }
+    //     } catch (err) {
+    //         setDefaultLoading(false);
+    //         Alert.alert("Error", "Could not process this file.");
+    //     }
+    // };
     const handlePreview = async (file: any) => {
         setDefaultLoading(true);
 
         const sourceUrl = `${API_BASE_URL_DEV_DMS}/${file.file_name}`;
         const extension = file.extension.toLowerCase();
-        // Create a safe local path
-        const sanitizedFileName = file?.original_name.replace(/\s+/g, '_');
-        const localPath = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${sanitizedFileName}`;
-        try {
-            // 1. Download the file via Blob-Util
-            const res = await ReactNativeBlobUtil.config({
-                path: decodeURI(localPath),
-                fileCache: true,
 
-            }).fetch('GET', sourceUrl);
+        // 1. Create a unique, safe local path
+        // Using file_id or a unique filename is safer than original_name to avoid collisions
+        const sanitizedFileName = `${file.file_id}_${file.original_name.replace(/\s+/g, '_')}`;
+        const localPath = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${sanitizedFileName}`;
+
+        try {
+            // 2. Check if the file already exists locally
+            const exists = await ReactNativeBlobUtil.fs.exists(localPath);
+
+            let finalPath = localPath;
+
+            if (!exists) {
+                // 3. Only download if it doesn't exist
+                console.log("File not found locally. Downloading...");
+                const res = await ReactNativeBlobUtil.config({
+                    path: localPath, // Direct path to save
+                    fileCache: true,
+                }).fetch('GET', sourceUrl);
+                finalPath = res.path();
+            } else {
+                console.log("File exists locally. Opening from cache.");
+            }
 
             setDefaultLoading(false);
 
-            // 2. Hybrid Decision Logic
+            // 4. Formatting path for platform specific viewers
+            const platformPath = Platform.OS === 'android' ? `file://${finalPath}` : finalPath;
+
+            // 5. Hybrid Decision Logic
             const internalViewable = ['pdf'];
 
             if (internalViewable.includes(extension)) {
-                // Navigate to your Hybrid Viewer Screen
-                let localpath = Platform.OS === 'android' ? `file://${res.path()}` : res.path()
-                const decodedPath = localpath; // Converts %20 back to spaces
-
                 navigation.navigate('Main', {
                     screen: 'DocumentViewer',
                     params: {
                         fileUrl: sourceUrl,
-                        // Ensure the path is a clean string and has the file protocol
-                        localPath: decodedPath,
+                        localPath: platformPath,
                         fileName: file.original_name,
                         mimeType: file.mime_type
                     }
-                })
-
+                });
             } else if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
-                //if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
-                // If it's just an image, iOS preview is still best
                 if (Platform.OS === 'ios') {
-                    ReactNativeBlobUtil.ios.previewDocument(res.path());
+                    ReactNativeBlobUtil.ios.previewDocument(finalPath);
                 } else {
-                    ReactNativeBlobUtil.android.actionViewIntent(res.path(), 'image/*');
+                    ReactNativeBlobUtil.android.actionViewIntent(finalPath, 'image/*');
                 }
             } else {
-                // Fallback for archives/others
-                ReactNativeBlobUtil.android.actionViewIntent(res.path(), file.mime_type || 'application/octet-stream');
+                // Fallback for other file types
+                ReactNativeBlobUtil.android.actionViewIntent(finalPath, file.mime_type || 'application/octet-stream');
             }
+
         } catch (err) {
             setDefaultLoading(false);
-            Alert.alert("Error", "Could not process this file.");
+            console.error("Preview Error:", err);
+            Alert.alert("Error", "Could not process or download this file.");
         }
     };
+
     const handledelete = async (fileid: any) => {
         try {
             setLoading(true);
             const uploadData = new FormData();
-            // uploadData.append('file', {
-            //     uri: Platform.OS === 'ios' ? result.uri.replace('file://', '') : result.uri,
-            //     type: result.type || 'application/octet-stream',
-            //     name: result.name,
-            // });
             uploadData.append('action', 'dms_delete');
             uploadData.append('userid', '1');
             uploadData.append('module', 'profile');
@@ -156,7 +230,7 @@ const DocumentSummary = () => {
             if (response.data.success) {
                 showToast("File Deleted", "File deleted successfully.", "success");
 
-                fetchFiles(1, true, searchQuery);
+                fetchFiles(1, true);
             } else {
                 showToast("Failed", "File deleted failed.", "error");
 
@@ -193,7 +267,7 @@ const DocumentSummary = () => {
 
             if (response.data.success) {
                 Alert.alert("Success", "File replaced successfully");
-                fetchFiles(1, true, searchQuery);
+                fetchFiles(1, true);
             }
         } catch (error) {
             if (!isErrorWithCode(error) || error.code !== errorCodes.OPERATION_CANCELED) {
@@ -249,52 +323,30 @@ const DocumentSummary = () => {
 
     return (
         <View className="flex-1 bg-slate-50">
-            {/* <View className="px-5 pt-14 pb-4 bg-white border-b border-slate-100">
-                <Text className="text-2xl font-black text-slate-900 mb-4">My Documents</Text>
-                <View className="flex-row items-center">
-                    <View className="flex-1 flex-row items-center bg-slate-100 rounded-2xl px-4 py-2">
-                        <Search size={20} color="#94a3b8" />
-                        <TextInput
-                            placeholder="Search documents..."
-                            className="flex-1 ml-3 text-slate-900 text-[15px] py-1"
-                            value={searchQuery}
-                            onChangeText={setSearchQuery}
-                            placeholderTextColor="#94a3b8"
-                        />
-                    </View>
-                      <TouchableOpacity className="ml-3 w-11 h-11 bg-slate-100 rounded-2xl items-center justify-center">
-                        <SlidersHorizontal size={20} color="#64748b" />
-                    </TouchableOpacity>  
-                </View>
-            </View> */}
-
+            {/* Header Section */}
             <View className="px-5 pt-14 pb-4 bg-white border-b border-slate-100">
-                <Text className="text-2xl font-black text-slate-900 mb-4">My Documents</Text>
-                <View className="flex-row items-center">
-                    <View className="flex-1 flex-row items-center bg-slate-100 rounded-2xl px-4 py-2">
-                        <Search size={20} color="#94a3b8" />
-                        <TextInput
-                            placeholder="Search documents..."
-                            className="flex-1 ml-3 text-slate-900 text-[15px] py-1"
-                            value={searchQuery}
-                            onChangeText={setSearchQuery}
-                            placeholderTextColor="#94a3b8"
-                        />
+                <View className="flex-row items-center mb-4">
+                    {/* Back Button */}
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate("BaptismRecords")}
+                        className="w-10 h-10 items-center justify-center rounded-full bg-slate-50 border border-slate-100 mr-3"
+                        activeOpacity={0.7}
+                    >
+                        <ChevronLeft size={24} color="#0f172a" strokeWidth={2.5} />
+                    </TouchableOpacity>
 
-                        {/* Clear Button: Only show if searchQuery has text */}
-                        {searchQuery.length > 0 && (
-                            <TouchableOpacity
-                                onPress={() => setSearchQuery('')}
-                                className="ml-2 p-1"
-                            >
-                                <XCircle size={18} color="#94a3b8" fill="#e2e8f0" />
-                            </TouchableOpacity>
-                        )}
-                    </View>
+                    <Text className="text-2xl font-black text-slate-900">
+                        My Documents
+                    </Text>
+                </View>
+
+                {/* Search Bar section remains here if needed */}
+                <View className="flex-row items-center">
+                    {/* ... your search bar code ... */}
                 </View>
             </View>
 
-            <FlatList
+            {files.length > 0 ? <FlatList
                 data={files}
                 keyExtractor={(item: any) => item.file_id.toString()}
                 renderItem={renderFileItem}
@@ -304,7 +356,11 @@ const DocumentSummary = () => {
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                 ListEmptyComponent={!loading ? <View className="mt-20 items-center"><Text className="text-slate-400">No documents found</Text></View> : null}
             />
-            {files.length < 5 && <MotiView
+                : <VStack className="flex-1 justify-center  bg-white  ">
+                    <NotFoundScreen title="Records not found" description="Recent Upload Profiles" />
+                </VStack>
+            }
+            {/* {files.length < 5 && <MotiView
                 from={{ scale: 0, opacity: 0, translateY: 50 }}
                 animate={{ scale: 1, opacity: 1, translateY: 0 }}
                 transition={{
@@ -333,7 +389,7 @@ const DocumentSummary = () => {
                         <Icon as={AddIcon} size="xl" className="text-cyan-400" style={{ width: 38, height: 38 }} />
                     </LinearGradient>
                 </TouchableOpacity>
-            </MotiView>}
+            </MotiView>} */}
             {loading && page === 1 && !refreshing && (
                 <View style={StyleSheet.absoluteFill} className="bg-white/60 items-center justify-center z-50">
                     <ActivityIndicator size="large" color="#007AFF" />
@@ -344,4 +400,4 @@ const DocumentSummary = () => {
     );
 };
 
-export default DocumentSummary;
+export default StaffDocumentSummary;

@@ -88,15 +88,15 @@ try {
                     ,IF(l.id IS NULL, 0, 1) AS is_liked_by_me  
                 FROM 
                     V_Profile p
-                LEFT JOIN profile_likes l ON l.profile_id = p.profile_id AND l.sender_id =  :sender_id
+                LEFT JOIN profile_likes l ON l.profile_id = p.profile_id AND l.sender_id = :profile_id  
 
 			    WHERE 
-                    p.profile_id = :profile_id   
+                    p.profile_id =   :sender_id
 			    LIMIT 1"; 
 
         $stmt = $db->prepare($sql);
         $stmt->execute([
-            'profile_id' => $id ,
+            'profile_id' => $tprofile_id ,
             'sender_id' => $id 
         ]);
         
