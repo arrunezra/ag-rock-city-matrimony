@@ -125,7 +125,7 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto, onPayment }: any) => {
                 </TouchableOpacity>
 
                 {/* Pay Securely - Primary Style */}
-                <TouchableOpacity
+                {summary?.is_subscribed == false && <TouchableOpacity
                     onPress={() => onPayment(summary?.subscription_amount ?? 0)}
                     activeOpacity={0.9}
                     style={{ elevation: 8 }}
@@ -143,7 +143,7 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto, onPayment }: any) => {
                         </Text>
                     </LinearGradient>
                 </TouchableOpacity>
-
+                }
             </HStack>
 
             {/* Add this below the Edit Profile button */}
@@ -167,9 +167,14 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto, onPayment }: any) => {
                         {/* Matches Card */}
                         <VStack className="flex-1 p-5 rounded-[32px] bg-indigo-50/50 border border-indigo-100 items-center relative">
                             <TouchableOpacity className='items-center ' onPress={() => {
-                                navigation.navigate('SummryListView', {
-                                    filter: 'Likes'
-                                });
+
+                                if (summary?.is_subscribed) {
+                                    navigation.navigate('SummryListView', {
+                                        filter: 'Likes'
+                                    });
+                                } else {
+                                    onPayment(summary?.subscription_amount ?? 0)
+                                }
                             }}          >
                                 <Center className="w-10 h-10 rounded-2xl bg-indigo-100 mb-2">
                                     <Icon as={Users} size="sm" className="text-indigo-600" />
@@ -183,9 +188,15 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto, onPayment }: any) => {
 
                         <VStack className="flex-1 p-5 rounded-[32px] bg-emerald-50/50 border border-emerald-100 items-center relative">
                             <TouchableOpacity className='items-center ' onPress={() => {
-                                navigation.navigate('SummryListView', {
-                                    filter: 'Views'
-                                });
+
+                                if (summary?.is_subscribed) {
+                                    navigation.navigate('SummryListView', {
+                                        filter: 'Views'
+                                    });
+                                } else {
+                                    onPayment(summary?.subscription_amount ?? 0)
+                                }
+
                             }}>
                                 <Center className="w-10 h-10 rounded-2xl bg-emerald-100 mb-2">
                                     <Icon as={Eye} size="sm" className="text-emerald-600" />
@@ -204,9 +215,14 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto, onPayment }: any) => {
                         {/* Accepted Card - Now in Royal Violet */}
                         <VStack className="flex-1 p-5 rounded-[32px] bg-purple-50/50 border border-purple-100 items-center">
                             <TouchableOpacity className='items-center ' onPress={() => {
-                                navigation.navigate('SummryListView', {
-                                    filter: 'Accepted'
-                                });
+                                if (summary?.is_subscribed) {
+                                    navigation.navigate('SummryListView', {
+                                        filter: 'Accepted'
+                                    });
+                                } else {
+                                    onPayment(summary?.subscription_amount ?? 0)
+                                }
+
                             }}>
                                 <Center className="w-10 h-10 rounded-2xl bg-purple-100 mb-2 shadow-sm shadow-purple-200">
                                     {/* Using a star or check-ribbon for a 'Success' feel */}
@@ -216,10 +232,10 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto, onPayment }: any) => {
                                 <Text className="text-purple-400 text-[9px] font-bold uppercase tracking-widest">Accepted</Text>
 
                                 {/* Optional: Add a tiny "growth" indicator */}
-                                <HStack className="items-center mt-1">
+                                {/* <HStack className="items-center mt-1">
                                     <Icon as={TrendingUp} size={'md'} className="text-purple-400 mr-1" />
                                     <Text className="text-purple-400 font-bold text-[8px]">+3 Today</Text>
-                                </HStack>
+                                </HStack> */}
                             </TouchableOpacity>
                         </VStack>
 
@@ -230,9 +246,16 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto, onPayment }: any) => {
                                 <Text className="text-white font-black text-[8px]">12 NEW</Text>
                             </Box> */}
                             <TouchableOpacity className='items-center ' onPress={() => {
-                                navigation.navigate('SummryListView', {
-                                    filter: 'Requests'
-                                });
+
+                                if (summary?.is_subscribed) {
+                                    navigation.navigate('SummryListView', {
+                                        filter: 'Requests'
+                                    });
+                                } else {
+                                    onPayment(summary?.subscription_amount ?? 0)
+                                }
+
+
                             }}>
                                 <Center className="w-10 h-10 rounded-2xl bg-rose-100 mb-2">
                                     <Icon as={HeartHandshake} size="sm" className="text-rose-600" />

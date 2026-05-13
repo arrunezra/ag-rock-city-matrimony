@@ -229,6 +229,14 @@ export const profileService = {
       return { success: false, message: error.message };
     }
   },
+  setViewLog: async (body: any) => {
+    try {
+      const response = await api.post('/profile/log_view.php', body);
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  },
 };
 
 export default profileService;

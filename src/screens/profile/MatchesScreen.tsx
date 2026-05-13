@@ -170,7 +170,7 @@ const MatchesScreen = () => {
                         <ProfileCard
                             user={user}
                             profile={item}
-                            onPress={() => navigation.navigate('ProfileDetail', { profile_id: item.profile_id })}
+                            onPress={() => navigation.navigate('ProfileDetail', { profile_id: item.profile_id, module: 'match' })}
                             showToast={showToast}
                             reload={() => fetchProfiles(1, true)}
                         />
@@ -228,21 +228,21 @@ const MatchesScreen = () => {
                             setShowFilters(false);
                         }}
                     />
-                </Box> : (
-                    /* Render the Premium Glass Card UI we built earlier here */
-                    /* This way, the user stays on the 'Matches' tab but sees the 'Unlock' UI */
-                    <PremiumUnlockScreen onPay={() => navigation.navigate('Checkout', {
+                </Box> :
+                /* Render the Premium Glass Card UI we built earlier here */
+                /* This way, the user stays on the 'Matches' tab but sees the 'Unlock' UI */
+                !loading && <PremiumUnlockScreen onPay={() => navigation.navigate('Checkout', {
+                    totalAmount: subscriptionAmount ?? 0,
+                    customerName: user?.firstName
+                })}
+                    values={{
+
                         totalAmount: subscriptionAmount ?? 0,
                         customerName: user?.firstName
-                    })}
-                        values={{
 
-                            totalAmount: subscriptionAmount ?? 0,
-                            customerName: user?.firstName
+                    }}
+                />
 
-                        }}
-                    />
-                )
 
             }
         </Box>
@@ -251,3 +251,5 @@ const MatchesScreen = () => {
 }
 
 export default MatchesScreen;
+
+

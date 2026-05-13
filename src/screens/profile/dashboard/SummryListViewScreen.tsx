@@ -177,7 +177,7 @@ const SummryListViewScreen = (props: any) => {
                             renderItem={({ item }) => (
                                 <HStack className="justify-between items-center p-4 border-b border-outline-100 bg-white">
                                     <Pressable className="flex-1" onPress={() => {
-                                        navigation.navigate('ProfileDetail', { profile_id: item.profile_id })
+                                        navigation.navigate('ProfileDetail', { profile_id: item.profile_id, module: 'summary' })
                                     }}>
                                         <HStack space="lg" className="items-center">
                                             <Avatar size="xl">

@@ -86,53 +86,63 @@ const DocumentSummary = () => {
 
         const sourceUrl = `${API_BASE_URL_DEV_DMS}/${file.file_name}`;
         const extension = file.extension.toLowerCase();
-        // Create a safe local path
-        const sanitizedFileName = file?.original_name.replace(/\s+/g, '_');
-        const localPath = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${sanitizedFileName}`;
-        try {
-            // 1. Download the file via Blob-Util
-            const res = await ReactNativeBlobUtil.config({
-                path: decodeURI(localPath),
-                fileCache: true,
 
-            }).fetch('GET', sourceUrl);
+        // 1. Create a unique, safe local path
+        // Using file_id or a unique filename is safer than original_name to avoid collisions
+        const sanitizedFileName = `${file.file_id}_${file.original_name.replace(/\s+/g, '_')}`;
+        const localPath = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${sanitizedFileName}`;
+
+        try {
+            // 2. Check if the file already exists locally
+            const exists = await ReactNativeBlobUtil.fs.exists(localPath);
+
+            let finalPath = localPath;
+
+            if (!exists) {
+                // 3. Only download if it doesn't exist
+                console.log("File not found locally. Downloading...");
+                const res = await ReactNativeBlobUtil.config({
+                    path: localPath, // Direct path to save
+                    fileCache: true,
+                }).fetch('GET', sourceUrl);
+                finalPath = res.path();
+            } else {
+                console.log("File exists locally. Opening from cache.");
+            }
 
             setDefaultLoading(false);
 
-            // 2. Hybrid Decision Logic
+            // 4. Formatting path for platform specific viewers
+            const platformPath = Platform.OS === 'android' ? `file://${finalPath}` : finalPath;
+
+            // 5. Hybrid Decision Logic
             const internalViewable = ['pdf'];
 
             if (internalViewable.includes(extension)) {
-                // Navigate to your Hybrid Viewer Screen
-                let localpath = Platform.OS === 'android' ? `file://${res.path()}` : res.path()
-                const decodedPath = localpath; // Converts %20 back to spaces
-
                 navigation.navigate('Main', {
                     screen: 'DocumentViewer',
                     params: {
                         fileUrl: sourceUrl,
-                        // Ensure the path is a clean string and has the file protocol
-                        localPath: decodedPath,
+                        localPath: platformPath,
                         fileName: file.original_name,
                         mimeType: file.mime_type
                     }
-                })
-
+                });
             } else if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
-                //if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
-                // If it's just an image, iOS preview is still best
                 if (Platform.OS === 'ios') {
-                    ReactNativeBlobUtil.ios.previewDocument(res.path());
+                    ReactNativeBlobUtil.ios.previewDocument(finalPath);
                 } else {
-                    ReactNativeBlobUtil.android.actionViewIntent(res.path(), 'image/*');
+                    ReactNativeBlobUtil.android.actionViewIntent(finalPath, 'image/*');
                 }
             } else {
-                // Fallback for archives/others
-                ReactNativeBlobUtil.android.actionViewIntent(res.path(), file.mime_type || 'application/octet-stream');
+                // Fallback for other file types
+                ReactNativeBlobUtil.android.actionViewIntent(finalPath, file.mime_type || 'application/octet-stream');
             }
+
         } catch (err) {
             setDefaultLoading(false);
-            Alert.alert("Error", "Could not process this file.");
+            console.error("Preview Error:", err);
+            Alert.alert("Error", "Could not process or download this file.");
         }
     };
     const handledelete = async (fileid: any) => {

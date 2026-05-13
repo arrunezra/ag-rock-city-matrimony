@@ -23,7 +23,8 @@ import { useNavigation } from '@react-navigation/native';
 
 export default function ProfileDetailScreen({ route }: any) {
     const { user } = useAuth();
-    const { profile_id } = route.params; // Data passed from the list
+    const { profile_id, module } = route.params; // Data passed from the list
+
     const { showToast } = useAppToast();
     const navigation = useNavigation<any>();
 
@@ -72,12 +73,23 @@ export default function ProfileDetailScreen({ route }: any) {
 
     useEffect(() => {
         fetchProfileDetails()
-        // const timer = setTimeout(() => {
-        //     setIsReady(true);
-        // }, 50);
+        const logProfileView = async () => {
+            try {
+                await profileService.setViewLog({
+                    viewed_profile_id: profile_id
+                });
 
-        // return () => clearTimeout(timer);
+            } catch (e) {
+                console.log("View log failed, but don't interrupt user experience");
+            }
+        };
+        if (module == 'summary' || module == 'match') {
+            console.log('module', module, profile_id);
+            logProfileView();
+        }
     }, []);
+
+
 
     if (!isReady) {
         return <ProfileSkeleton />;
