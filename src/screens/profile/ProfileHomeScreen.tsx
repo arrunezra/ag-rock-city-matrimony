@@ -18,11 +18,11 @@ const ProfileHomeScreen = () => {
                         user={user}
                         onAddPhoto={() => navigation.navigate('ShowProfileGallery')}
                         onEdit={() => navigation.navigate('ProfileEdit')}
-                        onPayment={() => {
+                        onPayment={(sub_amt: any) => {
                             navigation.navigate('Checkout', {
-                                totalAmount: 100, // ₹50.00 in paise
-                                orderId: 'order_987654321', // Generated from your backend
-                                customerName: 'Arun'
+                                totalAmount: sub_amt, // ₹50.00 in paise
+
+                                customerName: user?.employeeId
                             });
                         }}
                     />

@@ -82,7 +82,7 @@ const SectionHeader = ({ title }: { title: string }) => (
 );
 
 const PartnerPreferencesView = ({ data, onEditField }: any) => {
-    //console.log('PartnerPreferencesView dat====', data);
+    console.log('PartnerPreferencesView dat====', data);
 
     return (
 

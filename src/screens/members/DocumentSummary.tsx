@@ -26,6 +26,7 @@ import { MotiView } from 'moti';
 import LinearGradient from 'react-native-linear-gradient';
 import { AddIcon, Icon } from '@/src/components/common/IconUI';
 import { useAppToast } from '@/src/context/ToastContext';
+import { Screen } from 'react-native-screens';
 
 const DocumentSummary = () => {
     const navigation = useNavigation<any>();
@@ -318,8 +319,9 @@ const DocumentSummary = () => {
                 <TouchableOpacity
                     activeOpacity={0.9}
                     onPress={() =>
-                        navigation.navigate("UserDocumentUpload"
-                        )
+                        navigation.navigate("Main", {
+                            screen: "UserDocumentUpload"
+                        })
                     }
                     // Added rounded-full and overflow-hidden here
                     className="h-20 w-20 rounded-full overflow-hidden shadow-2xl shadow-cyan-500/50"

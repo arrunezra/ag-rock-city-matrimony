@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { FlatList, ActivityIndicator, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { FlatList, ActivityIndicator, ScrollView, Pressable, KeyboardAvoidingView, Platform, TouchableOpacity, View, StyleSheet, Dimensions } from 'react-native';
 import { Box, Spinner, Center, HStack, Text } from '@/src/components/common/GluestackUI';
 import api from '@/src/api/api';
 import { ProfileCard } from './ProfileCard';
@@ -21,22 +21,29 @@ import {
 import { useIsFocused } from '@react-navigation/native'; // Add this import
 import _ from 'lodash';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import LinearGradient from 'react-native-linear-gradient';
+import { ShieldCheck } from '@/src/components/common/IconUI';
+import { Crown } from 'lucide-react-native';
+import PremiumUnlockScreen from './PremiumUnlockScreen';
 const MatchesScreen = () => {
 
     const { user } = useAuth();
     const { showToast } = useAppToast();
     const isFocused = useIsFocused(); // This hook returns true/false when focus changes
-
+    const { width } = Dimensions.get('window');
     const abortControllerRef = useRef<AbortController | null>(null);
     const navigation = useNavigation<any>();
     const [profiles, setProfiles] = useState<any[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [subscriptionAmount, setSubscriptionAmount] = useState(0);
+
     const [refreshing, setRefreshing] = useState(false);
     const [selectedFilter, setSelectedFilter] = useState('New');
     const [showFilters, setShowFilters] = useState(false); // Fix for More Match click
-
+    const [isSubscribed, setisSubscribed] = useState(false);
     const [filters, setFilters] = useState({
         gender: '',
         marital_status: '',
@@ -78,7 +85,14 @@ const MatchesScreen = () => {
                 if (shouldRefresh || response?.message === "Record not found") {
                     setProfiles([]);
                 }
+                // Even on failure, if the server tells us they aren't subscribed, update UI
+
             }
+            if (pageNumber === 1 && shouldRefresh) {
+                setisSubscribed(!!response?.is_subscribed);
+                setSubscriptionAmount(response?.subscription_amount ?? 0);
+            }
+
         } catch (error: any) {
             if (error.name === 'AbortError' || error.message === 'canceled') return;
             console.error("Fetch Error:", error);
@@ -87,6 +101,8 @@ const MatchesScreen = () => {
             setRefreshing(false);
         }
     };
+
+    //#region CaptureProtection 
     useFocusEffect(
         useCallback(() => {
             // Security logic
@@ -105,7 +121,7 @@ const MatchesScreen = () => {
         }, [selectedFilter]) // Only re-run if the tab changes. 
         // Don't include 'filters' if you don't want it to reset while typing.
     );
-
+    //#endregion
 
 
     const handleRefresh = useCallback(async () => {
@@ -176,41 +192,61 @@ const MatchesScreen = () => {
     return (
 
         <Box className="flex-1 bg-background-50">
-            {/* 1. Header / Tabs (Height determined by content) */}
-            <Box className="pt-4 bg-white border-b border-outline-50">
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    <HStack className="gap-2 pb-4 px-4">
-                        {['New', 'My Match', 'More Match'].map((filter: any) => (
-                            <Pressable
-                                key={filter}
-                                onPress={() => filter === 'More Match' ? setShowFilters(true) : setSelectedFilter(filter)}
-                                className={`px-5 py-2.5 rounded-full border shadow-sm ${selectedFilter === filter ? 'bg-primary-500 border-primary-500' : 'bg-white border-outline-200'
-                                    }`}
-                            >
-                                <Text className={`text-sm font-bold ${selectedFilter === filter ? 'text-white' : 'text-typography-600'}`}>
-                                    {filter}
-                                </Text>
-                            </Pressable>
-                        ))}
-                    </HStack>
-                </ScrollView>
-            </Box>
+            {isSubscribed ?
+                <Box className="flex-1 bg-background-50">
+                    {/* 1. Header / Tabs (Height determined by content) */}
+                    <Box className="pt-4 bg-white border-b border-outline-50">
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            <HStack className="gap-2 pb-4 px-4">
+                                {['New', 'My Match', 'More Match'].map((filter: any) => (
+                                    <Pressable
+                                        key={filter}
+                                        onPress={() => filter === 'More Match' ? setShowFilters(true) : setSelectedFilter(filter)}
+                                        className={`px-5 py-2.5 rounded-full border shadow-sm ${selectedFilter === filter ? 'bg-primary-500 border-primary-500' : 'bg-white border-outline-200'
+                                            }`}
+                                    >
+                                        <Text className={`text-sm font-bold ${selectedFilter === filter ? 'text-white' : 'text-typography-600'}`}>
+                                            {filter}
+                                        </Text>
+                                    </Pressable>
+                                ))}
+                            </HStack>
+                        </ScrollView>
+                    </Box>
 
-            {/* 2. Content Area (Fills the entire remaining screen) */}
-            <Box className="flex-1">
-                {renderContent()}
-            </Box>
+                    {/* 2. Content Area (Fills the entire remaining screen) */}
+                    <Box className="flex-1">
+                        {renderContent()}
+                    </Box>
 
-            <SearchActionsheet
-                isOpen={showFilters}
-                onClose={() => setShowFilters(false)}
-                initialFilters={filters}
-                onApply={(newFilters: any) => {
-                    setFilters(newFilters);
-                    setShowFilters(false);
-                }}
-            />
+                    <SearchActionsheet
+                        isOpen={showFilters}
+                        onClose={() => setShowFilters(false)}
+                        initialFilters={filters}
+                        onApply={(newFilters: any) => {
+                            setFilters(newFilters);
+                            setShowFilters(false);
+                        }}
+                    />
+                </Box> : (
+                    /* Render the Premium Glass Card UI we built earlier here */
+                    /* This way, the user stays on the 'Matches' tab but sees the 'Unlock' UI */
+                    <PremiumUnlockScreen onPay={() => navigation.navigate('Checkout', {
+                        totalAmount: subscriptionAmount ?? 0,
+                        customerName: user?.firstName
+                    })}
+                        values={{
+
+                            totalAmount: subscriptionAmount ?? 0,
+                            customerName: user?.firstName
+
+                        }}
+                    />
+                )
+
+            }
         </Box>
+
     );
 }
 

@@ -40,6 +40,7 @@ import DocumentViewer from "../screens/common/DocumentViewer";
 import StaffInboxScreen from "../screens/staff/StaffInboxScreen";
 import StaffDocumentSummary from "../screens/staff/StaffDocumentSummary";
 import CheckoutScreen from "../screens/Razorpay/CheckoutScreen";
+import PremiumUnlockScreen from "../screens/profile/PremiumUnlockScreen";
 
 
 const Stack = createNativeStackNavigator();
@@ -55,8 +56,6 @@ export const ROLE_DRAWER_CONFIG: Record<string, any[]> = {
     // { name: "MyPhotos", component: MyPhotos, options: { title: "My Photos" } }, Dont delete 
     { name: "PartnerPreferences", component: PartnerPreferences, options: { title: "Partner Preferences" } },
     { name: "DocumentSummary", component: DocumentSummary, options: { title: "My Files" } },
-
-    // { name: "UserDocumentUpload", component: UserDocumentUpload, options: { title: "My Documents" } },
   ],
   staff: [
     { name: "BaptismRecords", component: BaptismScreen, options: { title: "Baptism Records" } },
@@ -114,6 +113,7 @@ const SHARED_STACKS = (role: string) => (
         <Stack.Screen name="ContactPrivacy" component={ContactPrivacyScreen} options={{ title: 'Contact Privacy' }} />
         <Stack.Screen name="BlockedUsersScreen" component={BlockedUsersScreen} options={{ title: 'Blocked Profile' }} />
         <Stack.Screen name="SummryListView" component={SummryListViewScreen} options={{ title: 'Profile Summary' }} />
+        <Stack.Screen name="UserDocumentUpload" component={UserDocumentUpload} options={{ title: 'My Documents' }} />
 
 
 
@@ -128,6 +128,8 @@ const SHARED_STACKS = (role: string) => (
       options={{ headerShown: false }}
     />
     <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Payment' }} />
+    <Stack.Screen name="PremiumUnlock" component={PremiumUnlockScreen} options={{ title: 'Payment' }} />
+
   </Stack.Group>
 );
 

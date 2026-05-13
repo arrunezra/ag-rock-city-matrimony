@@ -214,7 +214,7 @@ export const profileService = {
   },
   fetchSummaryDetails: async (body: any) => {
     try {
-      console.log('body', body)
+      //console.log('body', body)
       const response = await api.post(`/profile/get_profile_home_summary.php`, body);
       return response.data;
     } catch (error: any) {

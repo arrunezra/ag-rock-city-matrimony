@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, VStack, HStack, Text, Heading, Avatar, AvatarImage, AvatarFallbackText, Center } from '@/src/components/common/GluestackUI';
-import { Pressable, TouchableOpacity } from 'react-native';
+import { Pressable, TouchableOpacity, View } from 'react-native';
 import { AddIcon, CheckIcon, EditIcon, Icon, StarIcon } from '@/components/ui/icon';
 import { API_BASE_URL_DEV_Profiles_Thumbs } from '@/src/utils/environment';
 import { getExtension } from '@/src/utils/common';
 import LinearGradient from 'react-native-linear-gradient';
-import { Briefcase, Camera, CheckCircle, CheckCircle2, ChevronRight, Edit3, Eye, GraduationCap, Heart, HeartHandshake, MapPin, Share2, Star, TrendingUp, Users, Zap } from 'lucide-react-native';
+import { Briefcase, Camera, CheckCircle, CheckCircle2, ChevronRight, CreditCard, Edit3, Eye, GraduationCap, Heart, HeartHandshake, MapPin, Share2, Star, TrendingUp, Users, Zap } from 'lucide-react-native';
 import profileService from '@/src/services/profileService';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
@@ -54,7 +54,7 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto, onPayment }: any) => {
     const fullName = user?.firstName
         ? `${user.firstName} ${user.lastName || ''}`.trim()
         : "Guest User";
-    console.log('fullName', fullName)
+
     return (
         <VStack className="px-5 py-8 bg-[#f8fafc] gap-8">
             {/* Profile Card Overlay */}
@@ -107,40 +107,42 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto, onPayment }: any) => {
             </HStack>
 
             {/* Action Buttons Row */}
-            <HStack space="md" className="w-full">
-                <Pressable onPress={onEdit} className="flex-1">
-                    {({ pressed }) => (
-                        <Box
-                            className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden"
-                            style={{ transform: [{ scale: pressed ? 0.97 : 1 }] }}
-                        >
-                            <HStack space="sm" className="justify-center items-center py-4">
-                                <Icon as={Edit3} size="sm" className="text-slate-600" />
-                                <Text className="font-bold text-slate-700">Edit Profile</Text>
-                            </HStack>
+            <HStack space="md" className="w-full px-4 items-center">
 
-                        </Box>
+                {/* Edit Profile - Secondary Style */}
+                <TouchableOpacity
+                    onPress={onEdit}
+                    activeOpacity={0.7}
+                    className="flex-1 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
+                >
+                    <View className="h-14 flex-row items-center justify-center px-4">
+                        {/* Using a darker slate for the icon and text to ensure visibility */}
+                        <Edit3 size={18} color="#475569" strokeWidth={2.5} />
+                        <Text className="ml-2 font-bold text-slate-600 text-sm">
+                            Edit Profile
+                        </Text>
+                    </View>
+                </TouchableOpacity>
 
-
-                    )}
-                </Pressable>
-                <Pressable onPress={onPayment} className="flex-1">
-                    {({ pressed }) => (
-                        <Box
-                            className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden"
-                            style={{ transform: [{ scale: pressed ? 0.97 : 1 }] }}
-                        >
-                            <HStack space="sm" className="justify-center items-center py-4">
-                                <Icon as={Edit3} size="sm" className="text-slate-600" />
-                                <Text className="font-bold text-slate-700">Payment</Text>
-                            </HStack>
-
-                        </Box>
-
-
-                    )}
-                </Pressable>
-
+                {/* Pay Securely - Primary Style */}
+                <TouchableOpacity
+                    onPress={() => onPayment(summary?.subscription_amount ?? 0)}
+                    activeOpacity={0.9}
+                    style={{ elevation: 8 }}
+                    className="flex-[1.5] overflow-hidden rounded-2xl shadow-lg shadow-emerald-500/40"
+                >
+                    <LinearGradient
+                        colors={['#10b981', '#059669']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        className="h-14 flex-row items-center justify-center px-4"
+                    >
+                        <CreditCard size={18} color="white" strokeWidth={2.5} />
+                        <Text className="ml-2 text-white font-black text-sm tracking-wide uppercase">
+                            Pay Securely
+                        </Text>
+                    </LinearGradient>
+                </TouchableOpacity>
 
             </HStack>
 
@@ -327,7 +329,7 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto, onPayment }: any) => {
 
 
             </VStack>
-        </VStack>
+        </VStack >
     );
 };
 

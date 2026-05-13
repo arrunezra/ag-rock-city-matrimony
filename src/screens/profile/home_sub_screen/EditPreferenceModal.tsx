@@ -38,10 +38,16 @@ const EditPreferenceModal = ({ isOpen, onClose, fieldType, currentData, onSave, 
             setSearch(''); // Reset search when opening
 
             if (fieldType === 'age') {
-                setTempValue([currentData.min_age, currentData.max_age]);
+                let min_age = currentData.min_age == 'all' ? 18 : currentData.min_age;
+                let max_age = currentData.max_age == 'all' ? 50 : currentData.max_age;
+
+                setTempValue([min_age, max_age]);
             }
             else if (fieldType === 'height') {
-                setTempValue([parseFloat(currentData.min_height), parseFloat(currentData.max_height)]);
+                let min_height = currentData.min_height == 'all' ? 130 : currentData.min_height;
+                let max_height = currentData.max_height == 'all' ? 230 : currentData.max_height;
+
+                setTempValue([parseFloat(min_height), parseFloat(max_height)]);
             }
             else if (fieldType === 'marital') {
                 setTempValue(currentData.marital_status || []);

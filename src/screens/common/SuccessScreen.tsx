@@ -3,7 +3,7 @@ import { Animated, Easing } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { Box, Center, HStack, Text, VStack } from '@/src/components/common/GluestackUI';
 
-export default function LoadingScreen() {
+export default function SuccessScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
 
