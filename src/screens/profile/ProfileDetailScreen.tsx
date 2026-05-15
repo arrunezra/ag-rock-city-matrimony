@@ -52,7 +52,8 @@ export default function ProfileDetailScreen({ route }: any) {
             if (res.success) {
                 let items = {
                     ...res.data,
-                    images: res.images
+                    images: res.images,
+                    subscription_amount: res?.subscription_amount,
                 }
                 setIsLiked(res.data?.is_liked_by_me);
                 //console.log('items==', items);
@@ -83,7 +84,7 @@ export default function ProfileDetailScreen({ route }: any) {
                 console.log("View log failed, but don't interrupt user experience");
             }
         };
-        if (module == 'summary' || module == 'match') {
+        if ((user?.role == 'member') && (module == 'summary' || module == 'match')) {
             console.log('module', module, profile_id);
             logProfileView();
         }
@@ -391,9 +392,8 @@ export default function ProfileDetailScreen({ route }: any) {
     }
     const handlePaymentUpdate = () => {
         navigation.navigate('Checkout', {
-            totalAmount: 100, // ₹50.00 in paise
-            orderId: 'order_978697050', // Generated from your backend
-            customerName: 'Arun ezra'
+            totalAmount: data?.subscription_amount ?? 0, // ₹50.00 in paise 
+            customerName: data?.full_name ?? ""
         });
     }
     const handleVerifyPhoto = () => {
@@ -1412,7 +1412,7 @@ export default function ProfileDetailScreen({ route }: any) {
                                         </Button>
 
                                         {/* Payment Button */}
-                                        <Button
+                                        {/* {data?.has_active_subscription == 0 && <Button
                                             className="flex-1 bg-emerald-500 rounded-2xl h-12 shadow-sm active:bg-emerald-600"
                                             onPress={() => handlePaymentUpdate()}
                                         >
@@ -1422,6 +1422,7 @@ export default function ProfileDetailScreen({ route }: any) {
                                                 <ButtonText className="text-white font-bold text-sm">Payment</ButtonText>
                                             </HStack>
                                         </Button>
+                                        } */}
                                     </HStack>
 
                                     {/* Main Add Details Button */}

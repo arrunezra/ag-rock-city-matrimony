@@ -27,11 +27,14 @@ import { AddIcon, Icon } from '@/src/components/common/IconUI';
 import { useAppToast } from '@/src/context/ToastContext';
 import LoadingScreen from '@/src/screens/common/LoadingScreen';
 import NotFoundScreen from '../common/NotFoundScreen';
+import { useAlert } from '@/src/context/AlertContext';
 
 const StaffDocumentSummary = ({ route }: any) => {
     const { profile_id } = route.params;
     const navigation = useNavigation<any>();
     const { showToast } = useAppToast();
+    const { showAlert, hideAlert } = useAlert();
+
     const [files, setFiles] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -213,14 +216,20 @@ const StaffDocumentSummary = ({ route }: any) => {
         }
     };
 
-    const handledelete = async (fileid: any) => {
+    const confirmDelete = async (fileid: any) => {
         try {
             setLoading(true);
             const uploadData = new FormData();
+            // uploadData.append('file', {
+            //     uri: Platform.OS === 'ios' ? result.uri.replace('file://', '') : result.uri,
+            //     type: result.type || 'application/octet-stream',
+            //     name: result.name,
+            // });
             uploadData.append('action', 'dms_delete');
             uploadData.append('userid', '1');
             uploadData.append('module', 'profile');
             uploadData.append('file_id', fileid);
+            uploadData.append('profile_id', profile_id);
 
             const token = await AsyncStorage.getItem('accessToken');
             const response = await api.post('/files/dms_file_upload.php', uploadData, {
@@ -243,6 +252,22 @@ const StaffDocumentSummary = ({ route }: any) => {
             setLoading(false);
         }
     }
+    const handledelete = async (fileid: any) => {
+
+        showAlert({
+            type: 'warning',
+            title: 'Delete Profile?',
+            message: 'Are you sure you want to delete your profile?',
+            confirmText: "Delete",
+            onConfirm: async () => {
+                hideAlert();
+                confirmDelete(fileid);
+
+            }
+        });
+
+
+    }
     const handleReplace = async (existingGuid: any) => {
         try {
             const [result] = await pick({ type: [types.allFiles] });
@@ -258,6 +283,7 @@ const StaffDocumentSummary = ({ route }: any) => {
             uploadData.append('action', 'dms_replace');
             uploadData.append('module', 'profile');
             uploadData.append('userid', "1");
+
             uploadData.append('file_id', existingGuid);
 
             const token = await AsyncStorage.getItem('accessToken');

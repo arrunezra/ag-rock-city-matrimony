@@ -19,6 +19,8 @@ ALTER VIEW V_Profile as (
     ,GetLookupValues(5, p.country,'') AS country_name
     ,p.updated_at
     ,p.is_visible
+    ,p.has_active_subscription
+    ,p.last_payment_date 
     -- Background Details
     ,pb.religion
     ,GetLookupValues(1, pb.religion,'')  AS religion_name

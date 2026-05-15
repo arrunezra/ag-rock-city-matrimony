@@ -24,7 +24,7 @@ export function RoleBasedNavigator({ userRole, user, logout }: any) {
         <Drawer.Navigator
             drawerContent={(props) => <CustomDrawerContent {...props} userRole={userRole} user={user} logout={logout} />}
         >
-            <Drawer.Screen name="Main" options={{ title: userRole === 'admin' ? 'Admin Dashboard' : userRole === 'staff' ? 'Dashboard' : 'My Profile' }}>
+            <Drawer.Screen name="Main" options={{ headerShown: false, title: userRole === 'admin' ? 'Admin Dashboard' : userRole === 'staff' ? 'Dashboard' : 'My Profile' }}>
                 {() => <DynamicStackRouter userRole={userRole} logout={logout} />}
             </Drawer.Screen>
 

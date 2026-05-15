@@ -6,10 +6,47 @@ import { Box, VStack, HStack, Text, Divider, Heading } from '@/src/components/co
 import { ChevronRightIcon, Icon } from '@/src/components/common/IconUI';
 import LinearGradient from 'react-native-linear-gradient';
 import { useAuth } from '@/src/context/AuthContext';
+import profileService from '@/src/services/profileService';
+import { useAppToast } from '@/src/context/ToastContext';
+import { useAlert } from '@/src/context/AlertContext';
 
 export default function SettingsScreen({ navigation }: any) {
 
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const { showToast } = useAppToast();
+  const { showAlert, hideAlert } = useAlert();
+
+  const confirmDelete = async () => {
+
+    try {
+      const res = await profileService.handle_member_actions({ action: 'accdelete', 'user_id': user?.userid });
+      if (res && res.success) {
+
+        showToast('Your profile has been successfully deleted', "success");
+        logout();
+      } else {
+        showToast("Error", `Something wnet wrong`, "error");
+
+      }
+    } catch (e) {
+    }
+  }
+
+  const onDeleteAccount = async () => {
+    showAlert({
+      type: 'warning',
+      title: 'Delete Profile?',
+      message: 'Are you sure you want to delete your profile?',
+      confirmText: "Delete",
+      onConfirm: async () => {
+        hideAlert();
+        confirmDelete();
+
+      }
+    });
+
+  }
+
   const SettingsGradientCard = ({ title, icon, children, gradientColors }: any) => (
     <Box className="mb-6 px-5">
       <LinearGradient
@@ -134,7 +171,7 @@ export default function SettingsScreen({ navigation }: any) {
 
         {/* Danger Zone */}
         <Box className="px-5 mt-4">
-          <Pressable className="bg-red-50 rounded-[32px] p-6 border border-red-100 items-center">
+          <Pressable onPress={onDeleteAccount} className="bg-red-50 rounded-[32px] p-6 border border-red-100 items-center">
             <HStack space="md" className='items-center '>
               <Icon as={Trash2} size="sm" className="text-red-500" />
               <Text className="text-red-600 font-bold">Delete Account Permanently</Text>

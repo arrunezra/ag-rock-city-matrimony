@@ -15,7 +15,7 @@ import { Search, SlidersHorizontal, Trash2, XCircle } from 'lucide-react-native'
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native'; // Added navigation
+import { useFocusEffect, useNavigation } from '@react-navigation/native'; // Added navigation
 
 import api from '@/src/api/api';
 import { API_BASE_URL_DEV_DMS } from '@/src/utils/environment';
@@ -27,10 +27,13 @@ import LinearGradient from 'react-native-linear-gradient';
 import { AddIcon, Icon } from '@/src/components/common/IconUI';
 import { useAppToast } from '@/src/context/ToastContext';
 import { Screen } from 'react-native-screens';
+import { useAlert } from '@/src/context/AlertContext';
 
 const DocumentSummary = () => {
     const navigation = useNavigation<any>();
     const { showToast } = useAppToast();
+    const { showAlert, hideAlert } = useAlert();
+
     const [files, setFiles] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -40,8 +43,9 @@ const DocumentSummary = () => {
     const [defaultLoading, setDefaultLoading] = useState(false);
 
     const fetchFiles = useCallback(async (pageNum = 1, isSearching = false, currentSearch = searchQuery) => {
-        if (loading) return;
-        if (pageNum > 1 && !hasMore && !isSearching) return;
+        // If it's a background refresh from navigation, we might want to bypass the 'loading' guard
+        // or ensure loading is false before we navigate away.
+        if (loading && pageNum !== 1) return;
 
         setLoading(true);
         try {
@@ -53,6 +57,7 @@ const DocumentSummary = () => {
                 action: 'staff'
             };
             const res = await api.post('/files/profile_myfiles_summary.php', payload);
+
             if (res.data.success) {
                 setFiles((prev) => pageNum === 1 ? res.data.files : [...prev, ...res.data.files]);
                 setHasMore(res.data.hasMore);
@@ -66,8 +71,15 @@ const DocumentSummary = () => {
         }
     }, [hasMore, loading, searchQuery]);
 
-    useEffect(() => { fetchFiles(1, false, ""); }, []);
+    useFocusEffect(
+        useCallback(() => {
+            // This runs every time the screen is focused
+            fetchFiles(1, true, searchQuery);
 
+            // Optional: Reset page to 1 if you want to restart pagination
+            setPage(1);
+        }, [searchQuery]) // Re-run if searchQuery changes while focused
+    );
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
             fetchFiles(1, true, searchQuery);
@@ -145,7 +157,7 @@ const DocumentSummary = () => {
             Alert.alert("Error", "Could not process or download this file.");
         }
     };
-    const handledelete = async (fileid: any) => {
+    const confirmDelete = async (fileid: any) => {
         try {
             setLoading(true);
             const uploadData = new FormData();
@@ -179,6 +191,22 @@ const DocumentSummary = () => {
         } finally {
             setLoading(false);
         }
+    }
+    const handledelete = async (fileid: any) => {
+
+        showAlert({
+            type: 'warning',
+            title: 'Delete Profile?',
+            message: 'Are you sure you want to delete your profile?',
+            confirmText: "Delete",
+            onConfirm: async () => {
+                hideAlert();
+                confirmDelete(fileid);
+
+            }
+        });
+
+
     }
     const handleReplace = async (existingGuid: any) => {
         try {

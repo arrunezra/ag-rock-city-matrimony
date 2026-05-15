@@ -41,6 +41,8 @@ import StaffInboxScreen from "../screens/staff/StaffInboxScreen";
 import StaffDocumentSummary from "../screens/staff/StaffDocumentSummary";
 import CheckoutScreen from "../screens/Razorpay/CheckoutScreen";
 import PremiumUnlockScreen from "../screens/profile/PremiumUnlockScreen";
+import StaffProfileSummaryView from "../screens/profile/StaffProfileSummaryView";
+import PaymentScreen from "../screens/profile/InboxScreen";
 
 
 const Stack = createNativeStackNavigator();
@@ -58,7 +60,7 @@ export const ROLE_DRAWER_CONFIG: Record<string, any[]> = {
     { name: "DocumentSummary", component: DocumentSummary, options: { title: "My Files" } },
   ],
   staff: [
-    { name: "BaptismRecords", component: BaptismScreen, options: { title: "Baptism Records" } },
+    { name: "BaptismRecords", component: BaptismScreen, options: { title: "Documents" } },
   ],
 };
 
@@ -67,7 +69,7 @@ const TAB_CONFIG = {
   admin: [
     { name: "Dashboard", component: AdminDashboard, icon: HomeIcon, title: "Admin Home" },
     { name: "Profile", component: ProfileSummary, icon: HeartIcon, title: "Profile" },
-    { name: "Inbox", component: InboxScreen, icon: MessageCircleIcon, title: "Inbox" },
+    { name: "Payment", component: PaymentScreen, icon: MessageCircleIcon, title: "Payment Details" },
   ],
   staff: [
     { name: "Home", component: StaffDashboard, icon: HomeIcon, options: { title: "Staff Overview" } },
@@ -95,6 +97,8 @@ const SHARED_STACKS = (role: string) => (
         <Stack.Screen name="DMSUpload" component={DMSUploadScreen} />
         <Stack.Screen name="DMSSummary" component={DMSSummaryScreen} />
         <Stack.Screen name="StaffDocumentSummary" component={StaffDocumentSummary} options={{ title: 'Documents' }} />
+        <Stack.Screen name="staffProfileSummaryView" component={StaffProfileSummaryView} options={{ title: 'Profiles' }} />
+
 
 
 

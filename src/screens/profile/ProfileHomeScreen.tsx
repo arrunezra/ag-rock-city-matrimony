@@ -20,9 +20,8 @@ const ProfileHomeScreen = () => {
                         onEdit={() => navigation.navigate('ProfileEdit')}
                         onPayment={(sub_amt: any) => {
                             navigation.navigate('Checkout', {
-                                totalAmount: sub_amt, // ₹50.00 in paise
-
-                                customerName: user?.employeeId
+                                totalAmount: sub_amt, // ₹50.00 in paise 
+                                customerName: user?.firstName
                             });
                         }}
                     />

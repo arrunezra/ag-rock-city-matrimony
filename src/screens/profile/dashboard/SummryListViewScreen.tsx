@@ -188,24 +188,51 @@ const SummryListViewScreen = (props: any) => {
                                             <VStack className="flex-1" space="xs">
                                                 <Text size="xl" className="font-bold text-typography-900">{item.full_name}</Text>
                                                 {/* Dynamic Sub-text based on Filter */}
-                                                <Text size="sm" className="text-typography-500">{item.city_name || config.subText}</Text>
+                                                <Text size="sm" className="text-typography-600">{item.city_name || config.subText}</Text>
                                             </VStack>
                                         </HStack>
                                     </Pressable>
 
-                                    {/* Dynamic Action Button */}
-                                    <Box className="ml-2">
-                                        <Pressable onPress={() => handleProfileAction(item.profile_id, item.full_name)}>
-                                            <LinearGradient
-                                                colors={config.buttonColors}
-                                                style={{ borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8, minWidth: 90, alignItems: 'center' }}
-                                            >
-                                                <Text className="text-white font-bold text-xs">
-                                                    {config.buttonText}
-                                                </Text>
-                                            </LinearGradient>
-                                        </Pressable>
-                                    </Box>
+                                    {/* 1. Show Date/Time ONLY for Profile Visitors */}
+                                    {config?.title == 'Profile Visitors' && (
+                                        <VStack className="items-end ml-2">
+                                            <Text size="xs" className="text-typography-700 font-bold">
+                                                {item.sub_text ?
+                                                    new Intl.DateTimeFormat('en-GB', {
+                                                        day: '2-digit',
+                                                        month: 'short',
+                                                        year: 'numeric'
+                                                    }).format(new Date(item.sub_text)).replace(/ /g, '-')
+                                                    : ''
+                                                }
+                                            </Text>
+                                            <Text size="xs" className="text-typography-500">
+                                                {item.sub_text ?
+                                                    new Date(item.sub_text).toLocaleTimeString([], {
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                        hour12: true
+                                                    }) : ''
+                                                }
+                                            </Text>
+                                        </VStack>
+                                    )}
+
+                                    {/* 2. Dynamic Action Button ONLY for other views (Liked/Connected) */}
+                                    {config?.title != 'Profile Visitors' && (
+                                        <Box className="ml-2">
+                                            <Pressable onPress={() => handleProfileAction(item.profile_id, item.full_name)}>
+                                                <LinearGradient
+                                                    colors={config.buttonColors}
+                                                    style={{ borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8, minWidth: 90, alignItems: 'center' }}
+                                                >
+                                                    <Text className="text-white font-bold text-xs">
+                                                        {config.buttonText}
+                                                    </Text>
+                                                </LinearGradient>
+                                            </Pressable>
+                                        </Box>
+                                    )}
                                 </HStack>
 
 

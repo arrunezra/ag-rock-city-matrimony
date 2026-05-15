@@ -122,3 +122,57 @@ export const getFilterConfig = (filter: string) => {
         buttonColors: ['#10b981', '#059669', '#047857']
     };
 };
+
+export const formatCurrency = (amount: string | number) => {
+
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 0,
+    }).format(Number(amount ?? 0));
+};
+
+export const getCurrentMonthYear = () => {
+    return new Intl.DateTimeFormat('en-US', {
+        month: 'long',
+        year: 'numeric'
+    }).format(new Date());
+};
+
+export const getFinancialYear = () => {
+    const today = new Date();
+    const currentMonth = today.getMonth(); // 0-11 (April is 3)
+    const currentYear = today.getFullYear();
+
+    // If current month is Jan, Feb, or March (0, 1, 2)
+    // The financial year is (CurrentYear - 1)
+    const fyStart = currentMonth < 3 ? currentYear - 1 : currentYear;
+
+    return `FY ${fyStart}`;
+};
+
+export const getDetailedFY = () => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const startYear = currentMonth < 3 ? today.getFullYear() - 1 : today.getFullYear();
+    const endYear = (startYear + 1).toString().slice(-2); // Gets '27' from 2027
+
+    return `FY ${startYear}-${endYear}`;
+};
+
+// Returns: FY 2026-27
+
+export const getCurrentYear = () => {
+    return new Date().getFullYear().toString();
+};
+
+// Usage: getCurrentYear() -> "2026"
+
+export const CHURCH_COLORS = [
+    '#6366f1', // Indigo
+    '#10b981', // Emerald
+    '#f59e0b', // Amber
+    '#3b82f6', // Blue
+    '#8b5cf6', // Violet
+    '#f43f5e', // Rose
+];

@@ -144,8 +144,8 @@ const FavoritesScreen = () => {
                             ) : (
                                 // Inactive State for Matches
                                 <HStack className="py-2.5 items-center justify-center gap-2 rounded-full">
-                                    <Icon as={HeartIcon} color="#94a3b8" size="lg" />
-                                    <Text className="text-secondary-400 font-semibold text-sm">
+                                    <Icon as={HeartIcon} color="#181a1dff" size="lg" />
+                                    <Text className="text-secondary-400 font-semibold text-sm " style={{ color: "#181a1dff" }}>
                                         {"Connected"}
                                     </Text>
                                 </HStack>

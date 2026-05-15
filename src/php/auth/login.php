@@ -29,7 +29,9 @@ try {
 					,p.gender
                     ,pf.file_name 
                     ,p.city
+					,p.is_visible
                     ,u.IsVerified
+					
             FROM users u 
             LEFT JOIN profiles p ON u.userid = p.userid 
             LEFT JOIN profile_files pf ON pf.file_id = (
@@ -40,7 +42,7 @@ try {
                 ORDER BY is_profile_pic DESC, created_at DESC 
                 LIMIT 1
             )
-            WHERE u.phoneNumber = ? OR u.email = ?";
+            WHERE u.IsActive = 1 AND  (u.phoneNumber = ? OR u.email = ?)";
 
     $stmt = $db->prepare($sql);
     $stmt->execute([$data->phoneNumber, $data->phoneNumber]);
@@ -55,7 +57,8 @@ try {
             "email" => $user['email'],
             "role" => $user['role'],
             "profile_id" => $user['profile_id'],
-			"gender" => $user['gender']
+			"gender" => $user['gender'],
+			"is_visible" => $user['is_visible']
         ];
         $accessToken = JWT::encode($payload, 3600);
 
@@ -86,6 +89,7 @@ try {
                 "city" => $user['city'] ?? '',
                 "profile_id" => $user['profile_id'] ?? '',
                 "isVerified" => $user['IsVerified'] ?? 0,
+				"is_visible" => $user['is_visible']
             ]
         ]);
     } else {

@@ -2,6 +2,7 @@
 require_once '../helpers/AuthMiddleware.php'; 
 require_once '../config/database.php';
 require_once __DIR__ . '/../error_log_config.php';  
+require_once '../config/config.php';
 
 try {
         $token = AuthMiddleware::check();
@@ -84,7 +85,8 @@ try {
                     ,p.IsActive
                     ,p.IsVerified
                     ,p.disability
-
+                    ,p.has_active_subscription
+                    ,p.last_payment_date 
                     ,IF(l.id IS NULL, 0, 1) AS is_liked_by_me  
                 FROM 
                     V_Profile p
@@ -130,12 +132,14 @@ try {
 
         // 4. Fetch all results
         $images = $statsStmt->fetchAll(PDO::FETCH_ASSOC);
-	
+		$amount = Config::get('subscription_amount');
+
         if ($profile) {
             echo json_encode([
                 "success" => true,
                 "data" => $profile,
-                "images" => $images
+                "images" => $images,
+                "subscription_amount" => $amount
             ]);
         } else {
             http_response_code(404);
