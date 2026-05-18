@@ -18,10 +18,13 @@ import LinearGradient from 'react-native-linear-gradient';
 import HeaderSession from '../common/HeaderSession';
 import AdminServices from '@/src/services/AdminServices';
 import { CHURCH_COLORS, formatCurrency, getCurrentMonthYear, getCurrentYear, getDetailedFY, getFinancialYear } from '@/src/utils/common';
+import { useAuth } from '@/src/context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
 const AdminDashboard = ({ navigation }: any) => {
+    const { user } = useAuth();
+
     const [data, setData] = useState<any>(null);
 
 
@@ -51,41 +54,54 @@ const AdminDashboard = ({ navigation }: any) => {
     useEffect(() => {
         loadData();
     }, []);
-    const modules = React.useMemo(() => [
-        {
-            title: 'Staff Details',
-            count: data?.summary?.total_staff || 0, // Ensure your SP returns total_staff
-            trend: '+3 new requests',
-            icon: Users,
-            colors: ['#4facfe', '#00f2fe'],
-            screen: 'StaffListView'
-        },
-        {
-            title: 'Church Hub',
-            count: data?.summary?.total_churches || 0,
-            trend: '2 Pending Verify',
-            icon: ChurchIcon,
-            colors: ['#667eea', '#764ba2'],
-            screen: 'ChurchListView',
-        },
-        {
-            title: 'Profile Ops',
-            count: data?.summary?.total_profiles || 0,
-            trend: '45 Alerts',
-            icon: UserCheck,
-            colors: ['#0ba360', '#3cba92'],
-            screen: 'StaffProfileSummaryView'
-        },
-        {
-            title: 'Payment',
-            // Note: For currency, you might want to show formatted string or raw count
-            count: data?.summary?.overall_revenue || 0,
-            trend: '+15% Trend',
-            icon: CreditCard,
-            colors: ['#f83600', '#f9d423'],
-            screen: 'PaymentListView'
+    // Make sure 'userRole' is included in your component's dependencies
+    const modules = React.useMemo(() => {
+        // 1. Define all available grid modules exactly as before
+        const allModules = [
+            {
+                title: 'Staff Details',
+                count: data?.summary?.total_staff || 0,
+                trend: '+3 new requests',
+                icon: Users,
+                colors: ['#4facfe', '#00f2fe'],
+                screen: 'StaffListView'
+            },
+            {
+                title: 'Church Hub',
+                count: data?.summary?.total_churches || 0,
+                trend: '2 Pending Verify',
+                icon: ChurchIcon,
+                colors: ['#667eea', '#764ba2'],
+                screen: 'ChurchListView',
+            },
+            {
+                title: 'Profile Ops',
+                count: data?.summary?.total_profiles || 0,
+                trend: '45 Alerts',
+                icon: UserCheck,
+                colors: ['#0ba360', '#3cba92'],
+                screen: 'StaffProfileSummaryView'
+            },
+            {
+                title: 'Payment',
+                count: data?.summary?.overall_revenue || 0,
+                trend: '+15% Trend',
+                icon: CreditCard,
+                colors: ['#f83600', '#f9d423'],
+                screen: 'PaymentListView'
+            }
+        ];
+
+        // 2. If the user's role is strictly 'admin', filter out the 'Church Hub' item
+        if (user?.role !== 'admin') {
+            return allModules.filter(module => module.title !== 'Church Hub');
         }
-    ], [data]); // Only recalculate when 'data' state changes
+
+        // 3. Super Admins or Root Admins will see all modules
+        return allModules;
+
+    }, [data, user?.role]); // Added userRole to the dependency array to trigger updates if it changes
+    // Only recalculate when 'data' state changes
     const onRefresh = () => {
         setIsRefreshing(true);
         loadData();
@@ -137,49 +153,68 @@ const AdminDashboard = ({ navigation }: any) => {
                 </MotiView>
 
                 {/* --- 2. INTERACTIVE GRADIENT GRID --- */}
-                <Box className="mb-8">
+                <Box className="mb-6 px-4">
                     <HStack space="md" className="flex-wrap justify-between">
-                        {modules.map((item, index) => (
-                            <MotiView
-                                key={item.title}
-                                from={{ opacity: 0, scale: 0.9, translateY: 20 }}
-                                animate={{ opacity: 1, scale: 1, translateY: 0 }}
-                                transition={{
-                                    type: 'spring',
-                                    delay: index * 100,
-                                    damping: 15
-                                }}
-                                style={{ width: '48%', marginBottom: 16 }}
-                            >
-                                <LinearGradient
-                                    colors={item.colors}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 1 }}
-                                    style={{
-                                        borderRadius: 25,
-                                        padding: 20,
-                                        elevation: 10,
-                                        shadowColor: item.colors[0],
-                                        shadowOpacity: 0.3,
-                                        shadowRadius: 10
-                                    }}
-                                >
-                                    <View className="flex-row justify-between items-start mb-4">
-                                        <Box className="bg-white/20 p-2 rounded-xl">
-                                            <Icon as={item.icon} size="md" color="white" />
-                                        </Box>
-                                        <ArrowUpRight size={18} color="white" opacity={0.7} />
-                                    </View>
+                        {modules.map((item, index) => {
+                            // --- DYNAMIC CARD WIDTH LOGIC ---
+                            // If there's an odd number of modules and this is the last card, make it 100% width
+                            const isLastOddCard = modules.length % 2 !== 0 && index === modules.length - 1;
+                            const cardWidth = isLastOddCard ? '100%' : '48%';
 
-                                    <Text className="text-white/70 text-[10px] font-bold uppercase tracking-widest">
-                                        {item.title}
-                                    </Text>
-                                    <Heading size="xl" className="text-white mt-1 font-black">
-                                        {item.title == "Payment" ? formatCurrency(item?.count || 0) : item?.count}
-                                    </Heading>
-                                </LinearGradient>
-                            </MotiView>
-                        ))}
+                            return (
+                                <MotiView
+                                    key={item.title}
+                                    from={{ opacity: 0, scale: 0.9, translateY: 20 }}
+                                    animate={{ opacity: 1, scale: 1, translateY: 0 }}
+                                    transition={{
+                                        type: 'spring',
+                                        delay: index * 100,
+                                        damping: 15
+                                    }}
+                                    // Injected the dynamic calculation directly here
+                                    style={{ width: cardWidth, marginBottom: 16 }}
+                                >
+                                    <TouchableOpacity
+                                        activeOpacity={0.9}
+                                        onPress={() => navigation.navigate(item.screen)}
+                                    >
+                                        <LinearGradient
+                                            colors={item.colors}
+                                            start={{ x: 0, y: 0 }}
+                                            end={{ x: 1, y: 1 }}
+                                            style={{
+                                                borderRadius: 25,
+                                                padding: 20,
+                                                elevation: 8,
+                                                shadowColor: item.colors[0],
+                                                shadowOpacity: 0.25,
+                                                shadowRadius: 10
+                                            }}
+                                        >
+                                            {/* Card Content Row */}
+                                            <HStack className="justify-between items-start mb-4">
+                                                <Box className="bg-white/20 p-2 rounded-xl">
+                                                    <Icon as={item.icon} size="md" color="white" />
+                                                </Box>
+                                                <Icon as={ArrowUpRight} size="sm" className="text-white/70" />
+                                            </HStack>
+
+                                            <HStack className="justify-between items-end mt-2 w-full">
+                                                {/* Left-aligned Title */}
+                                                <Text className="text-white/70 text-[10px] font-bold uppercase tracking-widest flex-1">
+                                                    {item.title}
+                                                </Text>
+
+                                                {/* Right-aligned Number/Amount Value */}
+                                                <Heading size="xl" className="text-white font-black text-right">
+                                                    {item.title === "Payment" ? formatCurrency(item?.count || 0) : item?.count}
+                                                </Heading>
+                                            </HStack>
+                                        </LinearGradient>
+                                    </TouchableOpacity>
+                                </MotiView>
+                            );
+                        })}
                     </HStack>
                 </Box>
 
@@ -203,24 +238,25 @@ const AdminDashboard = ({ navigation }: any) => {
                     </HStack>
 
                     {/* MAIN REVENUE CARD */}
-                    <Box className="bg-white rounded-[30px] border border-slate-100 shadow-xl overflow-hidden">
+                    <Box className="bg-white rounded-[30px] border border-slate-100 shadow-xl overflow-hidden mx-4">
                         <LinearGradient
-                            colors={['#ffffff', '#f8fafc']}
+                            colors={['#e6f4f1', '#ffffff']} // Smooth transition from an ultra-light mint tint to crisp white
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
                             style={{ padding: 24 }}
                         >
                             <VStack space="xl">
                                 {/* OVERALL AMOUNT */}
                                 <VStack>
-                                    <Text className="text-slate-400 text-[10px] font-bold uppercase tracking-[2px]">Total Collection</Text>
+                                    <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-[2px]">Total Collection</Text>
                                     <HStack className="items-baseline" space="xs">
-                                        <Heading className="text-slate-900 font-black text-3xl">
+                                        <Heading className="text-slate-900 font-black text-3xl mt-1">
                                             {formatCurrency(data?.summary.overall_revenue || 0)}
                                         </Heading>
-                                        {/* <Text className="text-emerald-500 font-bold text-xs">+8.2%</Text> */}
                                     </HStack>
                                 </VStack>
 
-                                <Box className="h-[1px] bg-slate-100 w-full" />
+                                <Box className="h-[1px] bg-slate-200/60 w-full" />
 
                                 {/* MONTHLY & YEARLY SPLIT */}
                                 <HStack className="justify-between">
@@ -230,7 +266,7 @@ const AdminDashboard = ({ navigation }: any) => {
                                         <Text className="text-slate-400 text-[9px] mt-1 font-medium">Monthly</Text>
                                     </VStack>
 
-                                    <Box className="w-[1px] bg-slate-100 h-10 mx-4" />
+                                    <Box className="w-[1px] bg-slate-200/60 h-10 mx-4" />
 
                                     <VStack className="flex-1">
                                         <Text className="text-slate-400 text-[10px] font-bold uppercase mb-1">Current {getCurrentYear()}</Text>
@@ -242,7 +278,7 @@ const AdminDashboard = ({ navigation }: any) => {
                         </LinearGradient>
 
                         {/* FOOTER */}
-                        <Box className="bg-slate-50/50 p-3 items-center border-t border-slate-100">
+                        <Box className="bg-slate-50 p-3 items-center border-t border-slate-100">
                             <Text className="text-slate-400 text-[10px] font-medium text-center">
                                 * Values updated as of today 15 May 2026
                             </Text>
@@ -250,7 +286,7 @@ const AdminDashboard = ({ navigation }: any) => {
                     </Box>
                 </MotiView>
                 {/* --- 4. CHURCH-WISE BREAKDOWN --- */}
-                <MotiView
+                {user?.role === 'admin' && <MotiView
                     from={{ opacity: 0, translateY: 30 }}
                     animate={{ opacity: 1, translateY: 0 }}
                     transition={{ delay: 1000 }}
@@ -273,7 +309,7 @@ const AdminDashboard = ({ navigation }: any) => {
                             const dynamicColor = CHURCH_COLORS[index % CHURCH_COLORS.length];
 
                             return <Box
-                                key={church.id}
+                                key={church.church_id}
                                 className="bg-white p-4 rounded-[22px] border border-slate-100 shadow-sm"
                             >
                                 <HStack className="justify-between items-center">
@@ -311,7 +347,7 @@ const AdminDashboard = ({ navigation }: any) => {
                     </VStack>
 
                 </MotiView>
-
+                }
             </ScrollView>
         </Box>
     );

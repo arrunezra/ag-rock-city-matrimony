@@ -17,7 +17,7 @@ const FuturisticDropdown = ({
     isInvalid = false,
 }: any) => {
     data = data || [];
-    console.log('data', data);
+    //console.log('data', data);
     let newDate = new Date();
     return (
         <Dropdown

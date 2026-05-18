@@ -26,18 +26,24 @@ import Toast from 'react-native-toast-message';
 import { toastConfig } from './src/screens/common/ToastConfig';
 import { AppToastProvider } from './src/context/ToastContext';
 import RazorpayCheckout from 'react-native-razorpay';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 function App() {
 
   const [isAllPermissionGranted, setIsAllPermissionGranted] = useState(false);
 
   const [loading, setLoading] = useState(true);
   useEffect(() => {
+    // const items = async () => {
+    //   await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'userData']);
+
+    // }
     const checkPermission = async () => {
       const storagePermission = await requestPermission(PermissionTypes.STORAGE);
       const cameraPermission = await requestPermission(PermissionTypes.CAMERA);
       setIsAllPermissionGranted(storagePermission && cameraPermission);
       setLoading(false);
     };
+    // items();
     checkPermission();
   }, [])
 

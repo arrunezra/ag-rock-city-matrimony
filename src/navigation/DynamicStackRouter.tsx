@@ -43,12 +43,21 @@ import CheckoutScreen from "../screens/Razorpay/CheckoutScreen";
 import PremiumUnlockScreen from "../screens/profile/PremiumUnlockScreen";
 import StaffProfileSummaryView from "../screens/profile/StaffProfileSummaryView";
 import PaymentScreen from "../screens/profile/InboxScreen";
+import PaymentHistoryScreen from "../screens/payment/PaymentHistoryScreen";
 
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 export const ROLE_DRAWER_CONFIG: Record<string, any[]> = {
   admin: [
+    { name: "StaffDashboard", component: StaffDashboard, options: { title: "Staff Overview" } },
+    { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Overview" } },
+  ],
+  super_admin: [
+    { name: "StaffDashboard", component: StaffDashboard, options: { title: "Staff Overview" } },
+    { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Overview" } },
+  ],
+  root_admin: [
     { name: "StaffDashboard", component: StaffDashboard, options: { title: "Staff Overview" } },
     { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Overview" } },
   ],
@@ -69,7 +78,17 @@ const TAB_CONFIG = {
   admin: [
     { name: "Dashboard", component: AdminDashboard, icon: HomeIcon, title: "Admin Home" },
     { name: "Profile", component: ProfileSummary, icon: HeartIcon, title: "Profile" },
-    { name: "Payment", component: PaymentScreen, icon: MessageCircleIcon, title: "Payment Details" },
+    { name: "Payment", component: PaymentHistoryScreen, icon: MessageCircleIcon, title: "Payment Details" },
+  ],
+  super_admin: [
+    { name: "Dashboard", component: AdminDashboard, icon: HomeIcon, title: "Admin Home" },
+    { name: "Profile", component: ProfileSummary, icon: HeartIcon, title: "Profile" },
+    { name: "Payment", component: PaymentHistoryScreen, icon: MessageCircleIcon, title: "Payment Details" },
+  ],
+  root_admin: [
+    { name: "Dashboard", component: AdminDashboard, icon: HomeIcon, title: "Admin Home" },
+    { name: "Profile", component: ProfileSummary, icon: HeartIcon, title: "Profile" },
+    { name: "Payment", component: PaymentHistoryScreen, icon: MessageCircleIcon, title: "Payment Details" },
   ],
   staff: [
     { name: "Home", component: StaffDashboard, icon: HomeIcon, options: { title: "Staff Overview" } },
@@ -87,7 +106,7 @@ const TAB_CONFIG = {
 const SHARED_STACKS = (role: string) => (
   <Stack.Group screenOptions={{ headerShown: false }}>
     {/* Common Staff Screens available to both Admin and Staff */}
-    {(role === 'admin' || role === 'staff') && (
+    {((role === 'admin' || role === 'super_admin' || role === 'root_admin') || role === 'staff') && (
       <>
         <Stack.Screen name="StaffRegistration" component={StaffRegistration} />
         <Stack.Screen name="StaffDetail" component={StaffDetailsScreen} />
@@ -105,7 +124,7 @@ const SHARED_STACKS = (role: string) => (
       </>
     )}
     {/* Admin Only Modals */}
-    {role === 'admin' && (
+    {(role === 'admin' || role === 'super_admin' || role === 'root_admin') && (
       <><Stack.Screen name="ChurchRegistration" component={ChurchRegistrationScreen} options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="ChurchSummary" component={ChurchSummary} options={{ title: 'Church Summary' }} />
       </>
@@ -213,7 +232,8 @@ const DynamicTabs = ({ route }: any) => {
 
 // 4. The Master Dynamic Router
 const DynamicStackRouter = ({ userRole, logout }: { userRole: string, logout: any }) => {
-  // 1. Role Guard: Check if user exists
+  // 1. Role Guard: Check if user exists\
+  //console.log('userRole', userRole)
   if (!userRole) {
     return (
       <Center className="flex-1 bg-white p-6">
@@ -236,7 +256,7 @@ const DynamicStackRouter = ({ userRole, logout }: { userRole: string, logout: an
   }
 
   // 2. Allowed Roles: Check if role is valid
-  const allowedRoles = ['admin', 'staff', 'member'];
+  const allowedRoles = ['admin', 'staff', 'member', 'super_admin', 'root_admin'];
   if (!allowedRoles.includes(userRole)) {
     return (
       <Center className="flex-1">

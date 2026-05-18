@@ -33,6 +33,7 @@ BEGIN
 
     -- 3. CREATE CHURCH BREAKDOWN TABLE
     CREATE TEMPORARY TABLE temp_ChurchBreakdown (
+        church_id VARCHAR(50),
         church_name VARCHAR(255),
         profile_count INT,
         total_amount DECIMAL(15,2),
@@ -40,12 +41,13 @@ BEGIN
     ) ENGINE=MEMORY;
 
     -- 4. POPULATE CHURCH BREAKDOWN 
-    INSERT INTO temp_ChurchBreakdown (church_name, profile_count, total_amount, trend)
+    INSERT INTO temp_ChurchBreakdown (church_id,church_name, profile_count, total_amount, trend)
     SELECT 
-        cd.church_name,
-        COUNT(DISTINCT p.profile_id) as profile_count,
-        IFNULL(SUM(pr.amount), 0) as total_amount,
-        CASE WHEN SUM(pr.amount) > 5000 THEN 'up' ELSE 'stable' END as trend
+        cd.church_id
+        ,cd.church_name
+        ,COUNT(DISTINCT p.profile_id) as profile_count
+        ,IFNULL(SUM(pr.amount), 0) as total_amount
+        ,CASE WHEN SUM(pr.amount) > 5000 THEN 'up' ELSE 'stable' END as trend
     FROM church_details cd
     LEFT JOIN profiles_background pb ON cd.church_id = pb.church_id
     LEFT JOIN profiles p ON pb.profile_id = p.profile_id
