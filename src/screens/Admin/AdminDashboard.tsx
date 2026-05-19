@@ -27,13 +27,8 @@ const AdminDashboard = ({ navigation }: any) => {
 
     const [data, setData] = useState<any>(null);
 
-
-
-
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
-
-
 
     const loadData = async () => {
         try {
@@ -54,6 +49,8 @@ const AdminDashboard = ({ navigation }: any) => {
     useEffect(() => {
         loadData();
     }, []);
+
+
     // Make sure 'userRole' is included in your component's dependencies
     const modules = React.useMemo(() => {
         // 1. Define all available grid modules exactly as before
@@ -93,7 +90,7 @@ const AdminDashboard = ({ navigation }: any) => {
         ];
 
         // 2. If the user's role is strictly 'admin', filter out the 'Church Hub' item
-        if (user?.role !== 'admin') {
+        if (user?.role === 'admin') {
             return allModules.filter(module => module.title !== 'Church Hub');
         }
 
@@ -286,7 +283,7 @@ const AdminDashboard = ({ navigation }: any) => {
                     </Box>
                 </MotiView>
                 {/* --- 4. CHURCH-WISE BREAKDOWN --- */}
-                {user?.role === 'admin' && <MotiView
+                {user?.role !== 'admin' && <MotiView
                     from={{ opacity: 0, translateY: 30 }}
                     animate={{ opacity: 1, translateY: 0 }}
                     transition={{ delay: 1000 }}

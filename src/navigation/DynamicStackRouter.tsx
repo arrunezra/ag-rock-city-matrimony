@@ -44,22 +44,23 @@ import PremiumUnlockScreen from "../screens/profile/PremiumUnlockScreen";
 import StaffProfileSummaryView from "../screens/profile/StaffProfileSummaryView";
 import PaymentScreen from "../screens/profile/InboxScreen";
 import PaymentHistoryScreen from "../screens/payment/PaymentHistoryScreen";
+import { CreditCard } from "lucide-react-native";
 
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 export const ROLE_DRAWER_CONFIG: Record<string, any[]> = {
   admin: [
-    { name: "StaffDashboard", component: StaffDashboard, options: { title: "Staff Overview" } },
-    { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Overview" } },
+    { name: "StaffDashboard", component: StaffDashboard, options: { title: "Staff Overview", headerShown: false } },
+    { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Overview", headerShown: false } },
   ],
   super_admin: [
-    { name: "StaffDashboard", component: StaffDashboard, options: { title: "Staff Overview" } },
-    { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Overview" } },
+    { name: "StaffDashboard", component: StaffDashboard, options: { title: "Staff Overview", headerShown: false } },
+    { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Overview", headerShown: false } },
   ],
   root_admin: [
-    { name: "StaffDashboard", component: StaffDashboard, options: { title: "Staff Overview" } },
-    { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Overview" } },
+    { name: "StaffDashboard", component: StaffDashboard, options: { title: "Staff Overview", headerShown: false } },
+    { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Overview", headerShown: false } },
   ],
   member: [
     // { name: "ReceivedRequests", component: ReceivedScreen },
@@ -78,17 +79,17 @@ const TAB_CONFIG = {
   admin: [
     { name: "Dashboard", component: AdminDashboard, icon: HomeIcon, title: "Admin Home" },
     { name: "Profile", component: ProfileSummary, icon: HeartIcon, title: "Profile" },
-    { name: "Payment", component: PaymentHistoryScreen, icon: MessageCircleIcon, title: "Payment Details" },
+    { name: "Payment", component: PaymentHistoryScreen, icon: CreditCard, title: "Payment Details" },
   ],
   super_admin: [
     { name: "Dashboard", component: AdminDashboard, icon: HomeIcon, title: "Admin Home" },
     { name: "Profile", component: ProfileSummary, icon: HeartIcon, title: "Profile" },
-    { name: "Payment", component: PaymentHistoryScreen, icon: MessageCircleIcon, title: "Payment Details" },
+    { name: "Payment", component: PaymentHistoryScreen, icon: CreditCard, title: "Payment Details" },
   ],
   root_admin: [
     { name: "Dashboard", component: AdminDashboard, icon: HomeIcon, title: "Admin Home" },
     { name: "Profile", component: ProfileSummary, icon: HeartIcon, title: "Profile" },
-    { name: "Payment", component: PaymentHistoryScreen, icon: MessageCircleIcon, title: "Payment Details" },
+    { name: "Payment", component: PaymentHistoryScreen, icon: CreditCard, title: "Payment Details" },
   ],
   staff: [
     { name: "Home", component: StaffDashboard, icon: HomeIcon, options: { title: "Staff Overview" } },

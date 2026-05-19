@@ -10,6 +10,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import FuturisticDropdown from '@/src/components/common/FuturisticDropdown';
 import AdminServices from '@/src/services/AdminServices';
 import { useAuth } from '@/src/context/AuthContext';
+import ChruchService from '@/src/services/ChruchService';
 // --- CONFIG PALETTE ---
 const REVENUE_PALETTE = ['#087a46ff', '#1b5945ff']; // Deep slate sleek theme
 const LIMIT = 20;
@@ -31,12 +32,13 @@ interface Transaction {
     created_at: string;
 }
 
-const PaymentHistoryScreen = () => {
+const PaymentHistoryScreen = ({ navigation }: any) => {
     const { user } = useAuth();
 
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [churches, setChurches] = useState<any>([]);
 
     // --- PAGINATION STATES ---
     const [page, setPage] = useState<number>(1);
@@ -63,11 +65,7 @@ const PaymentHistoryScreen = () => {
 
     const toast = useToast();
 
-    const churchesList = [
-        { id: '0', name: 'St. Mary’s Cathedral' },
-        { id: '1', name: 'Grace Community Church' },
-        { id: '2', name: 'City Hope Chapel' },
-    ];
+
 
     const statusDropdownData = [
         { label: 'All Statuses', value: 'all' },
@@ -78,9 +76,9 @@ const PaymentHistoryScreen = () => {
     const churchDropdownData = useMemo(() => {
         return [
             { label: 'All Churches', value: 'all' },
-            ...churchesList.map(c => ({ label: c.name, value: c.id }))
+            ...churches.map((c: any) => ({ label: c.label, value: c.church_id }))
         ];
-    }, [churchesList]);
+    }, [churches]);
 
     // Track if any filter options deviate from default structures
     const isFilterApplied = useMemo(() => {
@@ -92,7 +90,7 @@ const PaymentHistoryScreen = () => {
 
     // Active descriptive metadata getters for the UI indicator chips
     const activeChurchName = useMemo(() => {
-        return churchesList.find(c => c.id === searchCriteria.church_id)?.name || 'All Registered';
+        return churches.find((c: any) => c.id === searchCriteria.church_id)?.name || 'All Registered';
     }, [searchCriteria.church_id]);
 
     // --- CORE API LAYER ---
@@ -109,7 +107,7 @@ const PaymentHistoryScreen = () => {
                 page: targetPage,
                 limit: LIMIT
             };
-
+            //console.log('bodyPayload', bodyPayload);
             const response = await AdminServices.getPaymentsHistory(bodyPayload);
 
             if (response.success) {
@@ -130,7 +128,25 @@ const PaymentHistoryScreen = () => {
             setIsRefreshing(false);
         }
     }, [searchCriteria, isRefreshing]);
+    useEffect(() => {
+        const fetchChurches = async () => {
+            try {
+                const res = await ChruchService.getChurchDetails({ action: 'all', id: '' });
+                //console.log('res', res);
+                if (res.success) {
 
+                    setChurches(res.churches);
+                } else {
+                    setChurches([]);
+                }
+            } catch (err) {
+                console.error("Failed to load churches:", err);
+            } finally {
+            }
+        };
+
+        fetchChurches();
+    }, []); // Empty array means this runs once on mount
     useEffect(() => {
         fetchFilteredLedger(1, true);
     }, [searchCriteria]);
@@ -224,8 +240,15 @@ const PaymentHistoryScreen = () => {
     return (
         <VStack className="flex-1 bg-white">
             <RNStatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-            <HeaderSession title="Payment Ledger" theme="midnight" leftIconType="back" />
-
+            {/* <HeaderSession title="Payment Ledger" theme="midnight" leftIconType="back" /> */}
+            <HeaderSession
+                title="Control Center"
+                theme='emerald'
+                //subTitle="System Overview"
+                showRightIcon={false}
+                leftIconType="menu"
+                onLeftPress={() => navigation.openDrawer()}
+            />
             {/* --- REVENUE HERO SUMMARY DISPLAY --- */}
             <MotiView from={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="mx-4 mt-4">
                 <LinearGradient colors={REVENUE_PALETTE} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ borderRadius: 28, padding: 24, elevation: 8 }}>
@@ -257,7 +280,7 @@ const PaymentHistoryScreen = () => {
             <VStack className="mt-3 px-4 pb-4 border-b border-slate-100 bg-white" space="md">
 
                 {/* HEADERS WITH CONDITIONAL RESET BUTTON WRAPPER */}
-                <HStack className="justify-between items-center px-1 mb-6 mt-6">
+                <HStack className="justify-between items-center px-1  mt-6">
                     <TouchableOpacity onPress={() => {
                         setShowFilter(pre => !pre)
                     }}>

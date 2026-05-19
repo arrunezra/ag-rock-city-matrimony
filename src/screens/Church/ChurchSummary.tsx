@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { FlatList, ScrollView, Alert, TouchableOpacity, Linking, Image, Platform, Animated, RefreshControl, ActivityIndicator, View } from 'react-native';
+import { FlatList, ScrollView, Alert, TouchableOpacity, Linking, Image, Platform, Animated, RefreshControl, ActivityIndicator, View, StatusBar } from 'react-native';
 import {
     Box, VStack, HStack, Input, InputField, Button, ButtonText, Text, Heading, Spinner,
     FormControl, FormControlLabel, FormControlLabelText, FormControlError, FormControlErrorText, Select, SelectTrigger,
@@ -25,6 +25,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import AnimatedListItem, { ChurchSkeleton } from './AnimattedSummary';
 import { Edit3, Settings2, XIcon } from 'lucide-react-native';
 import { ChruchService } from '@/src/services/ChruchService';
+import HeaderSession from '../common/HeaderSession';
 type Props = NativeStackScreenProps<AdminStackParamList, 'ChurchSummary'>;
 export default function ChurchSummary({ route, navigation }: any) {
     const [list, setList] = useState<any[]>([]);
@@ -35,6 +36,8 @@ export default function ChurchSummary({ route, navigation }: any) {
     const [searchTerm, setSearchTerm] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [currentTab, setCurrentTab] = useState('Active');
+
     // Form & Filter State
     const [showModal, setShowModal] = useState(false);
     const [errors, setErrors] = useState<any>({});
@@ -94,8 +97,9 @@ export default function ChurchSummary({ route, navigation }: any) {
     const fetchChurches = async (p = 1, append = false) => {
         setLoading(true);
         try {
-            console.log('fetchChurches', filters);
             const res = await api.post('/church/churchmanagment.php', { action: 'fetch', page: p, ...filters });
+            //console.log('fetchChurches', res);
+
             if (res.data.success) {
                 setList(append ? [...list, ...res.data.data] : res.data.data);
                 setTotalPages(res.data.totalPages);
@@ -283,6 +287,16 @@ export default function ChurchSummary({ route, navigation }: any) {
 
     return (
         <Box className="flex-1 bg-background-50">
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            {/* <HeaderSession title="Payment Ledger" theme="midnight" leftIconType="back" /> */}
+            <HeaderSession
+                title="Church Summary"
+                theme='emerald'
+                //subTitle="System Overview"
+                showRightIcon={false}
+                leftIconType="menu"
+                onLeftPress={() => navigation.openDrawer()}
+            />
             {/* 1. SEARCH BAR (Keep your existing code here) */}
             <Box className="px-5 pt-6 pb-4 bg-white/80 backdrop-blur-md border-b border-slate-100">
                 <VStack space="md">
@@ -290,7 +304,7 @@ export default function ChurchSummary({ route, navigation }: any) {
                     <HStack space="sm" className="items-center">
                         <Input
                             variant="rounded"
-                            className="flex-1 h-12 bg-slate-50 border-0 shadow-sm focus:border-cyan-500 transition-all"
+                            className="flex-1 h-12 bg-slate- border-0 shadow-sm focus:border-cyan-500 transition-all"
                         >
                             <InputSlot className="pl-4">
                                 <Icon as={SearchIcon} className="text-cyan-600" size="sm" />
@@ -306,7 +320,7 @@ export default function ChurchSummary({ route, navigation }: any) {
                                 <InputSlot className="pr-3">
                                     <TouchableOpacity
                                         onPress={() => setSearchTerm('')}
-                                        className="bg-slate-200 rounded-full p-1"
+                                        className="bg-slate-800 rounded-full p-1"
                                     >
                                         <Icon as={XIcon} size="xs" className="text-slate-500" />
                                     </TouchableOpacity>
@@ -338,6 +352,7 @@ export default function ChurchSummary({ route, navigation }: any) {
                                             // SINGLE SELECT LOGIC: 
                                             // Set the active_status to the clicked filter, 
                                             // and ensure other status fields are cleared
+                                            setCurrentTab(filter)
                                             setFilters({
                                                 ...filters,
                                                 active_status: filter // Overwrites previous status
@@ -420,12 +435,13 @@ export default function ChurchSummary({ route, navigation }: any) {
                                                     <Icon as={Phone} size="sm" className="text-cyan-600" />
                                                 </TouchableOpacity>
 
-                                                <TouchableOpacity
+                                                {item?.active_status === "Active" && <TouchableOpacity
                                                     className="w-10 h-10 rounded-full bg-red-50 items-center justify-center border border-red-100 active:bg-red-100"
                                                     onPress={() => handleDelete(item.id)}
                                                 >
                                                     <Icon as={Trash2} size="sm" className="text-red-500" />
                                                 </TouchableOpacity>
+                                                }
                                             </HStack>
                                         </HStack>
 
@@ -447,7 +463,7 @@ export default function ChurchSummary({ route, navigation }: any) {
                                             {/* Secondary Info/Status */}
                                             <VStack>
                                                 <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Last Modified</Text>
-                                                <Text className="text-xs font-semibold text-slate-600">Feb 13, 2026</Text>
+                                                <Text className="text-xs font-semibold text-slate-600">{item?.updated_at}</Text>
                                             </VStack>
 
                                             {/* The New Action Button */}
@@ -486,7 +502,7 @@ export default function ChurchSummary({ route, navigation }: any) {
             />
 
             {/* 3. FLOATING ACTION BUTTON (Modern Pulse) */}
-            <Fab
+            {currentTab === "Active" && <Fab
                 className="bg-primary-900 bottom-8 right-8 w-16 h-16 rounded-[22px] shadow-2xl active:scale-90 transition-all"
                 style={{
                     shadowColor: "#4F46E5",
@@ -502,6 +518,7 @@ export default function ChurchSummary({ route, navigation }: any) {
             >
                 <FabIcon as={AddIcon} size="xl" className="text-white" />
             </Fab>
+            }
         </Box>
     );
 }

@@ -1,5 +1,5 @@
 import React, { Activity, useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Easing, FlatList, Linking, Pressable, RefreshControl, ScrollView, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Animated, Easing, FlatList, Linking, Pressable, RefreshControl, ScrollView, StatusBar, TouchableOpacity } from 'react-native';
 import { Box, VStack, HStack, Text, Heading, Spinner, Divider, Center, Link, LinkText, ButtonText, Button, Avatar, AvatarFallbackText, AvatarImage } from '@/src/components/common/GluestackUI';
 import api from '@/src/api/api';
 import { Icon, Globe, MapPin, ChevronLeft } from '@/src/components/common/IconUI';
@@ -7,6 +7,7 @@ import { ChevronRight, Church, Edit3, Phone, ShieldCheck, User2Icon } from 'luci
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AdminStackParamList } from '@/src/types/navigation';
 import AnimatedListItem, { ChurchSkeleton } from './AnimattedSummary';
+import HeaderSession from '../common/HeaderSession';
 
 export default function ChurchDashboard({ navigation }: any) {
     const [stats, setStats] = useState<any>(null);
@@ -25,7 +26,6 @@ export default function ChurchDashboard({ navigation }: any) {
     }
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
-        // Call your fetch function (e.g., fetchDashboardStats)
         await fetchStats();
         setRefreshing(false);
     }, []);
@@ -208,68 +208,30 @@ export default function ChurchDashboard({ navigation }: any) {
         );
     };
 
-    // 2. THE ANIMATED DATA CARD
-    const AnimatedCard = ({ item, index, handleOpenPreview }: any) => {
-        const translateY = useRef(new Animated.Value(20)).current;
-        const opacity = useRef(new Animated.Value(0)).current;
 
-        useEffect(() => {
-            Animated.timing(translateY, {
-                toValue: 0,
-                duration: 400,
-                delay: index * 100, // Stagger effect
-                easing: Easing.out(Easing.back(1.5)),
-                useNativeDriver: true,
-            }).start();
-
-            Animated.timing(opacity, {
-                toValue: 1,
-                duration: 400,
-                delay: index * 100,
-                useNativeDriver: true,
-            }).start();
-        }, []);
-
-        return (
-            <Animated.View style={{ opacity, transform: [{ translateY }] }}>
-                <Box className="mx-4 mb-3 overflow-hidden rounded-2xl bg-white border border-outline-50 shadow-sm active:opacity-90">
-                    <HStack className="items-stretch">
-                        <Box className={`w-1.5 ${item.active_status === 'Active' ? 'bg-emerald-500' : 'bg-amber-400'}`} />
-                        <HStack space="md" className="flex-1 p-4 items-center">
-                            <TouchableOpacity onPress={() => handleOpenPreview(item)}>
-                                <Avatar size="md" className="border-2 border-white bg-primary-100 shadow-sm">
-                                    {item?.profile_image ? (
-                                        <AvatarImage source={{ uri: item.profile_image }} />
-                                    ) : (
-                                        <AvatarFallbackText className="text-primary-700 font-bold">{item.church_name}</AvatarFallbackText>
-                                    )}
-                                </Avatar>
-                            </TouchableOpacity>
-                            <VStack className="flex-1">
-                                <Text className="font-extrabold text-typography-900 text-sm leading-tight">{item.church_name}</Text>
-                                <Text size="xs" className="text-typography-400 font-medium mb-1">{item.pastor_name}</Text>
-                            </VStack>
-                            <TouchableOpacity className="w-8 h-8 rounded-full bg-background-50 items-center justify-center">
-                                <Icon as={Phone} size="xs" className="text-primary-600" />
-                            </TouchableOpacity>
-                        </HStack>
-                    </HStack>
-                </Box>
-            </Animated.View>
-        );
-    };
 
     // 3. MAIN COMPONENT RENDER
     // In your ChurchDashboard return statement:
     return (
         <Box className="flex-1 bg-background-50">
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            {/* <HeaderSession title="Payment Ledger" theme="midnight" leftIconType="back" /> */}
+            <HeaderSession
+                title="Church Overview"
+                theme='emerald'
+                //subTitle="System Overview"
+                showRightIcon={false}
+                leftIconType="menu"
+                onLeftPress={() => navigation.openDrawer()}
+            />
+
             {loading && !refreshing ? (
                 <VStack className="pt-4">
-                    <HeaderSkeleton /> {/* Add your Hero Skeleton here */}
+                    <HeaderSkeleton />
                     {[1, 2, 3, 4, 5].map((i) => <SkeletonItem key={i} />)}
                 </VStack>
             ) : (
-                <> <FlatList
+                <FlatList
                     data={loading ? [1, 2, 3, 4, 5] : stats?.recent_churches}
                     keyExtractor={(item, index) => (loading ? `skeleton-${index}` : item.id.toString())}
                     contentContainerStyle={{ paddingVertical: 16, paddingBottom: 100 }}
@@ -372,7 +334,7 @@ export default function ChurchDashboard({ navigation }: any) {
                             </AnimatedListItem>
                         );
                     }}
-                /></>
+                />
 
             )}
         </Box>

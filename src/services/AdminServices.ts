@@ -20,6 +20,7 @@ const AdminServices = {
             return { success: false, message: error.message };
         }
     },
+
 };
 
 export default AdminServices;
