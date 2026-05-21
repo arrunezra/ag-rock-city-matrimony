@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, DimensionValue, Easing, Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, DimensionValue, Easing, Platform, Pressable, ScrollView, StatusBar, StyleSheet } from 'react-native';
 import {
     Building2, MapPin, User, Phone, Mail, Hash, Globe, CheckCircle2, X, Icon
 } from '@/src/components/common/IconUI';
@@ -14,18 +14,20 @@ import {
 } from '@/src/components/common/GluestackUI';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AdminStackParamList } from '@/src/types/navigation';
-import { ChevronDown, ChevronLeft, Edit3, Plus, User2Icon } from 'lucide-react-native';
+import { ChevronDown, ChevronLeft, Edit3, Navigation, Network, Plus, User2Icon } from 'lucide-react-native';
 import { AnimateError } from '../common/AnimateError';
 import { KeyboardAvoidingView, KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Dropdown } from 'react-native-element-dropdown';
 import profileService from '@/src/services/profileService';
-import { STATES } from '@/src/utils/utils';
 import api from '@/src/api/api';
 import { SuccessOverlay } from '../common/SuccessOverlay';
 import FailedScreen from '../common/FailedScreen';
 import AnimatedFormRow from './AnimatedViewForRegistration';
 import LoadingScreen from '../common/LoadingScreen';
 import ChruchService from '@/src/services/ChruchService';
+import HeaderSession from '../common/HeaderSession';
+import FuturisticDropdown from '@/src/components/common/FuturisticDropdown';
+import { LookupContext } from '@/src/context/LookupContext';
 type Props = {
     navigation: NativeStackNavigationProp<AdminStackParamList, 'ChurchManagement'>;
     route: any;
@@ -37,7 +39,9 @@ interface FormFieldSkeletonProps {
 const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State - Replace with your actual logic
     //console.log('route', route)
     const { profile } = route.params;
-    console.log('params', profile)
+    const { lookups } = useContext(LookupContext);
+
+    // console.log('params', profile)
     const [cities, setCities] = useState<any[]>([]);
     const [form, setForm] = useState<any>({
         church_name: '',
@@ -170,7 +174,7 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
 
                     setTimeout(() => {
                         setIsSuccess(false);
-                        navigation.navigate('ChurchManagement', { refreshed: true });
+                        navigation.navigate('ChurchSummary', { refreshed: true });
                     }, 2500);
                 } else {
                     throw new Error("Backend validation failed");
@@ -296,24 +300,19 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
     return (
         <Box className="flex-1 bg-white">
             {/* HEADER */}
-            <Box className="px-6 pt-12 pb-6 bg-white">
-                <HStack space="lg" className="items-center">
-                    <Pressable
-                        onPress={() => navigation.goBack()}
-                        className="w-12 h-12 items-center justify-center rounded-full bg-slate-50 border border-slate-100 active:bg-slate-100"
-                    >
-                        <Icon as={ChevronLeft} size="lg" className="text-slate-900" />
-                    </Pressable>
-                    <VStack space="xs">
-                        <Heading size="xl" className="text-slate-900 font-extrabold leading-tight">
-                            {profile && profile?.church_id ? 'Update Church Profile' : 'Church Profile'}
-                        </Heading>
-                        <Text size="sm" className="text-slate-500 font-medium">
-                            Manage registry & contact details
-                        </Text>
-                    </VStack>
-                </HStack>
-            </Box>
+
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
+            <HeaderSession
+                title={profile && profile?.church_id ? 'Update Church Profile' : 'Church Profile'}
+                theme="emerald"
+                showBackButton={true}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+            />
+
 
             {/* Content wrapped in your logic */}
             <KeyboardAwareScrollView bottomOffset={0} className="flex-1" showsVerticalScrollIndicator={false}>
@@ -402,8 +401,22 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
                                     </FormControlLabelText>
                                 </HStack>
                             </FormControlLabel>
+                            <FuturisticDropdown
+                                data={lookups?.state}
+                                value={form?.state}
+                                onChange={(item: any) => {
+                                    updateField('state', item.value);
+                                    updateField('city', '');
+                                    fetchCities(item.value);
+                                }}
+                                placeholder="Select State "
+                                icon={{ icon: MapPin, color: 'text-blue-500' }}
+                                search={false}
+                                isInvalid={errors.state}
+                            />
 
-                            <Dropdown
+
+                            {/* <Dropdown
                                 style={[
                                     dropdownStyles.dropdown,
                                     errors?.active_status && { borderColor: '#ef4444' } // red-500 if error
@@ -422,7 +435,7 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
                                     fetchCities(item.StateCode);
                                 }}
                                 renderRightIcon={() => <Icon as={ChevronDown} size="xs" className="text-slate-400" />}
-                            />
+                            /> */}
                             <AnimateError isVisible={!!errors?.state}>
                                 <FormControlErrorText className="text-xs text-red-500 mt-1">
                                     {errors?.state}
@@ -440,7 +453,19 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
                                     <FormControlLabelText className="text-[12px] font-bold text-slate-500 uppercase">City</FormControlLabelText>
                                 </HStack>
                             </FormControlLabel>
-                            <Dropdown
+
+                            <FuturisticDropdown
+                                data={cities || []}
+                                value={form?.city}
+                                onChange={(item: any) => updateField('city', item.value)}
+                                placeholder="Select City"
+                                icon={{ icon: Navigation, color: 'text-cyan-600' }}
+                                search={true}
+                                isInvalid={errors.city}
+                            />
+
+
+                            {/* <Dropdown
                                 style={[
                                     dropdownStyles.dropdown,
                                     errors?.active_status && { borderColor: '#ef4444' } // red-500 if error
@@ -459,7 +484,7 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
                                 renderLeftIcon={() => isLoadingForCities ? <ActivityIndicator size="small" color="#0891b2" className="mr-3" /> : null}
                                 renderRightIcon={() => <Icon as={ChevronDown} size="xs" className="text-slate-400" />}
                                 onChange={item => updateField('city', item.CityCode)}
-                            />
+                            /> */}
                         </FormControl>
                     </AnimatedFormRow>
 
@@ -559,7 +584,18 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
                                     </FormControlLabelText>
                                 </HStack>
                             </FormControlLabel>
-                            <Dropdown
+
+                            <FuturisticDropdown
+                                data={lookups?.sub_community || []}
+                                value={form?.denomination}
+                                onChange={(item: any) => updateField('denomination', item.value)}
+                                placeholder="Select"
+                                icon={{ icon: Network, color: 'text-typography-400' }}
+                                search={false}
+                                isInvalid={errors?.denomination}
+                            />
+
+                            {/* <Dropdown
                                 style={[
                                     dropdownStyles.dropdown,
                                     { height: 64, backgroundColor: 'white', borderRadius: 16, paddingHorizontal: 16 },
@@ -567,14 +603,14 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
                                 ]}
                                 placeholderStyle={dropdownStyles.placeholderStyle}
                                 selectedTextStyle={dropdownStyles.selectedTextStyle}
-                                data={denominationData}
+                                data={lookups?.sub_community} 
                                 maxHeight={300}
                                 labelField="label"
                                 valueField="value"
                                 placeholder="Select"
                                 value={form?.denomination}
                                 onChange={item => updateField('denomination', item.value)}
-                            />
+                            /> */}
                             <AnimateError isVisible={!!errors?.denomination}>
                                 <FormControlErrorText className="text-xs text-red-500 mt-1">
                                     {errors?.denomination}
@@ -637,10 +673,7 @@ const ChurchRegistrationScreen = ({ navigation, route }: any) => {// Mock State 
                     <Button
                         onPress={handleSave}
                         isDisabled={isSubmitting || !form?.church_name}
-                        className={`flex-[1.5] h-16 rounded-2xl border-0 shadow-lg transition-all ${profile?.church_id
-                            ? 'bg-cyan-600 shadow-cyan-200' // Update Mode
-                            : 'bg-slate-900 shadow-slate-400' // Add Mode
-                            }`}
+                        className={`flex-[1.5] h-16 rounded-2xl border-0 shadow-lg transition-all  }`}
                     >
                         <HStack space="sm" className="items-center justify-center">
                             {isSubmitting ? (

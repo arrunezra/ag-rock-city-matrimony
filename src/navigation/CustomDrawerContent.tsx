@@ -4,13 +4,15 @@ import { Pressable, TouchableOpacity } from 'react-native';
 import { Icon } from '@/components/ui/icon';
 import { Camera, CheckIcon, ChevronRight, LogOut, Settings } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
-import { getExtension } from '../utils/common';
+import { useCallback, useContext, useState } from 'react';
+import { getCurrentYear, getExtension } from '../utils/common';
 import LinearGradient from 'react-native-linear-gradient';
+import { LookupContext } from '../context/LookupContext';
 
 export default function CustomDrawerContent(props: any) {
     const { state, userRole, navigation, user, logout } = props;
     // Add a timestamp to force the Avatar to re-render when the image changes
+    const { lookups } = useContext(LookupContext);
 
     const currentYear = new Date().getFullYear();
     const activeRouteName = state.routeNames[state.index];
@@ -18,6 +20,7 @@ export default function CustomDrawerContent(props: any) {
 
     useFocusEffect(
         useCallback(() => {
+
             setProfile(getExtension(user?.profilePic, 'addthumnail'))
         }, [])
     );
@@ -27,160 +30,143 @@ export default function CustomDrawerContent(props: any) {
 
     return (
         <DrawerContentScrollView {...props} contentContainerStyle={{ flex: 1, backgroundColor: '#fdfdfd' }}>
+            <VStack className="justify-between h-full flex-1">
 
-            <Box className="relative pb-10">
-                <LinearGradient
-                    colors={['#1b4b3dff', '#38ca99ff']} // Deep midnight to indigo
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{
-                        height: 160,
-                        borderBottomLeftRadius: 60,
-                    }}
-                />
+                {/* TOP SECTION: Profile Header + Drawer Nav Links */}
+                <Box>
+                    {/* 1. Header Hero Stage */}
+                    <Box className="relative pb-10">
+                        <LinearGradient
+                            colors={['#1b4b3dff', '#38ca99ff']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={{
+                                height: 160,
+                                borderBottomLeftRadius: 60,
+                            }}
+                        />
 
-                {/* 2. The Floating Stage (No border, just pure shadow depth) */}
-                <Box
-                    className="mx-6 bg-white rounded-[40px] p-4 shadow-2xl shadow-indigo-900/40"
-                    style={{ marginTop: -80, elevation: 20 }}
-                >
-                    <VStack space="xl">
-                        <HStack space="lg" className="items-center">
-                            {/* Unique Hexagonal or Rounded-Square Avatar Frame */}
-                            <TouchableOpacity onPress={() => {
-                                navigation.navigate('Main', { screen: 'ShowProfileGallery' })
-                            }}>
-                                <Box className="relative">
-                                    <Box className="p-1 rounded-[24px] bg-slate-100 border-2 border-slate-50">
-                                        <Avatar size="xl" className="rounded-[20px] bg-indigo-50">
-                                            <AvatarFallbackText className="font-bold text-indigo-700">{fullName}</AvatarFallbackText>
-                                            {profile && <AvatarImage source={{ uri: profile }} />}
-                                        </Avatar>
-                                    </Box>
-                                    {/* 2026 Minimalist Camera Trigger */}
-                                    <Pressable
-                                        onPress={() => {
-                                            navigation.navigate('Main', { screen: 'ShowProfileGallery' })
-                                            //navigation.navigate('ShowProfileGallery')
-                                        }}
-                                        className="absolute -bottom-1 -right-1 bg-white p-2 rounded-2xl shadow-lg border border-slate-100 active:bg-slate-50"
-                                    >
-                                        <Icon as={Camera} size="sm" className="text-slate-600" />
-                                    </Pressable>
-                                </Box>
-                            </TouchableOpacity>
-                            <VStack className="flex-1">
-                                <HStack space="xs" className="items-center">
-                                    <Heading
-                                        size="md"
-                                        className="text-slate-900 font-black tracking-tighter flex-shrink"
-                                    // Add flex-shrink so it knows to wrap rather than push the icon out
-                                    >
-                                        {fullName}
-                                    </Heading>
+                        {/* Floating User Card */}
+                        <Box
+                            className="mx-6 bg-white rounded-[40px] p-4 shadow-2xl shadow-indigo-900/40"
+                            style={{ marginTop: -80, elevation: 20 }}
+                        >
+                            <VStack space="xl">
+                                <HStack space="lg" className="items-center">
+                                    <TouchableOpacity onPress={() => {
+                                        navigation.navigate('Main', { screen: 'ShowProfileGallery' })
+                                    }}>
+                                        <Box className="relative">
+                                            <Box className="p-1 rounded-[24px] bg-slate-100 border-2 border-slate-50">
+                                                <Avatar size="xl" className="rounded-[20px] bg-indigo-50">
+                                                    <AvatarFallbackText className="font-bold text-indigo-700">{fullName}</AvatarFallbackText>
+                                                    {profile && <AvatarImage source={{ uri: profile }} />}
+                                                </Avatar>
+                                            </Box>
+                                            <Pressable
+                                                onPress={() => navigation.navigate('Main', { screen: 'ShowProfileGallery' })}
+                                                className="absolute -bottom-1 -right-1 bg-white p-2 rounded-2xl shadow-lg border border-slate-100 active:bg-slate-50"
+                                            >
+                                                <Icon as={Camera} size="sm" className="text-slate-600" />
+                                            </Pressable>
+                                        </Box>
+                                    </TouchableOpacity>
+                                    <VStack className="flex-1">
+                                        <HStack space="xs" className="items-center">
+                                            <Heading size="md" className="text-slate-900 font-black tracking-tighter flex-shrink">
+                                                {fullName}
+                                            </Heading>
+                                            <Center className="bg-blue-100 w-5 h-5 rounded-full flex-shrink-0">
+                                                <Icon as={CheckIcon} size={'md'} className="text-blue-600" />
+                                            </Center>
+                                        </HStack>
+                                        <Text className="text-slate-400 font-medium text-xs mb-2"> ID: {user?.role === 'member' ? user?.profile_id : user?.userid}</Text>
 
-                                    {/* Verification Icon */}
-                                    <Center className="bg-blue-100 w-5 h-5 rounded-full flex-shrink-0">
-                                        <Icon as={CheckIcon} size={'md'} className="text-blue-600" />
-                                    </Center>
+                                        {user.role !== 'member' && (
+                                            <Box className="bg-salt-50 self-start px-3 py-1 rounded-full shadow-md shadow-salt-200 border-slate-100/50">
+                                                <Text className="text-black font-black uppercase text-[8px] tracking-[1px]">
+                                                    Role: {user.role}
+                                                </Text>
+                                            </Box>
+                                        )}
+                                    </VStack>
                                 </HStack>
-                                <Text className="text-slate-400 font-medium text-xs mb-2"> ID: {user?.role === 'member' ? user?.profile_id : user?.userid}</Text>
 
-                                {/* Pill-style status */}
-                                {/* <Box className="bg-indigo-600 self-start px-3 py-1 rounded-full shadow-md shadow-indigo-200">
-                                    <Text className="text-white font-black uppercase text-[8px] tracking-[1px]">
-                                        Verified Account
-                                    </Text>
-                                </Box> */}
+                                <Box className="bg-slate-50 rounded-2xl p-3 border border-slate-100/50">
+                                    <HStack space="sm" className="items-center">
+                                        <Box className="w-2 h-2 rounded-full bg-emerald-500" />
+                                        <Text className="text-slate-600 font-bold text-[11px] italic">
+                                            {user?.email}
+                                        </Text>
+                                    </HStack>
+                                </Box>
                             </VStack>
-                        </HStack>
-
-                        {/* Sub-identity row (Email moved out of the main block for breathing room) */}
-                        <Box className="bg-slate-50 rounded-2xl p-3 border border-slate-100/50">
-                            <HStack space="sm" className="items-center">
-                                <Box className="w-2 h-2 rounded-full bg-emerald-500" />
-                                <Text className="text-slate-600 font-bold text-[11px] italic">
-                                    {user?.email}
-                                </Text>
-                            </HStack>
                         </Box>
-                    </VStack>
+                    </Box>
+
+                    {/* 2. Menu Items Navigation Links */}
+                    <Box className="px-2">
+                        <DrawerItemList {...props} />
+
+                        <Divider className="my-4 mx-4 bg-slate-100" />
+
+                        {/* Settings shows only for member roles here */}
+                        {user.role === 'member' && (
+                            <Pressable
+                                className="mx-2 p-3 rounded-2xl active:bg-indigo-50"
+                                onPress={() => navigation.navigate('Main', { screen: 'MemberSettings' })}
+                            >
+                                <HStack className="items-center justify-between">
+                                    <HStack space="md" className="items-center">
+                                        <Center className="w-8 h-8 rounded-xl bg-slate-100">
+                                            <Icon as={Settings} size="sm" className="text-slate-600" />
+                                        </Center>
+                                        <Text className="font-bold text-slate-700">Settings</Text>
+                                    </HStack>
+                                    <Icon as={ChevronRight} size="xs" className="text-slate-300" />
+                                </HStack>
+                            </Pressable>
+                        )}
+                    </Box>
                 </Box>
-            </Box>
 
-            {/* 2. Menu Items Section */}
-            <Box className="px-2 flex-1">
-                <DrawerItemList {...props} />
-
-                <Divider className="my-4 mx-4 bg-slate-100" />
-
-                {/* Custom Styled Settings Item */}
-                {user.role == 'member' ? <Pressable
-                    className="mx-2 p-3 rounded-2xl active:bg-indigo-50"
-                    onPress={() => navigation.navigate('Main', { screen: 'MemberSettings' })}
-                >
-                    <HStack className="items-center justify-between">
-                        <HStack space="md" items-center>
-                            <Center className="w-8 h-8 rounded-xl bg-slate-100">
-                                <Icon as={Settings} size="sm" className="text-slate-600" />
-                            </Center>
-                            <Text className="font-bold  text-slate-700">Settings</Text>
-                        </HStack>
-                        <Icon as={ChevronRight} size="xs" className="text-slate-300" />
-                    </HStack>
-                </Pressable>
-
-                    :
+                {/* BOTTOM SECTION: Branding Card with Logout Below It */}
+                <Box className="pb-6 mt-auto">
+                    {/* Logout Button Placed Below the Footer Card */}
                     <Pressable
-                        className="mx-2 p-3 rounded-2xl active:bg-indigo-50"
+                        className="mx-8 mt-5 p-3 mb-10 rounded-2xl active:bg-red-50 bg-slate-50 border border-slate-100"
                         onPress={() => logout()}
                     >
                         <HStack className="items-center justify-between">
-                            <HStack space="md" items-center>
-                                <Center className="w-8 h-8 rounded-xl bg-slate-100">
-                                    {/* <Icon as={} size="sm" className="text-slate-600" /> */}
-                                    <Icon as={LogOut} size="lg" className="text-slate-600" />
+                            <HStack space="md" className="items-center">
+                                <Center className="w-8 h-8 rounded-xl bg-red-100">
+                                    <Icon as={LogOut} size="sm" className="text-red-600" />
                                 </Center>
-                                <Text className="font-bold  text-slate-700">Logout</Text>
+                                <Text className="font-bold text-slate-700">Logout</Text>
                             </HStack>
-                            <Icon as={ChevronRight} size="xs" className="text-slate-300" />
+                            <Icon as={ChevronRight} size="xs" className="text-slate-400" />
                         </HStack>
                     </Pressable>
-                }
-            </Box>
-
-            {/* 3. Footer Section */}
-            <Box className="relative mt-auto pt-10">
-
-
-                {/* 2. The Floating Utility Stage */}
-                <Box
-                    className="mx-6 bg-white rounded-[40px] p-6 shadow-2xl shadow-emerald-900/20"
-                    style={{
-                        marginTop: -100, // Pulls the logout stage onto the gradient
-                        elevation: 20
-                    }}
-                >
-                    <VStack space="xl">
-                        {/* Logout Action Row */}
-
-
-                        {/* Branding/App Info Row */}
-                        <Box className="bg-slate-50 rounded-2xl p-4 ">
+                    {/* The Floating Footer Card (Branding Only) */}
+                    <Box className="mx-6 bg-white rounded-[40px] p-5 shadow-2xl shadow-emerald-900/10 border border-slate-50">
+                        <Box className="bg-slate-50 rounded-2xl p-4">
                             <VStack space="xs" className="items-center">
                                 <Text className="text-slate-900 font-black text-[10px] tracking-[2px]">
-                                    ROCT CITY <Text className="text-emerald-600">AG CHURCH</Text>
+                                    <Text className="text-emerald-600"> {lookups.appName}</Text>
                                 </Text>
                                 <HStack space="xs" className="items-center">
-                                    <Text className="text-[9px] font-bold text-slate-400">V 1.0.3</Text>
+                                    <Text className="text-[9px] font-bold text-slate-400">V {lookups.appVersion}</Text>
                                     <Box className="w-1 h-1 rounded-full bg-slate-300" />
-                                    <Text className="text-[9px] font-bold text-slate-400">© 2026</Text>
+                                    <Text className="text-[9px] font-bold text-slate-400">© {getCurrentYear()}</Text>
                                 </HStack>
                             </VStack>
                         </Box>
-                    </VStack>
+                    </Box>
+
+
                 </Box>
-            </Box>
+
+            </VStack>
         </DrawerContentScrollView>
 
     );

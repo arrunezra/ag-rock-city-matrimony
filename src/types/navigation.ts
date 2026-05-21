@@ -20,7 +20,7 @@ export type AdminStackParamList = {
   StaffDetail: undefined;
   StaffDashboard: undefined;
   StaffScreen: undefined;
-
+  ChurchManagement: undefined;
 
   // ... add others
 };
@@ -33,4 +33,3 @@ export type RootDrawerParamList = {
   ChurchSummary: undefined; // If it's also in the drawer
   BaptismRecords: undefined;
 };
- 

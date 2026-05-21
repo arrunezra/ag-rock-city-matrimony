@@ -289,13 +289,16 @@ export default function ChurchSummary({ route, navigation }: any) {
         <Box className="flex-1 bg-background-50">
             <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
             {/* <HeaderSession title="Payment Ledger" theme="midnight" leftIconType="back" /> */}
+
+
             <HeaderSession
                 title="Church Summary"
-                theme='emerald'
-                //subTitle="System Overview"
-                showRightIcon={false}
-                leftIconType="menu"
-                onLeftPress={() => navigation.openDrawer()}
+                theme="emerald"
+                showBackButton={true}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
             />
             {/* 1. SEARCH BAR (Keep your existing code here) */}
             <Box className="px-5 pt-6 pb-4 bg-white/80 backdrop-blur-md border-b border-slate-100">

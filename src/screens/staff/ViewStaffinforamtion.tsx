@@ -3,12 +3,15 @@ import { Hash, Icon, Phone, User } from '@/src/components/common/IconUI';
 import StaffService from '@/src/services/StaffService';
 import { ArrowLeft, Briefcase, Calendar, ChevronRight, Church, Edit3Icon, Hexagon, Home, Mail, MapPin, Navigation, Smartphone, UserCheck } from 'lucide-react-native';
 import { MotiView } from 'moti';
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { View, Text, TouchableOpacity, Linking } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import LinearGradient from 'react-native-linear-gradient';
 import LoadingScreen from '../common/LoadingScreen';
 import NotFoundScreen from '../common/NotFoundScreen';
+import { useAuth } from '@/src/context/AuthContext';
+import { useFocusEffect } from '@react-navigation/native';
+import { getExtension } from '@/src/utils/common';
 const InfoRow = ({ label, value, icon: IconComponent, color = "#0891b2", isMultiline = false }: any) => (
     <HStack className="items-center gap-5 py-2">
         {/* Icon with soft tinted background */}
@@ -47,7 +50,9 @@ const GlassTile = ({ label, value }: any) => (
 );
 const ViewStaffinforamtion = ({ navigation, route }: any) => {
     const { id } = route.params; // Get the ID from navigation
-    console.log('ViewStaffinforamtion id=', id);
+    const { user } = useAuth();
+
+    //console.log('ViewStaffinforamtion id=', id);
     const [formData, setFormData] = useState({
         id: id,
         firstName: '',
@@ -77,6 +82,14 @@ const ViewStaffinforamtion = ({ navigation, route }: any) => {
         activeStatus: '',
     });
     const [isLoading, setIsLoading] = useState(true);
+    const [profile, setProfile] = useState<any>('');
+
+    useFocusEffect(
+        useCallback(() => {
+            //console.log(getExtension(user?.profilePic, 'url'))
+            setProfile(getExtension(user?.profilePic, 'url'))
+        }, [])
+    );
     useEffect(() => {
         const fetchStaffData = async () => {
             try {
@@ -134,10 +147,11 @@ const ViewStaffinforamtion = ({ navigation, route }: any) => {
                                     <AvatarFallbackText className="font-bold text-2xl">
                                         {formData.firstName}{formData.lastName}
                                     </AvatarFallbackText>
-                                    <AvatarImage
+                                    {profile && <AvatarImage source={{ uri: profile }} className="h-full w-full" />}
+                                    {/* <AvatarImage
                                         source={{ uri: 'https://agrcdev.jeasuns.com/agrcdev/php/uploads/profiles/thumbs/AG0126-94693_1769585743_thumbnail.jpg' }}
                                         className="h-full w-full"
-                                    />
+                                    /> */}
                                 </Avatar>
 
                                 {/* Status Badge: Placed precisely on the edge */}
@@ -242,7 +256,7 @@ const ViewStaffinforamtion = ({ navigation, route }: any) => {
                         style={{ elevation: 10 }}
                     >
                         <LinearGradient
-                            colors={['#1e293b', '#0f172a']}
+                            colors={['#0891b2', '#0e7490']}
                             // Ensure the gradient also has rounded-full
                             className="h-full w-full rounded-full items-center justify-center"
                         >

@@ -61,7 +61,7 @@ const EditBasicsModalScreen = ({ isOpen, onClose, user, content, lookups, onRefr
             content.dobMonth = mm;
             content.dobYear = yyyy;
             setFormData(_.cloneDeep(content || []))
-            console.log('content', content)
+            //console.log('content', content)
 
             // updateForm('dobDay', dd)
             // updateForm('dobMonth', mm) 

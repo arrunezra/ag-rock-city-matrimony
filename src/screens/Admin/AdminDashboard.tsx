@@ -34,7 +34,7 @@ const AdminDashboard = ({ navigation }: any) => {
         try {
             const result = await AdminServices.getDashboard({ action: '' })
             if (result.success) {
-                console.log('result', result)
+                //console.log('result', result)
                 setData(result);
             }
 
@@ -118,11 +118,12 @@ const AdminDashboard = ({ navigation }: any) => {
             {/* 1. Put the header at the top */}
             <HeaderSession
                 title="Control Center"
-                theme='emerald'
-                //subTitle="System Overview"
-                showRightIcon={false}
-                leftIconType="menu"
-                onLeftPress={() => navigation.openDrawer()}
+                theme="emerald"
+                showBackButton={false}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
             />
             <ScrollView
                 showsVerticalScrollIndicator={false}
@@ -293,9 +294,9 @@ const AdminDashboard = ({ navigation }: any) => {
                         <Heading size="sm" className="text-slate-500 font-bold uppercase tracking-[2px]">
                             Church Breakdown
                         </Heading>
-                        <TouchableOpacity>
+                        {/* <TouchableOpacity>
                             <Text size="xs" className="text-cyan-600 font-bold">Export PDF</Text>
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
                     </HStack>
 
 

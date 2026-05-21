@@ -241,14 +241,17 @@ const PaymentHistoryScreen = ({ navigation }: any) => {
         <VStack className="flex-1 bg-white">
             <RNStatusBar barStyle="light-content" translucent backgroundColor="transparent" />
             {/* <HeaderSession title="Payment Ledger" theme="midnight" leftIconType="back" /> */}
+
             <HeaderSession
-                title="Control Center"
-                theme='emerald'
-                //subTitle="System Overview"
-                showRightIcon={false}
-                leftIconType="menu"
-                onLeftPress={() => navigation.openDrawer()}
+                title="Payment summary"
+                theme="emerald"
+                showBackButton={false}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
             />
+
             {/* --- REVENUE HERO SUMMARY DISPLAY --- */}
             <MotiView from={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="mx-4 mt-4">
                 <LinearGradient colors={REVENUE_PALETTE} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ borderRadius: 28, padding: 24, elevation: 8 }}>

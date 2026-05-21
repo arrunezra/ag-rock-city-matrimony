@@ -8,13 +8,14 @@ import { Icon } from '@/src/components/common/IconUI';
 
 interface HeaderProps {
     title: string;
-    theme?: 'midnight' | 'emerald' | 'slate';
-    leftIconType?: 'menu' | 'back' | 'none';
-    onLeftPress?: () => void;
+    theme?: 'midnight' | 'emerald' | 'slate' | 'blue';
+    showBackButton?: boolean;
+    onBackPress?: () => void;
     showRightIcon?: boolean;
-    rightIconType?: 'bell' | 'search' | 'close';
+    rightIconType?: 'menu' | 'bell' | 'search' | 'close';
     onRightPress?: () => void;
 }
+
 // Use this to get the height on Android/iOS
 const getStatusBarHeight = () => {
     return Platform.select({
@@ -26,29 +27,39 @@ const getStatusBarHeight = () => {
 const HeaderSession = ({
     title,
     theme = 'emerald',
-    leftIconType = 'menu',
-    onLeftPress,
+    showBackButton = true,
+    onBackPress,
     showRightIcon = true,
-    rightIconType = 'close',
+    rightIconType = 'menu', // Set default right icon to 'menu'
     onRightPress
 }: HeaderProps) => {
 
     const palettes = {
         midnight: ['#1E1B4B', '#0F172A'],
         emerald: ['#064E3B', '#022C22'],
-        slate: ['#334155', '#0F172A']
+        slate: ['#334155', '#0F172A'],
+        blue: ['#0891b2', '#155e75']
     };
 
-    const LeftIcon = leftIconType === 'menu' ? Menu : ChevronLeft;
-    const RightIcon = rightIconType === 'bell' ? Bell : (rightIconType === 'search' ? Search : X);
+    // Right icon mapper based on type
+    const getRightIcon = () => {
+        switch (rightIconType) {
+            case 'menu': return Menu;
+            case 'bell': return Bell;
+            case 'search': return Search;
+            case 'close': return X;
+            default: return Menu;
+        }
+    };
+
+    const RightIcon = getRightIcon();
     const STATUS_BAR_HEIGHT = getStatusBarHeight();
+
     return (
         <MotiView
             from={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            //transition={{ type: 'spring', damping: 15 }}
             transition={{ type: 'no-animation' }}
-
         >
             <LinearGradient
                 colors={palettes[theme]}
@@ -57,9 +68,6 @@ const HeaderSession = ({
                 style={{
                     paddingTop: STATUS_BAR_HEIGHT + 10, // Added 10px extra gap from status bar
                     paddingBottom: 20,                  // Added padding for better height
-                    //borderBottomLeftRadius: 32,
-                    //borderBottomRightRadius: 32,
-                    // --- PREMIUM SHADOW ---
                     elevation: 15,
                     shadowColor: palettes[theme][0],    // Shadow matches the theme color
                     shadowOffset: { width: 0, height: 10 },
@@ -68,19 +76,20 @@ const HeaderSession = ({
                 }}
             >
                 <HStack className="px-6 items-center justify-between">
-                    {/* LEFT ICON - INCREASED SIZE */}
+
+                    {/* LEFT SIDE - BACK OPTION */}
                     <Box className="w-12">
-                        {leftIconType !== 'none' && (
+                        {showBackButton && (
                             <TouchableOpacity
-                                onPress={onLeftPress}
+                                onPress={onBackPress}
                                 className="p-3 bg-white/10 rounded-2xl active:scale-90 transition-all"
                             >
-                                <Icon as={LeftIcon} size="lg" color="white" />
+                                <Icon as={ChevronLeft} size="lg" color="white" />
                             </TouchableOpacity>
                         )}
                     </Box>
 
-                    {/* CENTER TITLE - BETTER VERTICAL GAP */}
+                    {/* CENTER TITLE */}
                     <VStack className="items-center flex-1 mx-2">
                         <Heading
                             numberOfLines={1}
@@ -90,7 +99,7 @@ const HeaderSession = ({
                         </Heading>
                     </VStack>
 
-                    {/* RIGHT ICON - INCREASED SIZE */}
+                    {/* RIGHT SIDE - MENU & OTHER OPTIONS */}
                     <Box className="w-12 items-end">
                         {showRightIcon && (
                             <TouchableOpacity

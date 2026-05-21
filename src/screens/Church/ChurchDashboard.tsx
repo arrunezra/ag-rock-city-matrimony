@@ -125,8 +125,8 @@ export default function ChurchDashboard({ navigation }: any) {
 
             </HStack>
 
-            {/* 3. DENOMINATION BENTO LIST */}
-            <Box className="bg-white/60 rounded-[32px] p-2 border border-outline-100 shadow-sm mb-8">
+            {/* 3. DENOMINATION BENTO LIST Mulitple penecost and CSI display panna venum- Don't delete */}
+            {/* <Box className="bg-white/60 rounded-[32px] p-2 border border-outline-100 shadow-sm mb-8">
                 <Heading size="xs" className="my-3 ml-4 text-typography-500 uppercase tracking-[2px] font-bold">
                     Denominations
                 </Heading>
@@ -149,7 +149,7 @@ export default function ChurchDashboard({ navigation }: any) {
                         </HStack>
                     ))}
                 </VStack>
-            </Box>
+            </Box> */}
 
             <Divider className="mb-8 border-outline-50 opacity-50" />
 
@@ -169,7 +169,7 @@ export default function ChurchDashboard({ navigation }: any) {
                     className="bg-primary-50 px-4 py-2 rounded-full border border-primary-100 active:scale-95"
                 >
                     <HStack space="xs" className="items-center">
-                        <Text size="xs" className="text-primary-700 font-black uppercase">View All</Text>
+                        <Text size="xs" className="text-primary-700 font-black ">View All</Text>
                         <Icon as={ChevronRight} size="xs" className="text-primary-700" />
                     </HStack>
                 </TouchableOpacity>
@@ -215,16 +215,16 @@ export default function ChurchDashboard({ navigation }: any) {
     return (
         <Box className="flex-1 bg-background-50">
             <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-            {/* <HeaderSession title="Payment Ledger" theme="midnight" leftIconType="back" /> */}
+
             <HeaderSession
                 title="Church Overview"
-                theme='emerald'
-                //subTitle="System Overview"
-                showRightIcon={false}
-                leftIconType="menu"
-                onLeftPress={() => navigation.openDrawer()}
+                theme="emerald"
+                showBackButton={false}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
             />
-
             {loading && !refreshing ? (
                 <VStack className="pt-4">
                     <HeaderSkeleton />

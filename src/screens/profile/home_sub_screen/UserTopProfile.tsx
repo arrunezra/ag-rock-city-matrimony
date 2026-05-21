@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Box, VStack, HStack, Text, Heading, Avatar, AvatarImage, AvatarFallbackText, Center } from '@/src/components/common/GluestackUI';
 import { Pressable, TouchableOpacity, View } from 'react-native';
 import { AddIcon, CheckIcon, EditIcon, Icon, StarIcon } from '@/components/ui/icon';
@@ -8,10 +8,12 @@ import LinearGradient from 'react-native-linear-gradient';
 import { Briefcase, Camera, CheckCircle, CheckCircle2, ChevronRight, CreditCard, Edit3, Eye, GraduationCap, Heart, HeartHandshake, MapPin, Share2, Star, TrendingUp, Users, Zap } from 'lucide-react-native';
 import profileService from '@/src/services/profileService';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { LookupContext } from '@/src/context/LookupContext';
 
 const UserTopProfile = ({ user, onEdit, onAddPhoto, onPayment }: any) => {
     //console.log('user==', user)
     const navigation = useNavigation<any>();
+    const { lookups } = useContext(LookupContext);
 
     const [profiles, setProfiles] = useState<any>('');
     const [summary, setSummary] = useState<any>();
@@ -343,7 +345,7 @@ const UserTopProfile = ({ user, onEdit, onAddPhoto, onPayment }: any) => {
                             {/* 5. Clean Signature (Replaces the Action Stage) */}
                             <VStack className="items-center mt-4">
                                 <Text className="text-slate-300 font-black text-[8px] uppercase tracking-[3px]">
-                                    Roct City AG Church
+                                    {lookups.appName} Roct City AG Church
                                 </Text>
                             </VStack>
                         </VStack>

@@ -1,4 +1,4 @@
-import { RefreshControl, TouchableOpacity, Linking, Pressable, ScrollView, FlatList, ActivityIndicator, Animated } from "react-native";
+import { RefreshControl, TouchableOpacity, Linking, Pressable, ScrollView, FlatList, ActivityIndicator, Animated, StatusBar } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { MotiView } from 'moti';
 import {
@@ -6,6 +6,9 @@ import {
     Input,
     InputSlot,
     InputField,
+    Avatar,
+    AvatarFallbackText,
+    AvatarImage,
 } from '@/src/components/common/GluestackUI';
 import {
     Icon,
@@ -19,8 +22,13 @@ import { Edit3Icon, SearchIcon, Settings2, XCircle, XIcon } from "lucide-react-n
 import { useEffect, useMemo, useRef, useState } from "react";
 import StaffService from "@/src/services/StaffService";
 import { StaffSummarySkeleton } from "./DashboardSkeleton";
-const StaffItem = ({ item, index, navigation }: any) => (
-    <MotiView
+import HeaderSession from "../common/HeaderSession";
+import { getExtension } from "@/src/utils/common";
+import { useAuth } from "@/src/context/AuthContext";
+const StaffItem = ({ item, index, navigation, user }: any) => {
+    const [profile, setProfile] = useState<any>(getExtension(user?.profilePic, 'url'));
+    console.log('item', item);
+    return <MotiView
         from={{ opacity: 0, translateY: 20 }}
         animate={{ opacity: 1, translateY: 0 }}
         transition={{
@@ -42,7 +50,17 @@ const StaffItem = ({ item, index, navigation }: any) => (
                 className="p-4 rounded-r-[28px] rounded-l-[10px] border border-slate-100 flex-row items-center shadow-sm"
             >
                 <Box className="h-14 w-14 rounded-full bg-slate-100 border-2 border-white shadow-sm items-center justify-center overflow-hidden">
-                    <Text className="font-bold text-slate-400 text-lg">{item.full_name[0]}</Text>
+                    {/* <Text className="font-bold text-slate-400 text-lg">{item.full_name[0]}</Text> */}
+                    <Avatar className="h-full w-full rounded-full">
+                        <AvatarFallbackText className="font-bold text-2xl">
+                            {item.full_name}
+                        </AvatarFallbackText>
+                        {profile && <AvatarImage source={{ uri: profile }} className="h-full w-full" />}
+                        {/* <AvatarImage
+                                        source={{ uri: 'https://agrcdev.jeasuns.com/agrcdev/php/uploads/profiles/thumbs/AG0126-94693_1769585743_thumbnail.jpg' }}
+                                        className="h-full w-full"
+                                    /> */}
+                    </Avatar>
                 </Box>
 
                 <VStack className="ml-4 flex-1">
@@ -65,8 +83,10 @@ const StaffItem = ({ item, index, navigation }: any) => (
             </LinearGradient>
         </Pressable>
     </MotiView>
-);
+};
 const StaffSummaryView = ({ navigation }: any) => {
+    const { user } = useAuth();
+
     const [searchTerm, setSearchTerm] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const [filters, setFilters] = useState({ fullName: '', designation: '', activeStatus: 'Active' });
@@ -194,6 +214,17 @@ const StaffSummaryView = ({ navigation }: any) => {
     return (
 
         <Box className="flex-1 bg-slate-50">
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            {/* 1. Put the header at the top */}
+            <HeaderSession
+                title="Staff Overview"
+                theme='blue'
+                //subTitle="System Overview"
+                showRightIcon={false}
+                leftIconType="menu"
+                onLeftPress={() => navigation.openDrawer()}
+            />
+
             {/* 1. FIXED HEADER SECTION (Stays at top, Keyboard remains safe) */}
             <VStack space="lg" className="p-4 bg-slate-50 pt-12">
                 <HStack space="sm" className="items-center mt-2">
@@ -229,7 +260,7 @@ const StaffSummaryView = ({ navigation }: any) => {
                     <TouchableOpacity
                         activeOpacity={0.7}
                         onPress={() => {/* Open Filters */ }}
-                        className="w-16 h-16 bg-slate-900 rounded-3xl items-center justify-center shadow-xl active:scale-95 transition-transform"
+                        className="w-16 h-16 bg-slate-600 rounded-3xl items-center justify-center shadow-xl active:scale-95 transition-transform"
                     >
                         <Icon as={Settings2} className="text-cyan-400" size="md" />
                     </TouchableOpacity>
@@ -241,7 +272,7 @@ const StaffSummaryView = ({ navigation }: any) => {
                 data={staffList || []}
                 keyExtractor={(item: any) => item.id.toString()}
                 renderItem={({ item, index }) => (
-                    <StaffItem item={item} index={index} navigation={navigation} />
+                    <StaffItem item={item} user={user} index={index} navigation={navigation} />
                 )}
 
                 // This is where you put your Badges and "Recent Members" Title
@@ -298,7 +329,7 @@ const StaffSummaryView = ({ navigation }: any) => {
                     style={{ elevation: 10 }}
                 >
                     <LinearGradient
-                        colors={['#26dda0ff', '#0a6d4fff']}
+                        colors={['#0891b2', '#0e7490']}
                         // Ensure the gradient also has rounded-full
                         className="h-full w-full rounded-full items-center justify-center"
                     >

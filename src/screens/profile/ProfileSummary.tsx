@@ -57,12 +57,13 @@ const ProfileSummary = ({ navigation }: any) => {
 
             {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
             <HeaderSession
-                title="Control Center"
-                theme='emerald'
-                //subTitle="System Overview"
-                showRightIcon={false}
-                leftIconType="menu"
-                onLeftPress={() => navigation.openDrawer()}
+                title="Profile summary"
+                theme="emerald"
+                showBackButton={false}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
             />
             <KeyboardAwareScrollView
                 className="flex-1 bg-slate-50 p-4"

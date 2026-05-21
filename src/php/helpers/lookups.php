@@ -2,6 +2,7 @@
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 require_once '../config/database.php';
+require_once '../config/config.php';
 
 try {
     $db = Database::getInstance();
@@ -15,7 +16,8 @@ try {
                 m.LookupMasterName, 
                 t.LookupKey as 'key', 
                 t.LookupValue as 'value', 
-                t.LookupParentKey as 'parent'
+                t.LookupParentKey as 'parent',
+				t.Description as 'description'
             FROM t_mas_lookup m
             JOIN t_tran_lookup t ON m.LookupMasterID = t.LookupMasterID
             WHERE m.LookupMasterID IN ($ids) AND m.IsActive = 1  AND t.is_active = 1
@@ -51,12 +53,20 @@ try {
             $bulkData[$category][] = [
                 'label' => $row['value'],
                 'value' => $row['key'],
-                'parent' => $row['parent']
+                'parent' => $row['parent'],
+				'description' => $row['description']
             ];
         }
     }
-
-    echo json_encode(["success" => true, "data" => $bulkData]);
+    $appName = Config::get('DisplayName');
+    $appVersion = Config::get('app_version');
+    
+    echo json_encode([
+        "success" => true
+        ,"data" => $bulkData
+        ,"appName" => $appName
+        ,"appVersion" => $appVersion
+    ]);
 
 } catch (PDOException $e) {
     echo json_encode(["success" => false, "message" => $e->getMessage()]);

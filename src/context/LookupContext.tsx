@@ -28,12 +28,15 @@ interface LookupData {
     financial_details: LookupOption[];
     country: LookupOption[];
     hobbies: LookupOption[];
+    appName: string;
+    appVersion: string;
 }
 
 // 3. Define the Context's return type
 interface LookupContextType {
     lookups: LookupData;
     isReady: boolean;
+
     refreshLookups: () => Promise<void>;
 }
 
@@ -56,8 +59,11 @@ export const LookupContext = createContext<LookupContextType>({
         financial_status: [],
         financial_details: [],
         country: [],
-        hobbies: []
+        hobbies: [],
+        appName: '',
+        appVersion: ''
     },
+
     isReady: false,
     refreshLookups: async () => { },
 });
@@ -80,7 +86,9 @@ export const LookupProvider = ({ children }: { children: ReactNode }) => {
         financial_status: [],
         financial_details: [],
         country: [],
-        hobbies: []
+        hobbies: [],
+        appName: '',
+        appVersion: ''
     });
     const [isReady, setIsReady] = useState(false);
 
@@ -88,9 +96,14 @@ export const LookupProvider = ({ children }: { children: ReactNode }) => {
         try {
             // Updated to a bulk helper endpoint that returns all MasterIDs
             const res = await api.get('/helpers/lookups.php');
-            console.log('lookups=', res.data);
+            console.log('lookups=======', res.data);
             if (res.data.success) {
-                setLookups(res.data.data);
+                let item = {
+                    ...res.data.data,
+                    appName: res?.data?.appName,
+                    appVersion: res?.data?.appVersion
+                }
+                setLookups(item);
                 setIsReady(true);
             }
         } catch (err) {

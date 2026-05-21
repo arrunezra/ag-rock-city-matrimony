@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { FlatList, RefreshControl, Pressable, TextInput, TouchableOpacity, Animated } from 'react-native';
+import { FlatList, RefreshControl, Pressable, TextInput, TouchableOpacity, Animated, StatusBar } from 'react-native';
 import { Box, HStack, VStack, Text, Heading, Spinner, Center, Input, InputField, InputIcon, InputSlot } from '@/src/components/common/GluestackUI';
 import { useNavigation } from '@react-navigation/native';
 import { MotiView } from 'moti';
@@ -8,6 +8,7 @@ import { ChevronRight, MapPin, Check, Search, X, Settings2, XIcon, SearchIcon } 
 import api from '@/src/api/api';
 import { Icon } from '@/src/components/common/IconUI';
 import { getExtension } from '@/src/utils/common';
+import HeaderSession from '../common/HeaderSession';
 
 const StaffProfileSummaryView = () => {
     const navigation = useNavigation<any>();
@@ -23,13 +24,7 @@ const StaffProfileSummaryView = () => {
     // 1. Updated Fetch Logic to match the New PHP (POST method + Pagination)
     const fetchProfiles = useCallback(async (isSilent = false, search = '', pageNum = 0) => {
         if (!isSilent) setLoading(true);
-        console.log({
-            role: 'member',
-            search: search,
-            page: pageNum,
-            limit: 15, // Matches the offset logic in PHP
-            debug: 0
-        });
+
         try {
             // CHANGED: Using POST to match PHP json_decode(file_get_contents("php://input"))
             // CHANGED: Pointing to get_staff_profiles.php
@@ -182,7 +177,19 @@ const StaffProfileSummaryView = () => {
     }, [searchQuery]);
     return (
         <Box className="flex-1 bg-slate-50">
-            <VStack space="lg" className="p-4 bg-slate-50 pt-12">
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
+            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
+            <HeaderSession
+                title="Profile Summary"
+                theme="emerald"
+                showBackButton={true}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+            />
+            <VStack space="lg" className="p-4 bg-slate-50 ">
                 <HStack space="sm" className="items-center mt-2">
                     <Input
                         variant="rounded"

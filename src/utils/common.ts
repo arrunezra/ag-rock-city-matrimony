@@ -20,7 +20,7 @@ export const getFileIconConfig = (ext: string = '') => {
 
 export const getExtension = (fileName: string = '', action: 'fileName' | 'dotwithextension' | 'dotwitouthextension' | 'addthumnail' | "url") => {
 
-
+    console.log('fileName', fileName)
     if (!fileName && (action === 'addthumnail' || action === 'url')) {
         if (fileName == "fake") {
             return "";

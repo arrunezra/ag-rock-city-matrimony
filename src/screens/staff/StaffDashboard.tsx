@@ -3,12 +3,13 @@ import { AddIcon, Icon, UserCheck } from "@/src/components/common/IconUI";
 import StaffService from "@/src/services/StaffService";
 import { Activity, ChevronRight, Edit2, Edit3Icon, Phone, PhoneIcon, Plus, PlusIcon, Users, UserX } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Linking, Pressable, RefreshControl, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Linking, Pressable, RefreshControl, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import LinearGradient from "react-native-linear-gradient";
 import { StatusAlert } from "../common/StatusAlert";
 import { MotiView } from "moti";
 import DashboardSkeleton from "./DashboardSkeleton";
+import HeaderSession from "../common/HeaderSession";
 
 const StaffDashboard = ({ navigation }: any) => {
     const [data, setData] = useState<any>(null);
@@ -32,6 +33,17 @@ const StaffDashboard = ({ navigation }: any) => {
     }, []);
     return (
         <View className="flex-1 bg-slate-50">
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            {/* 1. Put the header at the top */}
+            <HeaderSession
+                title="Staff Overview"
+                theme="blue"
+                //subTitle="System Overview"
+                showRightIcon={false}
+                leftIconType="menu"
+                onLeftPress={() => navigation.openDrawer()}
+            />
+
             <KeyboardAwareScrollView bottomOffset={0} className="flex-1 bg-slate-50 p-4" showsVerticalScrollIndicator={false} refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={fetchDashboardData} tintColor="#0891b2" />
             } >
