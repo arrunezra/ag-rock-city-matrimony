@@ -26,8 +26,8 @@ import HeaderSession from "../common/HeaderSession";
 import { getExtension } from "@/src/utils/common";
 import { useAuth } from "@/src/context/AuthContext";
 const StaffItem = ({ item, index, navigation, user }: any) => {
-    const [profile, setProfile] = useState<any>(getExtension(user?.profilePic, 'url'));
-    console.log('item', item);
+    const [profile, setProfile] = useState<any>("");
+    //console.log('item', item);
     return <MotiView
         from={{ opacity: 0, translateY: 20 }}
         animate={{ opacity: 1, translateY: 0 }}
@@ -131,7 +131,7 @@ const StaffSummaryView = ({ navigation }: any) => {
                 designation: filters.designation,
                 search: genericSearch
             });
-            console.log('fetchSummaryStaffData', res);
+            //console.log('fetchSummaryStaffData', res);
             if (res.success) {
                 // Functional state update is safer for list manipulation
                 setStaffList(prev => shouldAppend ? [...prev, ...res.data] : res.data);
@@ -215,18 +215,20 @@ const StaffSummaryView = ({ navigation }: any) => {
 
         <Box className="flex-1 bg-slate-50">
             <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-            {/* 1. Put the header at the top */}
+            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
             <HeaderSession
                 title="Staff Overview"
-                theme='blue'
-                //subTitle="System Overview"
-                showRightIcon={false}
-                leftIconType="menu"
-                onLeftPress={() => navigation.openDrawer()}
+                theme="emerald"
+                showBackButton={false}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
             />
 
+
             {/* 1. FIXED HEADER SECTION (Stays at top, Keyboard remains safe) */}
-            <VStack space="lg" className="p-4 bg-slate-50 pt-12">
+            <VStack space="lg" className="p-4 bg-slate-50 pt-8">
                 <HStack space="sm" className="items-center mt-2">
                     <Input
                         variant="rounded"

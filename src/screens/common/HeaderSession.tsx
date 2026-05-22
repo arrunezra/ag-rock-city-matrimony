@@ -8,7 +8,7 @@ import { Icon } from '@/src/components/common/IconUI';
 
 interface HeaderProps {
     title: string;
-    theme?: 'midnight' | 'emerald' | 'slate' | 'blue';
+    theme?: 'midnight' | 'emerald' | 'slate' | 'blue' | 'sunset' | 'ocean' | "cyan" | 'forest' | 'bordeaux' | 'charcoal' | 'white' | 'glass' | 'mint';
     showBackButton?: boolean;
     onBackPress?: () => void;
     showRightIcon?: boolean;
@@ -35,10 +35,25 @@ const HeaderSession = ({
 }: HeaderProps) => {
 
     const palettes = {
-        midnight: ['#1E1B4B', '#0F172A'],
-        emerald: ['#064E3B', '#022C22'],
-        slate: ['#334155', '#0F172A'],
-        blue: ['#0891b2', '#155e75']
+        // --- Your Original Dark & Deep Themes ---
+        midnight: ['#1E1B4B', '#0F172A'], // Deep indigo to dark slate
+        emerald: ['#064E3B', '#022C22'], // Deep church / organic green
+        slate: ['#334155', '#0F172A'], // Muted professional steel gray
+        blue: ['#0891B2', '#155E75'], // Rich teal cyan to deep sea blue
+
+        // --- Premium & Vibrant Gradients (High Contrast for White Text) ---
+        sunset: ['#8B5CF6', '#EC4899'], // Royal Purple to Vibrant Pink (Energetic)
+        ocean: ['#0284C7', '#0369A1'], // Corporate / Trustworthy Bright Blue
+        forest: ['#0F766E', '#115E59'], // Sleek Deep Teal/Mint Green
+        bordeaux: ['#4C0519', '#881337'], // Luxury Crimson / Wine Red
+        charcoal: ['#1E293B', '#0F172A'], // Ultra-clean, modern minimalist Dark Mode
+        cyan: ['#0097b2', '#00bcd4'], // Corporate / Trustworthy Bright Blue
+
+        // --- Soft Pastel / Elegant Light Themes ---
+        // WARNING: If you use these, change your header text/icon color to black or dark slate!
+        white: ['#FFFFFF', '#F8FAFC'], // Pure crisp white to off-white
+        glass: ['#F1F5F9', '#E2E8F0'], // Soft metallic platinum gray
+        mint: ['#E6F4EA', '#CEEAD6']  // Peaceful, ultra-light community green
     };
 
     // Right icon mapper based on type
@@ -55,6 +70,13 @@ const HeaderSession = ({
     const RightIcon = getRightIcon();
     const STATUS_BAR_HEIGHT = getStatusBarHeight();
 
+    // Determine theme text color (dark text for white theme, white text for others)
+    const isWhiteTheme = (theme === 'white' || theme === 'glass' || theme === 'mint');
+    const textColor = isWhiteTheme ? 'text-slate-800' : 'text-white';
+    const iconColor = isWhiteTheme ? '#1E293B' : 'white';
+    const iconBg = isWhiteTheme ? 'bg-slate-900/5' : 'bg-white/10';
+    const shadowColor = isWhiteTheme ? '#64748B' : palettes[theme][0];
+
     return (
         <MotiView
             from={{ opacity: 0, scale: 0.95 }}
@@ -66,12 +88,12 @@ const HeaderSession = ({
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={{
-                    paddingTop: STATUS_BAR_HEIGHT + 10, // Added 10px extra gap from status bar
-                    paddingBottom: 20,                  // Added padding for better height
+                    paddingTop: STATUS_BAR_HEIGHT + 10, // Applied your custom padding tweak
+                    paddingBottom: 20,
                     elevation: 15,
-                    shadowColor: palettes[theme][0],    // Shadow matches the theme color
+                    shadowColor: shadowColor,
                     shadowOffset: { width: 0, height: 10 },
-                    shadowOpacity: 0.3,
+                    shadowOpacity: isWhiteTheme ? 0.08 : 0.3,
                     shadowRadius: 15,
                 }}
             >
@@ -82,9 +104,9 @@ const HeaderSession = ({
                         {showBackButton && (
                             <TouchableOpacity
                                 onPress={onBackPress}
-                                className="p-3 bg-white/10 rounded-2xl active:scale-90 transition-all"
+                                className={`p-3 ${iconBg} rounded-2xl active:scale-90 transition-all`}
                             >
-                                <Icon as={ChevronLeft} size="lg" color="white" />
+                                <Icon as={ChevronLeft} size="lg" color={iconColor} />
                             </TouchableOpacity>
                         )}
                     </Box>
@@ -93,7 +115,7 @@ const HeaderSession = ({
                     <VStack className="items-center flex-1 mx-2">
                         <Heading
                             numberOfLines={1}
-                            className="text-white font-extrabold text-xl tracking-tight text-center"
+                            className={`font-extrabold text-xl tracking-tight text-center ${textColor}`}
                         >
                             {title}
                         </Heading>
@@ -104,12 +126,15 @@ const HeaderSession = ({
                         {showRightIcon && (
                             <TouchableOpacity
                                 onPress={onRightPress}
-                                className="p-3 bg-white/10 rounded-2xl active:scale-90 transition-all"
+                                className={`p-3 ${iconBg} rounded-2xl active:scale-90 transition-all`}
                             >
                                 <Box className="relative">
-                                    <Icon as={RightIcon} size="lg" color="white" />
+                                    <Icon as={RightIcon} size="lg" color={iconColor} />
                                     {rightIconType === 'bell' && (
-                                        <Box className="absolute top-0 right-0 w-3 h-3 bg-cyan-400 rounded-full border-2 border-[#064E3B]" />
+                                        <Box
+                                            className="absolute top-0 right-0 w-3 h-3 bg-cyan-400 rounded-full border-2"
+                                            style={{ borderColor: palettes[theme][0] }} // Dynamic border color match
+                                        />
                                     )}
                                 </Box>
                             </TouchableOpacity>
@@ -119,6 +144,7 @@ const HeaderSession = ({
             </LinearGradient>
         </MotiView>
     );
+
 };
 
 export default HeaderSession;

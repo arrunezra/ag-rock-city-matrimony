@@ -1,4 +1,4 @@
-import { Box, Heading, HStack, Link, LinkText, VStack } from "@/src/components/common/GluestackUI";
+import { Avatar, AvatarFallbackText, AvatarImage, Box, Heading, HStack, Link, LinkText, VStack } from "@/src/components/common/GluestackUI";
 import { AddIcon, Icon, UserCheck } from "@/src/components/common/IconUI";
 import StaffService from "@/src/services/StaffService";
 import { Activity, ChevronRight, Edit2, Edit3Icon, Phone, PhoneIcon, Plus, PlusIcon, Users, UserX } from "lucide-react-native";
@@ -33,16 +33,19 @@ const StaffDashboard = ({ navigation }: any) => {
     }, []);
     return (
         <View className="flex-1 bg-slate-50">
+
             <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-            {/* 1. Put the header at the top */}
+            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
             <HeaderSession
                 title="Staff Overview"
                 theme="blue"
-                //subTitle="System Overview"
-                showRightIcon={false}
-                leftIconType="menu"
-                onLeftPress={() => navigation.openDrawer()}
+                showBackButton={false}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
             />
+
 
             <KeyboardAwareScrollView bottomOffset={0} className="flex-1 bg-slate-50 p-4" showsVerticalScrollIndicator={false} refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={fetchDashboardData} tintColor="#0891b2" />
@@ -117,8 +120,9 @@ const StaffDashboard = ({ navigation }: any) => {
                             <DashboardSkeleton />
                         ) : (
                             <>
-                                {data?.recent_staff?.map((item: any, index: number) => (
-                                    <MotiView
+                                {data?.recent_staff?.map((item: any, index: number) => {
+
+                                    return <MotiView
                                         key={item.staff_id}
                                         from={{ opacity: 0, scale: 0.9, translateY: 15 }}
                                         animate={{ opacity: 1, scale: 1, translateY: 0 }}
@@ -145,13 +149,14 @@ const StaffDashboard = ({ navigation }: any) => {
                                                 className="p-4 rounded-[28px] border border-slate-100 flex-row items-center shadow-sm"
                                             >
                                                 {/* Avatar Section */}
-                                                <Box className="relative ">
-                                                    <LinearGradient
-                                                        colors={['#0d9488', '#2dd4bf']} // Teal gradient for staff
-                                                        className="h-14 w-14 rounded-2xl  items-center justify-center shadow-sm"
-                                                    >
-                                                        <Text className="font-bold text-white text-xl">{item.full_name[0]}</Text>
-                                                    </LinearGradient>
+                                                <Box className="h-14 w-14 rounded-full bg-slate-100 border-2 border-white shadow-sm items-center justify-center overflow-hidden">
+                                                    <Avatar className="h-full w-full rounded-full">
+                                                        <AvatarFallbackText className="font-bold text-2xl">
+                                                            {item?.full_name}
+                                                        </AvatarFallbackText>
+                                                        <AvatarImage source={{ uri: "" }} className="h-full w-full" />
+
+                                                    </Avatar>
                                                 </Box>
 
                                                 {/* Info Section */}
@@ -196,7 +201,7 @@ const StaffDashboard = ({ navigation }: any) => {
                                             </LinearGradient>
                                         </Pressable>
                                     </MotiView>
-                                ))
+                                })
                                 }
 
                             </>

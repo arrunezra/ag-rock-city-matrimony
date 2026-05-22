@@ -392,12 +392,7 @@ export default function ProfileDetailScreen({ route }: any) {
         }));
         updateVerifyandStatusOnServer(id, newStatus, 'verify');
     }
-    const handlePaymentUpdate = () => {
-        navigation.navigate('Checkout', {
-            totalAmount: data?.subscription_amount ?? 0, // ₹50.00 in paise 
-            customerName: data?.full_name ?? ""
-        });
-    }
+
     const handleVerifyPhoto = () => {
         setIsPhotoVerifyModalVisible(true)
     }

@@ -200,7 +200,7 @@ const EditReligionModal = ({
                             </FormControl>
 
                             {/* CASTE NO BAR CHECKBOX CARD */}
-                            <TouchableOpacity
+                            {/* <TouchableOpacity
                                 activeOpacity={0.8}
                                 onPress={() => updateForm('is_caste_no_bar', !formData.is_caste_no_bar)}
                                 className={`mt-2 p-4 rounded-2xl border-2 flex-row items-center ${formData.is_caste_no_bar ? 'border-blue-500 bg-blue-50/50' : 'border-slate-100 bg-slate-50/50'}`}
@@ -215,6 +215,22 @@ const EditReligionModal = ({
                                     <Text size="xs" className="text-typography-500">
                                         Open to partner matches from all communities
                                     </Text>
+                                </VStack>
+                            </TouchableOpacity> */}
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                onPress={() => updateForm('is_caste_no_bar', !formData.is_caste_no_bar)}
+                                className={`mt-2 p-4 rounded-2xl border-2 flex-row items-center ${formData.is_caste_no_bar ? 'border-blue-500 bg-blue-50/50' : 'border-slate-100 bg-slate-50/50'}`}
+                            >
+                                <Box className={`w-6 h-6 rounded-lg items-center justify-center border-2 mr-3 ${formData.is_caste_no_bar ? 'bg-blue-500 border-blue-500' : 'bg-white border-slate-200'}`}>
+                                    {formData.is_caste_no_bar ? (
+                                        <Icon as={Check} size='lg' className="text-white" />
+                                    ) : null}
+                                </Box>
+
+                                <VStack className="flex-1">
+                                    <Text className={`text-sm font-bold ${formData.is_caste_no_bar ? 'text-blue-700' : 'text-typography-900'}`}>Caste No Bar</Text>
+                                    <Text size="xs" className="text-typography-500">Open to partner matches from all communities</Text>
                                 </VStack>
                             </TouchableOpacity>
                         </VStack>
@@ -240,7 +256,7 @@ const EditReligionModal = ({
 const styles = StyleSheet.create({
     dropdown: {
         height: 50,
-        borderColor: '#E5E7EB', // gray-200
+        borderColor: '#E5E7EB',
         borderWidth: 1,
         borderRadius: 12,
         paddingHorizontal: 12,
@@ -248,23 +264,23 @@ const styles = StyleSheet.create({
     },
 
     placeholderStyle: {
-        color: '#9CA3AF', // Gray-400
+        color: '#9CA3AF',
         fontSize: 14,
     },
     errorBorder: {
-        borderColor: '#EF4444', // red-500
+        borderColor: '#EF4444',
     },
     selectedTextStyle: {
-        color: '#111827', // Gray-900
+        color: '#111827',
         fontSize: 14,
         fontWeight: '500',
     },
     containerStyle: {
         backgroundColor: 'white',
         borderRadius: 24,
-        width: SCREEN_WIDTH * 0.85,   // Force it to be 80% of screen width
-        marginHorizontal: (SCREEN_WIDTH * 0.15) / 2, // Manually center it
-        maxHeight: '70%',      // Prevents the modal from going off-screen
+        width: SCREEN_WIDTH * 0.85,
+        marginHorizontal: (SCREEN_WIDTH * 0.15) / 2,
+        maxHeight: '70%',
         justifyContent: 'center',
         padding: 8,
         overflow: 'hidden',

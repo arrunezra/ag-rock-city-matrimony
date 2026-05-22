@@ -4,7 +4,7 @@ import {
     AvatarImage
 } from '@/src/components/common/GluestackUI';
 import { User, UserMinus } from "lucide-react-native";
-import { Alert, FlatList, Pressable, RefreshControl, ScrollView } from 'react-native';
+import { Alert, FlatList, Pressable, RefreshControl, ScrollView, StatusBar } from 'react-native';
 import profileService from '@/src/services/profileService';
 import { useAuth } from '@/src/context/AuthContext';
 import LinearGradient from 'react-native-linear-gradient';
@@ -13,6 +13,7 @@ import { useAlert } from '@/src/context/AlertContext';
 import { useAppToast } from '@/src/context/ToastContext';
 import NotFoundScreen from '../common/NotFoundScreen';
 import { useNavigation } from '@react-navigation/native';
+import HeaderSession from '../common/HeaderSession';
 
 const BlockedUsersScreen = () => {
     const navigation = useNavigation<any>();
@@ -73,7 +74,18 @@ const BlockedUsersScreen = () => {
     };
 
     return (
-        <Box className="flex-1 bg-white p-4">
+        <Box className="flex-1 bg-white">
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
+            <HeaderSession
+                title="Blocked Profiles"
+                theme="forest"
+                showBackButton={true}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+            />
             {blockedUsers.length !== 0 && <Heading size="lg" className="mb-4">Blocked Profiles  </Heading>}
 
             {blockedUsers.length === 0 && !refreshing ? (

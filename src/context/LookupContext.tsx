@@ -30,6 +30,7 @@ interface LookupData {
     hobbies: LookupOption[];
     appName: string;
     appVersion: string;
+    appLogo: string;
 }
 
 // 3. Define the Context's return type
@@ -61,7 +62,8 @@ export const LookupContext = createContext<LookupContextType>({
         country: [],
         hobbies: [],
         appName: '',
-        appVersion: ''
+        appVersion: '',
+        appLogo: ''
     },
 
     isReady: false,
@@ -88,7 +90,8 @@ export const LookupProvider = ({ children }: { children: ReactNode }) => {
         country: [],
         hobbies: [],
         appName: '',
-        appVersion: ''
+        appVersion: '',
+        appLogo: ''
     });
     const [isReady, setIsReady] = useState(false);
 
@@ -101,7 +104,8 @@ export const LookupProvider = ({ children }: { children: ReactNode }) => {
                 let item = {
                     ...res.data.data,
                     appName: res?.data?.appName,
-                    appVersion: res?.data?.appVersion
+                    appVersion: res?.data?.appVersion,
+                    appLogo: res?.data?.appLogo
                 }
                 setLookups(item);
                 setIsReady(true);

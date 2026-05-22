@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Animated, Dimensions, Pressable, RefreshControl, ScrollView, StyleSheet, Vibration, View } from 'react-native';
+import { Alert, Animated, Dimensions, Pressable, RefreshControl, ScrollView, StatusBar, StyleSheet, Vibration, View } from 'react-native';
 import { Box, VStack, HStack, Text, Heading, Center, Modal } from '@/src/components/common/GluestackUI';
 import { CheckCircleIcon, TrashIcon, CameraIcon, AlertCircleIcon, StarIcon, ShieldCloseIcon } from 'lucide-react-native';
 import FastImage from '@d11/react-native-fast-image';
@@ -16,11 +16,12 @@ import { useAppToast } from '@/src/context/ToastContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAlert } from '@/src/context/AlertContext';
 import { CustomAlertConfig, GlobalAlertProps } from '../common/GlobalAlert';
+import HeaderSession from '../common/HeaderSession';
 
 const { width } = Dimensions.get('window');
 const COLUMN_WIDTH = (width - 48) / 2;
 
-export default function ShowProfileGalleryScreen({ route }: any) {
+export default function ShowProfileGalleryScreen({ route, navigation }: any) {
     const { user, updateUser } = useAuth();
     const { showToast } = useAppToast();
     const { showAlert, hideAlert } = useAlert();
@@ -70,13 +71,13 @@ export default function ShowProfileGalleryScreen({ route }: any) {
                 id,
                 'set_default'
             );
-            debugger
+
             if (res.success) {
                 const selectedImage = images?.data?.find((img: any) => img.id === id);
 
                 if (selectedImage) {
 
-                    console.log('selectedImage', selectedImage)
+                    //console.log('selectedImage', selectedImage)
                     const newProfilePic = selectedImage;
 
                     await updateUser({
@@ -217,7 +218,7 @@ export default function ShowProfileGalleryScreen({ route }: any) {
             index: index,
             file_id: item.id,
         }));
-        console.log('profile', profile);
+        // console.log('profile', profile);
         return profile;
     }, [images]);
 
@@ -228,6 +229,18 @@ export default function ShowProfileGalleryScreen({ route }: any) {
 
     return (
         <Box className="flex-1 bg-white">
+
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
+            <HeaderSession
+                title="Profiles Overview"
+                theme="emerald"
+                showBackButton={true}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+            />
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }} refreshControl={
                 <RefreshControl
                     refreshing={refreshing}

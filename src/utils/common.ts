@@ -19,8 +19,7 @@ export const getFileIconConfig = (ext: string = '') => {
 };
 
 export const getExtension = (fileName: string = '', action: 'fileName' | 'dotwithextension' | 'dotwitouthextension' | 'addthumnail' | "url") => {
-
-    console.log('fileName', fileName)
+    //console.log('fileName', fileName, action)
     if (!fileName && (action === 'addthumnail' || action === 'url')) {
         if (fileName == "fake") {
             return "";
@@ -55,9 +54,11 @@ export const getExtension = (fileName: string = '', action: 'fileName' | 'dotwit
     }
     else if (action === 'url') {
         // Returns "RCST0326-81912_1774956775.jpg" 
+        //console.log('fileName', `${API_BASE_URL_DEV_Profiles_Images}/${fileName}`);
+
         return `${API_BASE_URL_DEV_Profiles_Images}/${fileName}`;
     }
-
+    //console.log('fileName', fileName);
     return fileName;
 };
 const cmToFeetInch = (cm: any) => {
@@ -166,6 +167,14 @@ export const getCurrentYear = () => {
     return new Date().getFullYear().toString();
 };
 
+export const getCurrentDate = () => {
+    const date = new Date();
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = date.toLocaleString('default', { month: 'short' });
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
+};
+
 // Usage: getCurrentYear() -> "2026"
 
 export const CHURCH_COLORS = [
@@ -176,3 +185,7 @@ export const CHURCH_COLORS = [
     '#8b5cf6', // Violet
     '#f43f5e', // Rose
 ];
+export const getFullName = (firstName: string, lastName: string) => {
+    if (!firstName) return "Guest User";
+    return `${firstName} ${lastName || ''}`.trim();
+};

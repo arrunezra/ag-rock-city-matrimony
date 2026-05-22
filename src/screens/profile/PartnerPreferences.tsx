@@ -7,9 +7,10 @@ import profileService from "@/src/services/profileService";
 import { useAppToast } from "@/src/context/ToastContext";
 import { useAuth } from "@/src/context/AuthContext";
 import { compact } from "lodash";
-import { RefreshControl } from "react-native";
+import { RefreshControl, StatusBar } from "react-native";
+import HeaderSession from "../common/HeaderSession";
 
-const PartnerPreferences = () => {
+const PartnerPreferences = ({ navigation }: any) => {
     const { user } = useAuth();
     const profile_id = user?.profile_id;
     //console.log('profile_id', profile_id);
@@ -131,26 +132,38 @@ const PartnerPreferences = () => {
     };
 
     return (
-
-        <ScrollView className="bg-slate-50 flex-1 bg-white" refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={fetchData} tintColor="#6366f1" />
-        }>
-            <PartnerPreferencesView
-                data={preferences}
-                onEditField={handleEditPress}
+        <Box className='flex-1'>
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
+            <HeaderSession
+                title="Partner Preferences"
+                theme="emerald"
+                showBackButton={true}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
             />
+            <ScrollView className="bg-slate-50 flex-1 bg-white" refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={fetchData} tintColor="#6366f1" />
+            }>
 
-            {isModalOpen && <EditPreferenceModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                fieldType={activeField}
-                currentData={preferences}
-                onSave={handleSaveUpdate}
-                lookups={lookups}
-            />
-            }
-        </ScrollView>
+                <PartnerPreferencesView
+                    data={preferences}
+                    onEditField={handleEditPress}
+                />
 
+                {isModalOpen && <EditPreferenceModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    fieldType={activeField}
+                    currentData={preferences}
+                    onSave={handleSaveUpdate}
+                    lookups={lookups}
+                />
+                }
+            </ScrollView>
+        </Box>
     );
 };
 

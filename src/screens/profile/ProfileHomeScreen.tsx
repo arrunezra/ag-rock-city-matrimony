@@ -3,8 +3,9 @@ import { useNavigation } from '@react-navigation/native';
 import UserTopProfile from './home_sub_screen/UserTopProfile';
 import SectionHorizontalList from './home_sub_screen/SectionHorizontalList';
 import { Box } from '@/src/components/common/GluestackUI';
-import { FlatList } from 'react-native';
+import { FlatList, StatusBar } from 'react-native';
 import { HOME_DATA } from '@/src/utils/constants';
+import HeaderSession from '../common/HeaderSession';
 
 const ProfileHomeScreen = () => {
     const { user } = useAuth();
@@ -19,10 +20,16 @@ const ProfileHomeScreen = () => {
                         onAddPhoto={() => navigation.navigate('ShowProfileGallery')}
                         onEdit={() => navigation.navigate('ProfileEdit')}
                         onPayment={(sub_amt: any) => {
-                            navigation.navigate('Checkout', {
-                                totalAmount: sub_amt, // ₹50.00 in paise 
-                                customerName: user?.firstName
-                            });
+
+                            //console.log('sub_amt', sub_amt)
+
+
+                            // navigation.navigate('Checkout', {
+                            //     totalAmount: sub_amt, // ₹50.00 in paise 
+                            //     customerName: user?.firstName,
+                            //     email: user?.email,
+                            //     phoneNo: user?.phone
+                            // });
                         }}
                     />
                 );
@@ -42,6 +49,17 @@ const ProfileHomeScreen = () => {
 
     return (
         <Box className="flex-1 bg-white">
+            <StatusBar barStyle="light-content" backgroundColor="#044e3a" />
+            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
+            <HeaderSession
+                title="My Profile"
+                theme="emerald"
+                showBackButton={false}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+            />
             <FlatList
                 data={HOME_DATA}
                 renderItem={renderItem}

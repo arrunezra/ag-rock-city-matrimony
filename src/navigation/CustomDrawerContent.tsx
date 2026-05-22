@@ -1,16 +1,19 @@
 import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 import { Box, VStack, HStack, Avatar, AvatarImage, Text, Divider, AvatarFallbackText, Center, Heading } from '@/src/components/common/GluestackUI';
-import { Pressable, TouchableOpacity } from 'react-native';
+import { Alert, Pressable, TouchableOpacity } from 'react-native';
 import { Icon } from '@/components/ui/icon';
 import { Camera, CheckIcon, ChevronRight, LogOut, Settings } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useContext, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { getCurrentYear, getExtension } from '../utils/common';
 import LinearGradient from 'react-native-linear-gradient';
 import { LookupContext } from '../context/LookupContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function CustomDrawerContent(props: any) {
-    const { state, userRole, navigation, user, logout } = props;
+    const { state, userRole, navigation, logout } = props;
+    const { user } = useAuth();
+
     // Add a timestamp to force the Avatar to re-render when the image changes
     const { lookups } = useContext(LookupContext);
 
@@ -20,10 +23,21 @@ export default function CustomDrawerContent(props: any) {
 
     useFocusEffect(
         useCallback(() => {
+            if (user?.role == 'member')
+                setProfile(getExtension(user?.profilePic, 'addthumnail'))
+            else setProfile(getExtension(user?.profilePic, 'url'))
 
-            setProfile(getExtension(user?.profilePic, 'addthumnail'))
-        }, [])
+        }, [user])
     );
+
+    // useEffect(() => {
+    //     if (user.role == 'member')
+    //         setProfile(getExtension(user?.profilePic, 'addthumnail'))
+    //     else setProfile(getExtension(user?.profilePic, 'url'))
+
+    // }, [])
+
+
     const fullName = user?.firstName
         ? `${user.firstName} ${user.lastName || ''}`.trim()
         : "Guest User";
@@ -54,7 +68,9 @@ export default function CustomDrawerContent(props: any) {
                             <VStack space="xl">
                                 <HStack space="lg" className="items-center">
                                     <TouchableOpacity onPress={() => {
-                                        navigation.navigate('Main', { screen: 'ShowProfileGallery' })
+                                        //if(user?.role == 'member') navigation.navigate('Main', { screen: 'ShowProfileGallery' })
+
+                                        navigation.navigate('Main', { screen: user?.role == 'member' ? 'ShowProfileGallery' : 'ProfileUpload' })
                                     }}>
                                         <Box className="relative">
                                             <Box className="p-1 rounded-[24px] bg-slate-100 border-2 border-slate-50">
@@ -64,7 +80,7 @@ export default function CustomDrawerContent(props: any) {
                                                 </Avatar>
                                             </Box>
                                             <Pressable
-                                                onPress={() => navigation.navigate('Main', { screen: 'ShowProfileGallery' })}
+                                                onPress={() => navigation.navigate('Main', { screen: user?.role == 'member' ? 'ShowProfileGallery' : 'ProfileUpload' })}
                                                 className="absolute -bottom-1 -right-1 bg-white p-2 rounded-2xl shadow-lg border border-slate-100 active:bg-slate-50"
                                             >
                                                 <Icon as={Camera} size="sm" className="text-slate-600" />
@@ -82,10 +98,10 @@ export default function CustomDrawerContent(props: any) {
                                         </HStack>
                                         <Text className="text-slate-400 font-medium text-xs mb-2"> ID: {user?.role === 'member' ? user?.profile_id : user?.userid}</Text>
 
-                                        {user.role !== 'member' && (
+                                        {user?.role !== 'member' && (
                                             <Box className="bg-salt-50 self-start px-3 py-1 rounded-full shadow-md shadow-salt-200 border-slate-100/50">
                                                 <Text className="text-black font-black uppercase text-[8px] tracking-[1px]">
-                                                    Role: {user.role}
+                                                    Role: {user?.role}
                                                 </Text>
                                             </Box>
                                         )}
@@ -111,7 +127,7 @@ export default function CustomDrawerContent(props: any) {
                         <Divider className="my-4 mx-4 bg-slate-100" />
 
                         {/* Settings shows only for member roles here */}
-                        {user.role === 'member' && (
+                        {user?.role === 'member' && (
                             <Pressable
                                 className="mx-2 p-3 rounded-2xl active:bg-indigo-50"
                                 onPress={() => navigation.navigate('Main', { screen: 'MemberSettings' })}

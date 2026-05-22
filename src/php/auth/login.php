@@ -14,26 +14,40 @@ if (empty($data->phoneNumber) || empty($data->password)) {
 }
 
 try {
-    // 1. Fetch User and Profile details
-    // FIXED: Added missing comma after p.profile_id
+    // 1. Fetch User details, checking profiles OR staff_details dynamically
     $sql = "SELECT  u.id
                     ,u.userid
                     ,u.phoneNumber
                     ,u.email
                     ,u.PasswordHash
                     ,u.role 
-                    ,p.profile_id
-                    ,p.gender
-                    ,p.first_name
-                    ,p.last_name
-					,p.gender
-                    ,pf.file_name 
-                    ,p.city
-					,p.is_visible
+                    ,u.IsActive
                     ,u.IsVerified
-					
+                                      
+                    -- Dynamic Name Resolution: Checks profile first, then staff_details, then users baseline
+                   
+                    ,COALESCE(p.profile_id, '') AS profile_id
+
+                    ,COALESCE(p.first_Name, sd.firstname) AS first_name
+                    ,COALESCE(p.last_name, sd.lastname, '') AS last_name
+                    
+                    -- Dynamic Location/Metadata Resolution
+                    ,COALESCE(p.city, sd.city) AS city
+                    ,COALESCE(p.gender, '') AS gender
+                    ,COALESCE(p.is_visible, 1) AS is_visible
+                    
+                    -- Dynamic Image Resolution: Checks member profile files first, then staff file_repo
+                    ,IFNULL(pf.file_name, fr.file_name) AS file_name 
+
             FROM users u 
+            
+            -- JOIN 1: Check if the user is a Member
             LEFT JOIN profiles p ON u.userid = p.userid 
+            
+            -- JOIN 2: Check if the user is Staff/Admin
+            LEFT JOIN staff_details sd ON u.userid = sd.userid
+            
+            -- IMAGE JOIN 1: Member profile image subquery
             LEFT JOIN profile_files pf ON pf.file_id = (
                 SELECT file_id 
                 FROM profile_files 
@@ -42,7 +56,11 @@ try {
                 ORDER BY is_profile_pic DESC, created_at DESC 
                 LIMIT 1
             )
-            WHERE u.IsActive = 1 AND  (u.phoneNumber = ? OR u.email = ?)";
+            
+            -- IMAGE JOIN 2: Staff profile image source from file_repo
+            LEFT JOIN file_repo fr ON fr.userid = u.userid
+            
+            WHERE u.IsActive = 1 AND (u.phoneNumber = ? OR u.email = ?)";
 
     $stmt = $db->prepare($sql);
     $stmt->execute([$data->phoneNumber, $data->phoneNumber]);
@@ -50,15 +68,15 @@ try {
 
     if ($user && password_verify($data->password, $user['PasswordHash'])) {
         
-        // 2. Generate Access Token
+        // 2. Generate Access Token Payload
         $payload = [
             "uid" => $user['userid'],
+            "profile_id" => $user['profile_id'],
             "phone" => $user['phoneNumber'],
             "email" => $user['email'],
             "role" => $user['role'],
-            "profile_id" => $user['profile_id'],
-			"gender" => $user['gender'],
-			"is_visible" => $user['is_visible']
+            "gender" => $user['gender'],
+            "is_visible" => $user['is_visible']
         ];
         $accessToken = JWT::encode($payload, 3600);
 
@@ -67,9 +85,8 @@ try {
         $updateStmt = $db->prepare("UPDATE users SET refresh_token = ? WHERE id = ?");
         $updateStmt->execute([$refreshToken, $user['id']]);
 
-        // 4. Default avatar logic
-        // FIXED: Wrapped ternary in parentheses to prevent logic errors
-        $defaultAvatar = ($user['gender'] === 'Male') ? 'boy.png' : 'girl.jpg';
+        // 4. Default Gender-based Avatar Logic
+        $defaultAvatar = (strtolower($user['gender']) === 'male') ? 'boy.png' : 'girl.jpg';
         $profilePic = !empty($user['file_name']) ? $user['file_name'] : $defaultAvatar;
          
         echo json_encode([
@@ -79,17 +96,17 @@ try {
             "expires_in" => 3600,
             "user" => [
                 "userid" => $user['userid'],
-                "firstName" => $user['first_name'] ?? 'Member',
-                "lastName" => $user['last_name'] ?? '',
+                "profile_id" => $user['profile_id'] ?? '',
+                "firstName" => $user['first_name'],
+                "lastName" => $user['last_name'],
                 "email" => $user['email'],
                 "phone" => $user['phoneNumber'],
                 "role" => $user['role'],
                 "profilePic" => $profilePic,
-                "profileThumb" => $profilePic, // Usually same as pic if no separate thumb
-                "city" => $user['city'] ?? '',
-                "profile_id" => $user['profile_id'] ?? '',
+                "profileThumb" => $profilePic, 
+                "city" => $user['city'],
                 "isVerified" => $user['IsVerified'] ?? 0,
-				"is_visible" => $user['is_visible']
+                "is_visible" => $user['is_visible']
             ]
         ]);
     } else {

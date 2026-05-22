@@ -17,7 +17,7 @@ import { MotiText, MotiView } from 'moti';
 import LinearGradient from 'react-native-linear-gradient';
 import HeaderSession from '../common/HeaderSession';
 import AdminServices from '@/src/services/AdminServices';
-import { CHURCH_COLORS, formatCurrency, getCurrentMonthYear, getCurrentYear, getDetailedFY, getFinancialYear } from '@/src/utils/common';
+import { CHURCH_COLORS, formatCurrency, getCurrentDate, getCurrentMonthYear, getCurrentYear, getDetailedFY, getFinancialYear } from '@/src/utils/common';
 import { useAuth } from '@/src/context/AuthContext';
 
 const { width } = Dimensions.get('window');
@@ -61,7 +61,7 @@ const AdminDashboard = ({ navigation }: any) => {
                 trend: '+3 new requests',
                 icon: Users,
                 colors: ['#4facfe', '#00f2fe'],
-                screen: 'StaffListView'
+                screen: 'StaffDashboard'
             },
             {
                 title: 'Church Hub',
@@ -69,7 +69,7 @@ const AdminDashboard = ({ navigation }: any) => {
                 trend: '2 Pending Verify',
                 icon: ChurchIcon,
                 colors: ['#667eea', '#764ba2'],
-                screen: 'ChurchListView',
+                screen: 'ChurchDashboard',
             },
             {
                 title: 'Profile Ops',
@@ -77,7 +77,7 @@ const AdminDashboard = ({ navigation }: any) => {
                 trend: '45 Alerts',
                 icon: UserCheck,
                 colors: ['#0ba360', '#3cba92'],
-                screen: 'StaffProfileSummaryView'
+                screen: 'Profile'
             },
             {
                 title: 'Payment',
@@ -85,7 +85,7 @@ const AdminDashboard = ({ navigation }: any) => {
                 trend: '+15% Trend',
                 icon: CreditCard,
                 colors: ['#f83600', '#f9d423'],
-                screen: 'PaymentListView'
+                screen: 'Payment'
             }
         ];
 
@@ -278,7 +278,7 @@ const AdminDashboard = ({ navigation }: any) => {
                         {/* FOOTER */}
                         <Box className="bg-slate-50 p-3 items-center border-t border-slate-100">
                             <Text className="text-slate-400 text-[10px] font-medium text-center">
-                                * Values updated as of today 15 May 2026
+                                * Values updated as of today {getCurrentDate()}
                             </Text>
                         </Box>
                     </Box>

@@ -10,6 +10,7 @@ import {
     Platform,
     Alert,
     StyleSheet,
+    StatusBar,
 } from 'react-native';
 import { ChevronLeft, Search, SlidersHorizontal, Trash2, XCircle } from 'lucide-react-native';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
@@ -28,6 +29,7 @@ import { useAppToast } from '@/src/context/ToastContext';
 import LoadingScreen from '@/src/screens/common/LoadingScreen';
 import NotFoundScreen from '../common/NotFoundScreen';
 import { useAlert } from '@/src/context/AlertContext';
+import HeaderSession from '../common/HeaderSession';
 
 const StaffDocumentSummary = ({ route }: any) => {
     const { profile_id } = route.params;
@@ -349,28 +351,18 @@ const StaffDocumentSummary = ({ route }: any) => {
 
     return (
         <View className="flex-1 bg-slate-50">
-            {/* Header Section */}
-            <View className="px-5 pt-14 pb-4 bg-white border-b border-slate-100">
-                <View className="flex-row items-center mb-4">
-                    {/* Back Button */}
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate("BaptismRecords")}
-                        className="w-10 h-10 items-center justify-center rounded-full bg-slate-50 border border-slate-100 mr-3"
-                        activeOpacity={0.7}
-                    >
-                        <ChevronLeft size={24} color="#0f172a" strokeWidth={2.5} />
-                    </TouchableOpacity>
 
-                    <Text className="text-2xl font-black text-slate-900">
-                        My Documents
-                    </Text>
-                </View>
-
-                {/* Search Bar section remains here if needed */}
-                <View className="flex-row items-center">
-                    {/* ... your search bar code ... */}
-                </View>
-            </View>
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
+            <HeaderSession
+                title="Documents View"
+                theme="emerald"
+                showBackButton={true}
+                onBackPress={() => navigation.navigate("BaptismRecords")}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+            />
 
             {files.length > 0 ? <FlatList
                 data={files}

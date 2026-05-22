@@ -1,4 +1,4 @@
-import { View, Text, RefreshControl, TouchableOpacity, Pressable, Animated, FlatList, ActivityIndicator } from 'react-native'
+import { View, Text, RefreshControl, TouchableOpacity, Pressable, Animated, FlatList, ActivityIndicator, StatusBar } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Box, Heading, HStack, Input, InputField, InputSlot, VStack } from '@/src/components/common/GluestackUI';
@@ -11,6 +11,7 @@ import FastImage from '@d11/react-native-fast-image';
 import StaffService from '@/src/services/StaffService';
 import { SearchIcon } from '@/components/ui/icon';
 import NotFoundScreen from '../common/NotFoundScreen';
+import HeaderSession from '../common/HeaderSession';
 
 // const StaffInboxScreen = ({ navigation }: any) => {
 //     // 1. Pagination States
@@ -350,7 +351,7 @@ const StaffInboxScreen = ({ navigation }: any) => {
     };
 
     const renderHeader = () => (
-        <VStack space="lg" className="p-4 bg-slate-50 pt-12">
+        <VStack space="lg" className="p-4 bg-slate-50 pt-4">
             <HStack space="sm" className="items-center mt-2">
                 <Input variant="rounded" className="flex-1 h-16 bg-white border-slate-100 shadow-md shadow-slate-200/50">
                     <InputSlot className="pl-5">
@@ -436,7 +437,7 @@ const StaffInboxScreen = ({ navigation }: any) => {
                                             {item.full_name || `${item.first_name} ${item.last_name}`}
                                         </Text>
                                         {/* EXACT POSITION FOR USERID: Top Right of the text area */}
-                                        <Text className="text-[10px] font-mono text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                                        <Text className="text-[12px] font-mono text-slate-800 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
                                             #{item.userid}
                                         </Text>
                                     </HStack>
@@ -496,9 +497,22 @@ const StaffInboxScreen = ({ navigation }: any) => {
 
     return (
         <VStack className="flex-1 bg-slate-50">
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
+            <HeaderSession
+                title="Notifications"
+                theme="sunset"
+                showBackButton={false}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+            />
+
+
             <LinearGradient
                 colors={['#4f46e5', '#7c3aed']}
-                style={{ borderRadius: 32, padding: 24 }}
+                style={{ borderRadius: 32, padding: 24, marginTop: 8, marginHorizontal: 10 }}
             >
                 <HStack className="justify-between items-center">
                     <VStack>

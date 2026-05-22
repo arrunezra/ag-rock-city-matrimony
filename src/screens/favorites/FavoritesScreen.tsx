@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FlatList, Pressable, RefreshControl } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StatusBar } from 'react-native';
 
 import { Box, HStack, Text, Center, Spinner, VStack, Button, ButtonText, Avatar, AvatarImage } from '@/src/components/common/GluestackUI';
 import profileService from '@/src/services/profileService';
@@ -12,6 +12,7 @@ import { StarIcon } from '@/components/ui/icon';
 import NotFoundScreen from '../common/NotFoundScreen';
 import { ScrollView } from 'react-native-gesture-handler';
 import { getExtension } from '@/src/utils/common';
+import HeaderSession from '../common/HeaderSession';
 
 const FavoritesScreen = () => {
     // 1. Add a safety check for navigation
@@ -55,7 +56,17 @@ const FavoritesScreen = () => {
     };
     return (
         <Box className="flex-1 bg-background-50">
-
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
+            <HeaderSession
+                title="Staff Overview"
+                theme="emerald"
+                showBackButton={false}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+            />
             {loading && profiles.length === 0 ? (
                 <Center className="flex-1">
                     <Spinner size="large" />

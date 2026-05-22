@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { FlatList, ActivityIndicator, ScrollView, Pressable, KeyboardAvoidingView, Platform, TouchableOpacity, View, StyleSheet, Dimensions } from 'react-native';
+import { FlatList, ActivityIndicator, ScrollView, Pressable, KeyboardAvoidingView, Platform, TouchableOpacity, View, StyleSheet, Dimensions, StatusBar } from 'react-native';
 import { Box, Spinner, Center, HStack, Text } from '@/src/components/common/GluestackUI';
 import api from '@/src/api/api';
 import { ProfileCard } from './ProfileCard';
@@ -26,6 +26,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { ShieldCheck } from '@/src/components/common/IconUI';
 import { Crown } from 'lucide-react-native';
 import PremiumUnlockScreen from './PremiumUnlockScreen';
+import HeaderSession from '../common/HeaderSession';
 const MatchesScreen = () => {
 
     const { user } = useAuth();
@@ -192,6 +193,18 @@ const MatchesScreen = () => {
     return (
 
         <Box className="flex-1 bg-background-50">
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
+            <HeaderSession
+                title="Staff Overview"
+                theme="emerald"
+                showBackButton={false}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+            />
+
             {isSubscribed ?
                 <Box className="flex-1 bg-background-50">
                     {/* 1. Header / Tabs (Height determined by content) */}
@@ -233,10 +246,11 @@ const MatchesScreen = () => {
                 /* This way, the user stays on the 'Matches' tab but sees the 'Unlock' UI */
                 !loading && <PremiumUnlockScreen onPay={() => navigation.navigate('Checkout', {
                     totalAmount: subscriptionAmount ?? 0,
-                    customerName: user?.firstName
+                    customerName: user?.firstName,
+                    email: user?.email,
+                    phoneNo: user?.phone
                 })}
                     values={{
-
                         totalAmount: subscriptionAmount ?? 0,
                         customerName: user?.firstName
 

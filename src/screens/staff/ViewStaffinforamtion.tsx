@@ -1,17 +1,18 @@
-import { Avatar, AvatarFallbackText, AvatarImage, Badge, Box, Button, ButtonText, Heading, HStack, VStack } from '@/src/components/common/GluestackUI';
+import { Avatar, AvatarFallbackText, AvatarImage, Badge, Box, Button, ButtonText, Center, Heading, HStack, VStack } from '@/src/components/common/GluestackUI';
 import { Hash, Icon, Phone, User } from '@/src/components/common/IconUI';
 import StaffService from '@/src/services/StaffService';
-import { ArrowLeft, Briefcase, Calendar, ChevronRight, Church, Edit3Icon, Hexagon, Home, Mail, MapPin, Navigation, Smartphone, UserCheck } from 'lucide-react-native';
+import { ArrowLeft, Briefcase, Calendar, ChevronRight, Church, Edit3, Edit3Icon, Hexagon, Home, Mail, MapPin, Navigation, Smartphone, UserCheck } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import React, { useCallback, useEffect, useState } from 'react'
-import { View, Text, TouchableOpacity, Linking } from 'react-native'
+import { View, Text, TouchableOpacity, Linking, StatusBar } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import LinearGradient from 'react-native-linear-gradient';
 import LoadingScreen from '../common/LoadingScreen';
 import NotFoundScreen from '../common/NotFoundScreen';
 import { useAuth } from '@/src/context/AuthContext';
 import { useFocusEffect } from '@react-navigation/native';
-import { getExtension } from '@/src/utils/common';
+import { getExtension, getFullName } from '@/src/utils/common';
+import HeaderSession from '../common/HeaderSession';
 const InfoRow = ({ label, value, icon: IconComponent, color = "#0891b2", isMultiline = false }: any) => (
     <HStack className="items-center gap-5 py-2">
         {/* Icon with soft tinted background */}
@@ -87,7 +88,7 @@ const ViewStaffinforamtion = ({ navigation, route }: any) => {
     useFocusEffect(
         useCallback(() => {
             //console.log(getExtension(user?.profilePic, 'url'))
-            setProfile(getExtension(user?.profilePic, 'url'))
+            setProfile("")
         }, [])
     );
     useEffect(() => {
@@ -111,163 +112,170 @@ const ViewStaffinforamtion = ({ navigation, route }: any) => {
         return <LoadingScreen />
     }
     if (!formData) return <NotFoundScreen />
-
+    const cleanName = getFullName(formData?.firstName, formData?.lastName);
     return (
         <Box className="flex-1 bg-[#f8fafc]">
-            <Box className="flex-1 bg-[#f8fafc]">
-                <KeyboardAwareScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+            {/* 1. Status Bar Setup */}
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
-                    {/* --- Header & Round Avatar --- */}
-                    <Box className="relative h-[320px] justify-center items-center">
-                        <LinearGradient
-                            colors={['#0097b2', '#00bcd4', '#f8fafc']}
-                            className="absolute inset-0"
-                        />
-                        <Box className="absolute top-12 left-6 z-10">
+            {/* 2. Unified Header Section */}
+            <HeaderSession
+                title="Staff Details"
+                theme="cyan" // Changed to match your primary body theme color perfectly
+                showBackButton={true}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()}
+            />
+
+            <KeyboardAwareScrollView
+                className="flex-1"
+                showsVerticalScrollIndicator={false}
+                bounces={true}
+            >
+                {/* 3. Hero Avatar Section with Gradient Background */}
+                <Box className="relative pt-8 pb-20 items-center justify-center">
+                    <LinearGradient
+                        colors={['#0097b2', '#00bcd4', '#f8fafc']}
+                        className="absolute inset-0"
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 0, y: 1 }}
+                    />
+
+                    <VStack className="items-center z-10">
+                        {/* Perfect Round Profile Ring container frame */}
+                        <Box className="h-32 w-32 rounded-full bg-transparent shadow-2xl shadow-cyan-950/50 border-[3px] border-white relative items-center justify-center">
+                            <Avatar className="h-full w-full rounded-full bg-cyan-700">
+                                <AvatarFallbackText className="font-black text-2xl text-white">
+                                    {cleanName}
+                                </AvatarFallbackText>
+
+                                <AvatarImage
+                                    source={{ uri: "" }}
+                                    className="h-full w-full rounded-full"
+                                />
+
+                            </Avatar>
+
+                            {/* Status Indicator Dot badge */}
+                            <Box
+                                className={`absolute bottom-1 right-1 h-5 w-5 rounded-full border-2 border-white z-20 ${formData?.activeStatus === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'
+                                    }`}
+                            />
+                        </Box>
+
+                        {/* Staff Profile Text Identity block */}
+                        <VStack className="items-center mt-4 px-4">
+                            <Heading className="text-[26px] text-slate-900 font-black tracking-tight text-center">
+                                {cleanName}
+                            </Heading>
+                            {formData?.designation && (
+                                <Box className="bg-cyan-900/10 px-3 py-1 rounded-full mt-1.5">
+                                    <Text className="text-cyan-700 font-extrabold uppercase text-[11px] tracking-[2px]">
+                                        {formData.designation}
+                                    </Text>
+                                </Box>
+                            )}
+                        </VStack>
+                    </VStack>
+                </Box>
+
+                {/* 4. Content Area Layout Blocks */}
+                <VStack className="px-5 gap-6 -mt-12 pb-36">
+
+                    {/* Contact Identity Info Card Container */}
+                    <Box className="bg-white p-6 rounded-[32px] shadow-xl shadow-slate-200/60 border border-slate-100/80">
+                        <VStack className="gap-5">
                             <TouchableOpacity
                                 activeOpacity={0.7}
                                 onPress={() => {
-                                    navigation.navigate("StaffDashboard");
+                                    if (formData?.mobileNo) Linking.openURL(`tel:${formData.mobileNo}`);
                                 }}
-                                className="h-11 w-11 bg-white/20 rounded-full items-center justify-center border border-white/40 backdrop-blur-md"
                             >
-                                <Icon
-                                    as={ArrowLeft}
-                                    size="md"
-                                    className="text-white"
-                                />
+                                <InfoRow label="Primary Mobile" value={formData?.mobileNo || "Not Available"} icon={Phone} color="#0891b2" />
                             </TouchableOpacity>
-                        </Box>
-                        <VStack className="items-center mt-4">
-                            {/* Outer Ring: Removed padding to allow the image to hit the edges */}
-                            <Box className="h-32 w-32 rounded-full bg-white shadow-2xl shadow-cyan-900/40 border-[3px] border-white relative items-center justify-center overflow-hidden">
 
-                                {/* Avatar: Set to fill 100% of the parent box */}
-                                <Avatar className="h-full w-full rounded-full">
-                                    <AvatarFallbackText className="font-bold text-2xl">
-                                        {formData.firstName}{formData.lastName}
-                                    </AvatarFallbackText>
-                                    {profile && <AvatarImage source={{ uri: profile }} className="h-full w-full" />}
-                                    {/* <AvatarImage
-                                        source={{ uri: 'https://agrcdev.jeasuns.com/agrcdev/php/uploads/profiles/thumbs/AG0126-94693_1769585743_thumbnail.jpg' }}
-                                        className="h-full w-full"
-                                    /> */}
-                                </Avatar>
+                            {formData?.alrenativeMobileNo && (
+                                <TouchableOpacity
+                                    activeOpacity={0.7}
+                                    onPress={() => Linking.openURL(`tel:${formData.alrenativeMobileNo}`)}
+                                >
+                                    <InfoRow label="Alternative Mobile" value={formData.alrenativeMobileNo} icon={Smartphone} color="#0d9488" />
+                                </TouchableOpacity>
+                            )}
 
-                                {/* Status Badge: Placed precisely on the edge */}
-                                <Box
-                                    className={`absolute bottom-2 right-2 h-6 w-6 rounded-full border-[3px] border-white z-10 ${formData.activeStatus === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'
-                                        }`}
-                                />
-                            </Box>
+                            <InfoRow
+                                label="Location"
+                                value={formData?.city_name ? `${formData.city_name}, ${formData.state_name || ''}` : "Not Set"}
+                                icon={MapPin}
+                                color="#4f46e5"
+                            />
 
-                            <VStack className="items-center mt-5">
-                                <Heading className="text-[24px] text-slate-900  font-black tracking-tight leading-tight">
-                                    {formData.firstName} {formData.lastName}
-                                </Heading>
-                                <Text className="text-cyan-600 font-bold uppercase text-[14px] tracking-[2px] mt-1">
-                                    {formData.designation || 'ADMINISTRATOR'}
-                                </Text>
-                            </VStack>
+                            <InfoRow
+                                label="Residential Address"
+                                value={formData?.address || "No Address Provided"}
+                                icon={Home}
+                                color="#64748b"
+                                isMultiline
+                            />
                         </VStack>
                     </Box>
 
-                    {/* --- Content Area --- */}
-                    <VStack className="px-6 gap-6 -mt-10 pb-40">
+                    {/* Church Corporate Affiliation Details Card Component */}
+                    <Box className="bg-white p-6 rounded-[32px] shadow-xl shadow-slate-200/60 border border-slate-100/80">
+                        <HStack className="items-center gap-3 mb-5">
+                            <Center className="bg-cyan-500 w-9 h-9 rounded-xl">
+                                <Icon as={Church} size="sm" className="text-white" />
+                            </Center>
+                            <Text className="text-slate-900 font-black text-lg tracking-tight">Church Details</Text>
+                        </HStack>
 
-                        {/* Personal & Contact Card */}
-                        <Box className="bg-white p-7 rounded-[40px] shadow-xl shadow-slate-200/50 border border-white">
-                            <VStack className="gap-6">
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        if (formData.mobileNo) Linking.openURL(`tel:${formData.mobileNo}`);
-                                    }}
-                                >
-                                    <InfoRow label="Primary Mobile" value={formData.mobileNo} icon={Phone} color="#0891b2" />
-                                </TouchableOpacity>
+                        <VStack className="gap-3.5">
+                            <GlassTile label="Church Name" value={formData?.church_name || "Unassigned"} />
+                            <GlassTile label="Pastor Name" value={formData?.pastor_name || "Unassigned"} />
+                            <GlassTile label="Branch Address" value={formData?.church_address || "Unassigned"} />
+                        </VStack>
+                    </Box>
+                </VStack>
+            </KeyboardAwareScrollView>
 
-                                {/* alrenativeMobileNo */}
-                                {formData.alrenativeMobileNo && (
-                                    <TouchableOpacity
-                                        onPress={() => {
-                                            if (formData.alrenativeMobileNo) Linking.openURL(`tel:${formData.alrenativeMobileNo}`);
-                                        }}
-                                    >
-                                        <InfoRow label="Alternative Mobile" value={formData.alrenativeMobileNo} icon={Smartphone} color="#0d9488" />
-                                    </TouchableOpacity>
-                                )}
-
-                                {/* city_name & state_name */}
-                                <InfoRow
-                                    label="Location"
-                                    value={formData.city_name ? `${formData.city_name}, ${formData.state_name}` : "Not Set"}
-                                    icon={MapPin}
-                                    color="#4f46e5"
-                                />
-
-                                {/* address */}
-                                <InfoRow label="Residential Address" value={formData.address} icon={Home} color="#64748b" isMultiline />
-                            </VStack>
-                        </Box>
-
-                        {/* Church Affiliation Card */}
-                        <Box className="bg-white p-7 rounded-[40px] shadow-xl shadow-slate-200/50 border border-white">
-                            <HStack className="items-center gap-3 mb-6">
-                                <Box className="bg-cyan-500 p-2 rounded-xl">
-                                    <Icon as={Church} size="sm" className="text-white" />
-                                </Box>
-                                <Text className="text-slate-900 font-black text-xl">Church Details</Text>
-                            </HStack>
-
-                            <VStack className="gap-3">
-                                {/* church_name */}
-                                <GlassTile label="Church Name" value={formData.church_name} />
-                                {/* pastor_name */}
-                                <GlassTile label="Pastor Name" value={formData.pastor_name} />
-
-                                {/* church_address */}
-                                <GlassTile label="Branch Address" value={formData.church_address} />
-                            </VStack>
-                        </Box>
-                    </VStack>
-                </KeyboardAwareScrollView>
-                {/* --- Floating Action Button (FAB) --- */}
+            {/* 5. Sleek Floating Action Button (FAB) */}
 
 
-                <MotiView
-                    from={{ scale: 0, opacity: 0, translateY: 50 }}
-                    animate={{ scale: 1, opacity: 1, translateY: 0 }}
-                    transition={{
-                        type: 'spring',
-                        damping: 15,
-                        stiffness: 150,
-                        delay: 400
-                    }}
-                    className="absolute bottom-8 right-8"
+            <MotiView
+                from={{ scale: 0, opacity: 0, translateY: 50 }}
+                animate={{ scale: 1, opacity: 1, translateY: 0 }}
+                transition={{
+                    type: 'spring',
+                    damping: 15,
+                    stiffness: 150,
+                    delay: 400
+                }}
+                className="absolute bottom-8 right-8"
+            >
+                <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => navigation.navigate("Main", {
+                        screen: "StaffRegistration",
+                        params: { id: id, isEdit: true }
+                    })}
+                    // Added rounded-full and overflow-hidden here
+                    className="h-16 w-16 rounded-full overflow-hidden shadow-2xl shadow-cyan-500/50"
+                    style={{ elevation: 10 }}
                 >
-                    <TouchableOpacity
-                        activeOpacity={0.9}
-                        onPress={() => navigation.navigate("Main", {
-                            screen: "StaffRegistration",
-                            params: { id: id, isEdit: true }
-                        })}
-                        // Added rounded-full and overflow-hidden here
-                        className="h-16 w-16 rounded-full overflow-hidden shadow-2xl shadow-cyan-500/50"
-                        style={{ elevation: 10 }}
+                    <LinearGradient
+                        colors={['#0891b2', '#0b5a70ff']}
+                        // Ensure the gradient also has rounded-full
+                        className="h-full w-full rounded-full items-center justify-center"
                     >
-                        <LinearGradient
-                            colors={['#0891b2', '#0e7490']}
-                            // Ensure the gradient also has rounded-full
-                            className="h-full w-full rounded-full items-center justify-center"
-                        >
-                            <Icon as={Edit3Icon} size="lg" className="text-cyan-400" />
-                        </LinearGradient>
-                    </TouchableOpacity>
-                </MotiView>
-
-            </Box>
+                        <Icon as={Edit3} size="lg" className="text-cyan-400" />
+                    </LinearGradient>
+                </TouchableOpacity>
+            </MotiView>
         </Box>
     );
 };
+
 
 export default ViewStaffinforamtion;

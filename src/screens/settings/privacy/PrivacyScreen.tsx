@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, StatusBar } from 'react-native';
 import {
     Box, VStack, HStack, Text, Heading, Switch, Divider
 } from '@/src/components/common/GluestackUI';
@@ -10,8 +10,9 @@ import { useAppToast } from '@/src/context/ToastContext';
 import { useAlert } from '@/src/context/AlertContext';
 import { useAuth } from '@/src/context/AuthContext';
 import { User } from '@/src/utils/models';
+import HeaderSession from '../../common/HeaderSession';
 
-export default function ContactPrivacyScreen() {
+export default function ContactPrivacyScreen({ navigation }: any) {
     const { showToast } = useAppToast();
     const { showAlert, hideAlert } = useAlert();
     const { user, updateUser } = useAuth();
@@ -65,6 +66,18 @@ export default function ContactPrivacyScreen() {
 
     return (
         <Box className="flex-1 bg-white">
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
+            <HeaderSession
+                title="Privacy"
+                theme="forest"
+                showBackButton={true}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+            />
+
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 20, paddingBottom: 40 }}>
 
                 {/* Screen Title */}

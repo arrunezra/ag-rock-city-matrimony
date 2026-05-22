@@ -1,4 +1,4 @@
-import { View, Text, RefreshControl, TouchableOpacity, Pressable, FlatList, ActivityIndicator, Animated } from 'react-native'
+import { View, Text, RefreshControl, TouchableOpacity, Pressable, FlatList, ActivityIndicator, Animated, StatusBar } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Box, Heading, HStack, Input, InputField, InputSlot, VStack } from '@/src/components/common/GluestackUI';
@@ -10,6 +10,7 @@ import { getExtension } from '@/src/utils/common';
 import FastImage from '@d11/react-native-fast-image';
 import StaffService from '@/src/services/StaffService';
 import NotFoundScreen from '../common/NotFoundScreen';
+import HeaderSession from '../common/HeaderSession';
 
 const BaptismScreen = ({ navigation }: any) => {
     const [profiles, setProfiles] = useState<any[]>([]);
@@ -111,7 +112,8 @@ const BaptismScreen = ({ navigation }: any) => {
     };
 
     const renderHeader = () => (
-        <VStack space="lg" className="p-4 bg-slate-50 pt-12">
+        <VStack space="lg" className="p-4 bg-slate-50 ">
+
             <HStack space="sm" className="items-center mt-2">
                 <Input variant="rounded" className="flex-1 h-16 bg-white border-slate-100 shadow-md shadow-slate-200/50">
                     <InputSlot className="pl-5">
@@ -252,6 +254,17 @@ const BaptismScreen = ({ navigation }: any) => {
 
     return (
         <VStack className="flex-1 bg-slate-50">
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
+            <HeaderSession
+                title="Documents View"
+                theme="emerald"
+                showBackButton={false}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+            />
             {/* Header outside FlatList */}
             {renderHeader()}
 

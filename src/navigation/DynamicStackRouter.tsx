@@ -45,32 +45,33 @@ import StaffProfileSummaryView from "../screens/profile/StaffProfileSummaryView"
 import PaymentScreen from "../screens/profile/InboxScreen";
 import PaymentHistoryScreen from "../screens/payment/PaymentHistoryScreen";
 import { CreditCard } from "lucide-react-native";
+import ProfileUploadScreen from "../screens/Admin/ProfileUploadScreen";
 
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 export const ROLE_DRAWER_CONFIG: Record<string, any[]> = {
   admin: [
-    { name: "StaffDashboard", component: StaffDashboard, options: { title: "Staff Overview", headerShown: false } },
-    { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Overview", headerShown: false } },
+    { name: "StaffDashboard", component: StaffDashboard, options: { title: "Staff Details", headerShown: false } },
+    { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Details", headerShown: false } },
   ],
   super_admin: [
-    { name: "StaffDashboard", component: StaffDashboard, options: { title: "Staff Overview", headerShown: false } },
-    { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Overview", headerShown: false } },
+    { name: "StaffDashboard", component: StaffDashboard, options: { title: "Staff Details", headerShown: false } },
+    { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Details", headerShown: false } },
   ],
   root_admin: [
-    { name: "StaffDashboard", component: StaffDashboard, options: { title: "Staff Overview", headerShown: false } },
-    { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Overview", headerShown: false } },
+    { name: "StaffDashboard", component: StaffDashboard, options: { title: "Staff Details", headerShown: false } },
+    { name: "ChurchDashboard", component: ChurchDashboard, options: { title: "Church Details", headerShown: false } },
   ],
   member: [
     // { name: "ReceivedRequests", component: ReceivedScreen },
     // { name: "AcceptedRequests", component: AcceptedScreen },
     // { name: "MyPhotos", component: MyPhotos, options: { title: "My Photos" } }, Dont delete 
-    { name: "PartnerPreferences", component: PartnerPreferences, options: { title: "Partner Preferences" } },
-    { name: "DocumentSummary", component: DocumentSummary, options: { title: "My Files" } },
+    { name: "PartnerPreferences", component: PartnerPreferences, options: { title: "Partner Preferences", headerShown: false } },
+    { name: "DocumentSummary", component: DocumentSummary, options: { title: "My Files", headerShown: false } },
   ],
   staff: [
-    { name: "BaptismRecords", component: BaptismScreen, options: { title: "Documents" } },
+    { name: "BaptismRecords", component: BaptismScreen, options: { title: "Documents", headerShown: false } },
   ],
 };
 
@@ -116,7 +117,7 @@ const SHARED_STACKS = (role: string) => (
         <Stack.Screen name="staffInbox" component={StaffInboxScreen} options={{ title: 'Recent verification photo' }} />
         <Stack.Screen name="DMSUpload" component={DMSUploadScreen} />
         <Stack.Screen name="DMSSummary" component={DMSSummaryScreen} />
-        <Stack.Screen name="StaffDocumentSummary" component={StaffDocumentSummary} options={{ title: 'Documents' }} />
+        <Stack.Screen name="StaffDocumentSummary" component={StaffDocumentSummary} options={{ title: 'Documents', headerShown: false }} />
         <Stack.Screen name="staffProfileSummaryView" component={StaffProfileSummaryView} options={{ title: 'Profiles' }} />
 
 
@@ -153,6 +154,8 @@ const SHARED_STACKS = (role: string) => (
     />
     <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Payment' }} />
     <Stack.Screen name="PremiumUnlock" component={PremiumUnlockScreen} options={{ title: 'Payment' }} />
+    <Stack.Screen name="ProfileUpload" component={ProfileUploadScreen} options={{ title: 'Profile Upload' }} />
+
 
   </Stack.Group>
 );

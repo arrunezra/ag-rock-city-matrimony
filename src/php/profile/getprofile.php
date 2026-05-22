@@ -4,6 +4,7 @@ header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-W
 require_once '../helpers/AuthMiddleware.php';
 require_once '../config/database.php';
 require_once __DIR__ . '/../error_log_config.php'; 
+require_once '../config/config.php';
 
 
 try {
@@ -150,11 +151,11 @@ try {
 	array_unshift($params, $tprofile_id, $tprofile_id, $tprofile_id);
 	$stmt = $db->prepare($sql);
     $stmt->execute($params);
-    $profiles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $profiles = $stmt->fetchAll(PDO::FETCH_ASSOC); 
 
     // Fetch the subscription status and the date
     $stmt_sub = $db->prepare("SELECT has_active_subscription, last_payment_date FROM profiles WHERE profile_id = ?");
-    $stmt_sub->execute([$profile_id]);
+    $stmt_sub->execute([$tprofile_id]);
     $subDetails = $stmt_sub->fetch(PDO::FETCH_ASSOC);
 
     $is_valid = false;
@@ -176,6 +177,7 @@ try {
         // }
         $is_valid = true;
     }
+        $subscription_amount = Config::get('subscription_amount');
 
     // Check if the array is empty
     if (empty($profiles)) {
@@ -185,7 +187,8 @@ try {
             "data" => [],
             "totalPages" => 0,
             "currentPage" => $page,
-            "is_subscribed" => $is_valid
+            "is_subscribed" => $is_valid,
+            "subscription_amount" => $subscription_amount
         ]);
     } else {
         echo json_encode([
@@ -193,7 +196,9 @@ try {
             "data" => $profiles,
             "totalPages" => $totalPages,
             "currentPage" => $page,
-            "is_subscribed" => $is_valid
+            "is_subscribed" => $is_valid,
+            "subscription_amount" => $subscription_amount
+
         ]);
     }
 } catch (Exception $e) {

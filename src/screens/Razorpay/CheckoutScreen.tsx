@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { TouchableHighlight, Text, Alert, View, ActivityIndicator, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import RazorpayCheckout from 'react-native-razorpay';
 import LoadingScreen from '../common/SuccessScreen';
@@ -9,9 +9,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SuccessOverlay } from '../common/SuccessOverlay';
 import { Screen } from 'react-native-screens';
 import { useAppToast } from '@/src/context/ToastContext';
+import { rezor_key } from '@/src/utils/environment';
+import { LookupContext } from '@/src/context/LookupContext';
 const CheckoutScreen = ({ route, navigation }: any) => {
-    const { totalAmount, customerName, userid } = route.params;
+    const { totalAmount, customerName, userid, email, phoneNo } = route.params;
     const { showToast } = useAppToast();
+    const { lookups } = useContext(LookupContext);
 
     const [isProcessing, setIsProcessing] = useState(false);
     const [order_id, setOrder_id] = useState("");
@@ -24,7 +27,7 @@ const CheckoutScreen = ({ route, navigation }: any) => {
             try {
                 const response = await razorpayServices.getOrderId({
                     amount: totalAmount,
-                    user_id: userid // Always pass the ID for server-side verification
+                    user_id: userid // Always pass the ID for server-side verification - means profile id
                 });
 
                 if (isMounted.current) {
@@ -52,15 +55,15 @@ const CheckoutScreen = ({ route, navigation }: any) => {
         setIsProcessing(true);
         const options = {
             description: `Subscription for ${customerName}`,
-            image: 'https://yourlogo.com/logo.png', // Use your actual brand logo
+            image: lookups?.appLogo, // Use your actual brand logo
             currency: 'INR',
-            key: 'rzp_test_SmqwhjEZRAizAi',
+            key: rezor_key,
             amount: Math.round(totalAmount),
-            name: 'Matches Premium',
+            name: customerName,
             order_id: order_id,
             prefill: {
-                email: 'arunezra@jeasuns.com',
-                contact: '919786970050',
+                email: email,
+                contact: phoneNo,
                 name: customerName
             },
             theme: { color: '#10b981' } // Matching your emerald theme
@@ -142,6 +145,7 @@ const CheckoutScreen = ({ route, navigation }: any) => {
                                     {/* Payment Summary Box (Inner White Card) */}
                                     <View style={styles.summaryCard}>
                                         <Text style={styles.summaryHeader}>Payment Summary</Text>
+
                                         <View style={styles.summaryRow}>
                                             <Text style={styles.summaryLabel}>Premium Service</Text>
                                             <Text style={styles.summaryValue}>: ₹{totalAmount}</Text>

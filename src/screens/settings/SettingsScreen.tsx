@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, ScrollView, TouchableOpacity } from 'react-native';
+import { Pressable, ScrollView, StatusBar, TouchableOpacity } from 'react-native';
 //import { Box, VStack, HStack, Text, Heading, Icon, Pressable, Divider, ChevronRightIcon } from '@/components/ui';
 import { User, Lock, Bell, Shield, Trash2, Eye, Calendar, Ban, Heart, Sparkles, LogOut, Info } from 'lucide-react-native';
 import { Box, VStack, HStack, Text, Divider, Heading } from '@/src/components/common/GluestackUI';
@@ -9,6 +9,7 @@ import { useAuth } from '@/src/context/AuthContext';
 import profileService from '@/src/services/profileService';
 import { useAppToast } from '@/src/context/ToastContext';
 import { useAlert } from '@/src/context/AlertContext';
+import HeaderSession from '../common/HeaderSession';
 
 export default function SettingsScreen({ navigation }: any) {
 
@@ -65,6 +66,18 @@ export default function SettingsScreen({ navigation }: any) {
   );
   return (
     <Box className="flex-1 bg-white">
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
+      <HeaderSession
+        title="Settings"
+        theme="forest"
+        showBackButton={true}
+        onBackPress={() => navigation.goBack()}
+        showRightIcon={true}
+        rightIconType="menu"
+        onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+      />
+
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 20, paddingBottom: 40 }}>
 
         <VStack className="px-8 pb-6">

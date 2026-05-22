@@ -15,13 +15,21 @@ $data = json_decode(file_get_contents("php://input"), true);
 $action = $data['action'] ?? null;
 $profile_id = $data['profile_id'] ?? null;
 $image_id = $data['image_id'] ?? null;
-
-if (!$action || !$profile_id || !$image_id) {
-    http_response_code(400);
-    echo json_encode(["success" => false, "message" => "Missing required parameters"]);
-    error_log("Missing required parameters -> set_default_profile_image.php");
+if($action != "get_default"){
+    if (!$action || !$profile_id || !$image_id) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Missing required parameters"]);
+        error_log("Missing required parameters -> set_default_or_delete_profile_image.php");
     exit;
+}else {
+    if (!$action == "get_default" && !$profile_id) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Missing required parameters"]);
+        error_log("Missing required parameters -> get_default - set_default_or_delete_profile_image.php");
+    }
 }
+}
+
 
  
 
@@ -86,7 +94,14 @@ try {
             break;
 
         case 'get_default':
-            $stmt = $pdo->prepare("SELECT file_id, is_profile_pic,is_verified FROM profile_files WHERE is_profile_pic = 1 AND profile_id = ?");
+            $stmt = $pdo->prepare("SELECT 
+										file_id
+										,file_name
+										,is_profile_pic
+										,is_verified
+									FROM 
+										profile_files 
+									WHERE is_profile_pic = 1 AND profile_id = ?");
             $stmt->execute([$profile_id]);
             $profiles = $stmt->fetch(PDO::FETCH_ASSOC);
 

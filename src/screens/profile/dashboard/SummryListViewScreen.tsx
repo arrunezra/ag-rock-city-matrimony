@@ -4,7 +4,7 @@ import {
     AvatarImage
 } from '@/src/components/common/GluestackUI';
 import { ChevronRight, User, UserMinus } from "lucide-react-native";
-import { Alert, FlatList, Pressable, RefreshControl, ScrollView } from 'react-native';
+import { Alert, FlatList, Pressable, RefreshControl, ScrollView, StatusBar } from 'react-native';
 import profileService from '@/src/services/profileService';
 import { useAuth } from '@/src/context/AuthContext';
 import LinearGradient from 'react-native-linear-gradient';
@@ -14,6 +14,7 @@ import { useAppToast } from '@/src/context/ToastContext';
 import NotFoundScreen from '../../common/NotFoundScreen';
 import { Icon } from '@/components/ui/icon';
 import { useNavigation } from '@react-navigation/native';
+import HeaderSession from '../../common/HeaderSession';
 
 const SummryListViewScreen = (props: any) => {
     const { filter, mode } = props?.route?.params;
@@ -137,110 +138,125 @@ const SummryListViewScreen = (props: any) => {
     };
 
     return (
-        <Box className="flex-1 bg-white p-4">
-            {/* 1. Header Logic */}
-            {summary.length !== 0 && (
-                <Heading size="lg" className="mb-4">{config.title}</Heading>
-            )}
-
-            {/* 2. Main Conditional Content */}
-            {summary.length === 0 && !refreshing && !isLoading ? (
-                // EMPTY STATE
-                <ScrollView
-                    contentContainerStyle={{ flex: 1, justifyContent: 'center' }}
-                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-                >
-                    <NotFoundScreen
-                        title={`No ${filter} found.`}
-                        description={`No profiles here yet. When there are ${filter}, they’ll appear here.`}
-                    />
-                </ScrollView>
-            ) : (
-                // DATA STATE (Nested Ternary: Loading OR FlatList)
-                <>
-                    {isLoading ? (
-                        <ProfileListSkeleton />
-                    ) : (
-                        <FlatList
-                            data={summary || []}
-                            keyExtractor={(item: any) => item.profile_id.toString()}
-                            refreshControl={
-                                <RefreshControl
-                                    refreshing={refreshing}
-                                    onRefresh={onRefresh}
-                                    colors={['#10b981']}
-                                    tintColor={'#10b981'}
-                                />
-                            }
-                            onEndReached={() => fetchSummaryDetails(false)} // This triggers the append logic
-                            onEndReachedThreshold={0.5}
-                            renderItem={({ item }) => (
-                                <HStack className="justify-between items-center p-4 border-b border-outline-100 bg-white">
-                                    <Pressable className="flex-1" onPress={() => {
-                                        navigation.navigate('ProfileDetail', { profile_id: item.profile_id, module: 'summary' })
-                                    }}>
-                                        <HStack space="lg" className="items-center">
-                                            <Avatar size="xl">
-                                                <AvatarFallbackText>{item.full_name}</AvatarFallbackText>
-                                                <AvatarImage source={{ uri: getExtension(item.file_name, 'addthumnail') }} />
-                                            </Avatar>
-
-                                            <VStack className="flex-1" space="xs">
-                                                <Text size="xl" className="font-bold text-typography-900">{item.full_name}</Text>
-                                                {/* Dynamic Sub-text based on Filter */}
-                                                <Text size="sm" className="text-typography-600">{item.city_name || config.subText}</Text>
-                                            </VStack>
-                                        </HStack>
-                                    </Pressable>
-
-                                    {/* 1. Show Date/Time ONLY for Profile Visitors */}
-                                    {config?.title == 'Profile Visitors' && (
-                                        <VStack className="items-end ml-2">
-                                            <Text size="xs" className="text-typography-700 font-bold">
-                                                {item.sub_text ?
-                                                    new Intl.DateTimeFormat('en-GB', {
-                                                        day: '2-digit',
-                                                        month: 'short',
-                                                        year: 'numeric'
-                                                    }).format(new Date(item.sub_text)).replace(/ /g, '-')
-                                                    : ''
-                                                }
-                                            </Text>
-                                            <Text size="xs" className="text-typography-500">
-                                                {item.sub_text ?
-                                                    new Date(item.sub_text).toLocaleTimeString([], {
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                        hour12: true
-                                                    }) : ''
-                                                }
-                                            </Text>
-                                        </VStack>
-                                    )}
-
-                                    {/* 2. Dynamic Action Button ONLY for other views (Liked/Connected) */}
-                                    {config?.title != 'Profile Visitors' && (
-                                        <Box className="ml-2">
-                                            <Pressable onPress={() => handleProfileAction(item.profile_id, item.full_name)}>
-                                                <LinearGradient
-                                                    colors={config.buttonColors}
-                                                    style={{ borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8, minWidth: 90, alignItems: 'center' }}
-                                                >
-                                                    <Text className="text-white font-bold text-xs">
-                                                        {config.buttonText}
-                                                    </Text>
-                                                </LinearGradient>
-                                            </Pressable>
-                                        </Box>
-                                    )}
-                                </HStack>
+        <Box className="flex-1 bg-white">
+            <StatusBar barStyle="light-content" backgroundColor="transparent" />
+            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
+            <HeaderSession
+                title={filter}
+                theme="emerald"
+                showBackButton={true}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+            />
+            <Box className="flex-1 bg-white p-4">
 
 
-                            )}
+                {/* 1. Header Logic */}
+                {summary.length !== 0 && (
+                    <Heading size="lg" className="mb-4">{config.title}</Heading>
+                )}
+
+                {/* 2. Main Conditional Content */}
+                {summary.length === 0 && !refreshing && !isLoading ? (
+                    // EMPTY STATE
+                    <ScrollView
+                        contentContainerStyle={{ flex: 1, justifyContent: 'center' }}
+                        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                    >
+                        <NotFoundScreen
+                            title={`No ${filter} found.`}
+                            description={`No profiles here yet. When there are ${filter}, they’ll appear here.`}
                         />
-                    )}
-                </>
-            )}
+                    </ScrollView>
+                ) : (
+                    // DATA STATE (Nested Ternary: Loading OR FlatList)
+                    <>
+                        {isLoading ? (
+                            <ProfileListSkeleton />
+                        ) : (
+                            <FlatList
+                                data={summary || []}
+                                keyExtractor={(item: any) => item.profile_id.toString()}
+                                refreshControl={
+                                    <RefreshControl
+                                        refreshing={refreshing}
+                                        onRefresh={onRefresh}
+                                        colors={['#10b981']}
+                                        tintColor={'#10b981'}
+                                    />
+                                }
+                                onEndReached={() => fetchSummaryDetails(false)} // This triggers the append logic
+                                onEndReachedThreshold={0.5}
+                                renderItem={({ item }) => (
+                                    <HStack className="justify-between items-center p-4 border-b border-outline-100 bg-white">
+                                        <Pressable className="flex-1" onPress={() => {
+                                            navigation.navigate('ProfileDetail', { profile_id: item.profile_id, module: 'summary' })
+                                        }}>
+                                            <HStack space="lg" className="items-center">
+                                                <Avatar size="xl">
+                                                    <AvatarFallbackText>{item.full_name}</AvatarFallbackText>
+                                                    <AvatarImage source={{ uri: getExtension(item.file_name, 'addthumnail') }} />
+                                                </Avatar>
+
+                                                <VStack className="flex-1" space="xs">
+                                                    <Text size="xl" className="font-bold text-typography-900">{item.full_name}</Text>
+                                                    {/* Dynamic Sub-text based on Filter */}
+                                                    <Text size="sm" className="text-typography-600">{item.city_name || config.subText}</Text>
+                                                </VStack>
+                                            </HStack>
+                                        </Pressable>
+
+                                        {/* 1. Show Date/Time ONLY for Profile Visitors */}
+                                        {config?.title == 'Profile Visitors' && (
+                                            <VStack className="items-end ml-2">
+                                                <Text size="xs" className="text-typography-700 font-bold">
+                                                    {item.sub_text ?
+                                                        new Intl.DateTimeFormat('en-GB', {
+                                                            day: '2-digit',
+                                                            month: 'short',
+                                                            year: 'numeric'
+                                                        }).format(new Date(item.sub_text)).replace(/ /g, '-')
+                                                        : ''
+                                                    }
+                                                </Text>
+                                                <Text size="xs" className="text-typography-500">
+                                                    {item.sub_text ?
+                                                        new Date(item.sub_text).toLocaleTimeString([], {
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                            hour12: true
+                                                        }) : ''
+                                                    }
+                                                </Text>
+                                            </VStack>
+                                        )}
+
+                                        {/* 2. Dynamic Action Button ONLY for other views (Liked/Connected) */}
+                                        {config?.title != 'Profile Visitors' && (
+                                            <Box className="ml-2">
+                                                <Pressable onPress={() => handleProfileAction(item.profile_id, item.full_name)}>
+                                                    <LinearGradient
+                                                        colors={config.buttonColors}
+                                                        style={{ borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8, minWidth: 90, alignItems: 'center' }}
+                                                    >
+                                                        <Text className="text-white font-bold text-xs">
+                                                            {config.buttonText}
+                                                        </Text>
+                                                    </LinearGradient>
+                                                </Pressable>
+                                            </Box>
+                                        )}
+                                    </HStack>
+
+
+                                )}
+                            />
+                        )}
+                    </>
+                )}
+            </Box>
         </Box>
     );
 };

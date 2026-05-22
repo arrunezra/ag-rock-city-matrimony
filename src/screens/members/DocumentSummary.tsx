@@ -10,6 +10,7 @@ import {
     Platform,
     Alert,
     StyleSheet,
+    StatusBar,
 } from 'react-native';
 import { Search, SlidersHorizontal, Trash2, XCircle } from 'lucide-react-native';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
@@ -28,6 +29,7 @@ import { AddIcon, Icon } from '@/src/components/common/IconUI';
 import { useAppToast } from '@/src/context/ToastContext';
 import { Screen } from 'react-native-screens';
 import { useAlert } from '@/src/context/AlertContext';
+import HeaderSession from '../common/HeaderSession';
 
 const DocumentSummary = () => {
     const navigation = useNavigation<any>();
@@ -288,6 +290,17 @@ const DocumentSummary = () => {
 
     return (
         <View className="flex-1 bg-slate-50">
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
+            <HeaderSession
+                title="My Files"
+                theme="emerald"
+                showBackButton={false}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+            />
             {/* <View className="px-5 pt-14 pb-4 bg-white border-b border-slate-100">
                 <Text className="text-2xl font-black text-slate-900 mb-4">My Documents</Text>
                 <View className="flex-row items-center">
@@ -307,8 +320,7 @@ const DocumentSummary = () => {
                 </View>
             </View> */}
 
-            <View className="px-5 pt-14 pb-4 bg-white border-b border-slate-100">
-                <Text className="text-2xl font-black text-slate-900 mb-4">My Documents</Text>
+            <View className="px-5 pt-6 pb-4 bg-white border-b border-slate-100">
                 <View className="flex-row items-center">
                     <View className="flex-1 flex-row items-center bg-slate-100 rounded-2xl px-4 py-2">
                         <Search size={20} color="#94a3b8" />

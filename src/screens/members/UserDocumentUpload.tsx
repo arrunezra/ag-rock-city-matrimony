@@ -27,6 +27,7 @@ import { AnimateError } from '../common/AnimateError';
 import { Icon } from '@/src/components/common/IconUI';
 import { useNavigation } from '@react-navigation/native';
 import { useAppToast } from '@/src/context/ToastContext';
+import HeaderSession from '../common/HeaderSession';
 
 const UserDocumentUpload = () => {
     // State Management
@@ -179,7 +180,17 @@ const UserDocumentUpload = () => {
     };
     return (
         <Box className="flex-1 bg-slate-50">
-            <StatusBar barStyle="dark-content" />
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
+            <HeaderSession
+                title="File Uploads"
+                theme="emerald"
+                showBackButton={true}
+                onBackPress={() => navigation.goBack()}
+                showRightIcon={true}
+                rightIconType="menu"
+                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+            />
 
             {/* Header */}
             <VStack className="px-6 pt-16 pb-4 bg-white border-b border-slate-100">

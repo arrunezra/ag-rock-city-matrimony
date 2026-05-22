@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Alert, Dimensions, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, Dimensions, Platform, Pressable, RefreshControl, ScrollView, StatusBar, StyleSheet, TouchableOpacity } from 'react-native';
 import { Box, Heading, Input, InputField, Button, ButtonText, Spinner, useToast, Toast, ToastTitle, Center, Avatar, AvatarImage, Text, HStack, VStack, Modal, ModalBackdrop, ModalContent, Progress, ProgressFilledTrack } from '@/src/components/common/GluestackUI';
 import api from '@/src/api/api';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -28,6 +28,7 @@ import { useAppToast } from '@/src/context/ToastContext';
 import NoDataScreen from '../common/NoDataScreen';
 import { Plus } from 'lucide-react-native';
 import { getExtension } from '@/src/utils/common';
+import HeaderSession from '../common/HeaderSession';
 
 
 export default function ProfileEditScreen({ navigation, route }: any) {
@@ -274,200 +275,6 @@ export default function ProfileEditScreen({ navigation, route }: any) {
     }
   };
 
-  const handleImagePick = async () => {
-    const result = await launchImageLibrary({
-      mediaType: 'photo',
-      quality: 0.8,
-      includeBase64: true, // Useful for smaller thumbnails
-    });
-
-    if (result.assets && result.assets[0]) {
-      uploadImage(result.assets[0]);
-    }
-  };
-  // const handlePickImage = async () => {
-  //   try {
-  //     // 1. Open Picker
-  //     const image = await ImagePicker.openPicker({
-  //       cropping: true,
-  //       cropperCircleOverlay: true,
-  //       mediaType: 'photo',
-  //     });
-
-  //     // 2. Skia Compression (GPU Accelerated)
-  //     setIsUploading(true);
-  //     setUploadProgress(0); // Start progress early to show activity
-
-  //     const compressedResult = await compressWithSkia(image);
-
-  //     if (!compressedResult || !compressedResult.uri) {
-  //       throw new Error("Failed to process image");
-  //     }
-
-  //     // 3. Prepare FormData using the compressed URI
-  //     const uploadData = new FormData();
-
-  //     uploadData.append('file', {
-  //       uri: compressedResult.uri, // Use Skia's compressed Base64 URI
-  //       type: 'image/jpeg',
-  //       name: `${profile.userid}_${Date.now()}.jpg`,
-  //     } as any);
-
-  //     uploadData.append('userid', profile.userid);
-
-  //     // 4. Start Upload with Progress Tracking
-  //     const token = await AsyncStorage.getItem('accessToken');
-
-  //     const response = await api.post('/files/profile_photo_upload.php', uploadData, {
-  //       headers: {
-  //         'Content-Type': 'multipart/form-data',
-  //         'Authorization': `Bearer ${token}`
-  //       },
-  //       // Axios tracks the progress of the multipart request
-  //       onUploadProgress: (progressEvent) => {
-  //         const { loaded, total } = progressEvent;
-  //         if (total) {
-  //           const percent = Math.round((loaded * 100) / total);
-  //           setUploadProgress(percent);
-  //         }
-  //       }
-  //     });
-
-  //     // 5. Success Handling
-  //     if (response.data.success) {
-  //       const fullUrl = `${API_BASE_URL_DEV_Profiles_Images}/${response.data.full_url}`;
-  //       const thumbUrl = `${API_BASE_URL_DEV_Profiles_Thumbs}/${response.data.thumb_url}`;
-
-  //       updateForm('profilePic', fullUrl);
-  //       updateForm('profileThumb', thumbUrl);
-  //       setProfileImage(fullUrl);
-
-  //       // Synchronize with global User Context/State
-  //       const updatedProfile: any = {
-  //         profileThumb: response.data.thumb_url,
-  //         profilePic: response.data.full_url,
-  //       };
-  //       await updateUser({ ...user, ...updatedProfile });
-
-  //     } else {
-  //       throw new Error(response.data.message || 'Upload failed');
-  //     }
-  //   } catch (error: any) {
-  //     if (error.message !== 'User cancelled image selection') {
-  //       console.error("Upload process error:", error);
-  //       // Alert user of failure here if needed
-  //     }
-  //   } finally {
-  //     setIsUploading(false);
-  //     setUploadProgress(0);
-  //   }
-  // };
-  const handlePickImage = async () => {
-    try {
-      const image = await ImagePicker.openPicker({
-        cropping: true,
-        cropperCircleOverlay: true,
-        mediaType: 'photo',
-      });
-
-      // START LOADING & MODAL
-      setIsUploading(true);
-      setUploadProgress(0);
-
-      // 1. Skia Compression
-      const compressedResult = await compressWithSkia(image);
-      if (!compressedResult?.uri) throw new Error("Compression failed");
-
-      // 2. Prepare FormData
-      const uploadData = new FormData();
-      uploadData.append('file', {
-        uri: compressedResult.uri,
-        type: 'image/jpeg',
-        name: `profile_${user?.userid}.jpg`,
-      } as any);
-      uploadData.append('userid', user?.userid);
-
-      // 3. Axios Upload
-      const token = await AsyncStorage.getItem('accessToken');
-      const response = await api.post('/files/profile_photo_upload.php', uploadData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
-        },
-        onUploadProgress: ({ loaded, total }) => {
-          if (total) {
-            setUploadProgress(Math.round((loaded * 100) / total));
-          }
-        }
-      });
-
-      if (response.data.success) {
-        // Success: Update your state and Context
-        const fullUrl = `${API_BASE_URL_DEV_Profiles_Images}/${response.data.full_url}`;
-        setProfileImage(fullUrl);
-        // Synchronize with global User Context/State
-        const updatedProfile: any = {
-          profileThumb: response.data.thumb_url,
-          profilePic: response.data.full_url,
-        };
-        await updateUser({ ...user, ...updatedProfile });
-      }
-
-    } catch (error: any) {
-      if (error.message !== 'User cancelled image selection') {
-        console.log(error);
-        Alert.alert("Upload Error", error.message);
-      }
-    } finally {
-      // CLOSE MODAL
-      setIsUploading(false);
-    }
-  };
-
-  const uploadImage = async (asset: any) => {
-    setSaving(true);
-    try {
-      const formData = new FormData();
-      formData.append('profile_image', {
-        uri: asset.uri,
-        type: asset.type,
-        name: asset.fileName || 'profile.jpg',
-      } as any);
-
-      const res = await api.post('/update_photo.php', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      if (res.data.success) {
-        // Update local state to show new photo immediately
-        setProfileData({ ...profileData, profile_thumb: res.data.url });
-        toast.show({ render: () => <Toast><ToastTitle>Photo Updated!</ToastTitle></Toast> });
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleUpdate = async () => {
-    setSaving(true);
-    try {
-      const res = await api.post('/manage_profile.php', profileData);
-      if (res.data.success) {
-        toast.show({
-          placement: "top",
-          render: ({ id }) => (
-            <Toast nativeID={id} action="success" variant="solid">
-              <ToastTitle>Profile Updated Successfully</ToastTitle>
-            </Toast>
-          ),
-        });
-      }
-    } catch (e) { console.error(e); }
-    finally { setSaving(false); }
-  };
-
   if (loading) return <ProfileSkeleton />;
   // <Box className="flex-1 justify-center"><Spinner size="large" /></Box>;
 
@@ -610,39 +417,6 @@ export default function ProfileEditScreen({ navigation, route }: any) {
 
   };
 
-
-  // Logic to update a specific property of a specific child
-  const updateKidDetail = (index: number, field: string, value: string) => {
-    const updatedKids: any = [...profileData.kids];
-    updatedKids[index] = { ...updatedKids[index], [field]: value };
-    updateForm('kids', updatedKids);
-  };
-
-  // Logic to remove a single child via the trash icon
-  const removeChild = (index: number) => {
-    const updatedKids = profileData?.kids.filter((_: any, i: any) => i !== index);
-    updateForm('kids', updatedKids);
-    updateForm('childrenCount', updatedKids.length.toString());
-  };
-
-
-
-
-  const getDynamicChildrenValue = () => {
-    if (!profileData?.kids || profileData.kids.length === 0) return "No Children";
-
-    const counts: { [key: string]: number } = {};
-    profileData.kids.forEach((child: any) => {
-      const g = child.gender || 'Child';
-      counts[g] = (counts[g] || 0) + 1;
-    });
-
-    // Returns "2 Boys, 2 Girls" dynamically
-    return Object.entries(counts)
-      .map(([gender, count]) => `${count} ${gender}${count > 1 ? 's' : ''}`)
-      .join(', ');
-  };
-
   const getAboutUs = () => {
     if (profileData.work_with !== 'NWK' && profileData.working_as) {
       return `Thank you for stopping by my profile! As a ${profileData.working_as}, my dreams and aspirations are the heartbeat of my journey toward success. I hope to find a life partner who is lovable and deeply understanding—someone who walks beside me as a best friend and stands firm with me through all of life's ups and downs. I look forward to hearing from you soon.`
@@ -656,11 +430,22 @@ export default function ProfileEditScreen({ navigation, route }: any) {
     else { }
 
   }
-
   const profilePicUrl = getExtension(user?.profilePic == 'boy.png' ? "fake" : user?.profilePic, 'url');
 
   return (
     <Box className="flex-1 bg-[#F1F5F9]">
+
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
+      <HeaderSession
+        title="Profile details"
+        theme="mint"
+        showBackButton={true}
+        onBackPress={() => navigation.goBack()}
+        showRightIcon={true}
+        rightIconType="menu"
+        onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+      />
 
       <ScrollView showsVerticalScrollIndicator={false} bounces={false}
         refreshControl={
@@ -712,12 +497,12 @@ export default function ProfileEditScreen({ navigation, route }: any) {
                 </Pressable>
 
                 {/* Back Button - Floating Glass Effect */}
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   onPress={() => navigation.goBack()}
                   className="absolute top-14 left-6 z-30 bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-xl"
                 >
                   <Icon as={ChevronLeftIcon} className="text-white" size="xl" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
 
                 {/* Bottom Gradient - Deeper and smoother for 2026 aesthetics */}
                 <LinearGradient
@@ -1491,13 +1276,7 @@ export default function ProfileEditScreen({ navigation, route }: any) {
     </Box>
   );
 }
-// Reuse this Row component for the Basics section
-const DetailRow = ({ label, value }: any) => (
-  <HStack className="items-start">
-    <Text size="xs" className="text-typography-400 w-32 font-medium">{label}</Text>
-    <Text size="sm" className="text-typography-800 font-semibold flex-1">:  {value}</Text>
-  </HStack>
-);
+
 
 
 
