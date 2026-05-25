@@ -137,6 +137,9 @@ const SummryListViewScreen = (props: any) => {
         });
     };
 
+    const renderView = () => {
+
+    }
     return (
         <Box className="flex-1 bg-white">
             <StatusBar barStyle="light-content" backgroundColor="transparent" />
@@ -190,68 +193,88 @@ const SummryListViewScreen = (props: any) => {
                                 onEndReached={() => fetchSummaryDetails(false)} // This triggers the append logic
                                 onEndReachedThreshold={0.5}
                                 renderItem={({ item }) => (
-                                    <HStack className="justify-between items-center p-4 border-b border-outline-100 bg-white">
-                                        <Pressable className="flex-1" onPress={() => {
-                                            navigation.navigate('ProfileDetail', { profile_id: item.profile_id, module: 'summary' })
-                                        }}>
-                                            <HStack space="lg" className="items-center">
-                                                <Avatar size="xl">
-                                                    <AvatarFallbackText>{item.full_name}</AvatarFallbackText>
-                                                    <AvatarImage source={{ uri: getExtension(item.file_name, 'addthumnail') }} />
-                                                </Avatar>
 
-                                                <VStack className="flex-1" space="xs">
-                                                    <Text size="xl" className="font-bold text-typography-900">{item.full_name}</Text>
-                                                    {/* Dynamic Sub-text based on Filter */}
-                                                    <Text size="sm" className="text-typography-600">{item.city_name || config.subText}</Text>
+                                    <LinearGradient
+                                        colors={['#ffffff', '#f4faf8', '#defbf1']} // Clean transition from pure white to soft mint green
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 0 }} // Horizontal gradient across the card layout
+                                        style={{ borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }} // Native border style execution
+                                    >
+                                        {/* Internal row arrangement framework container */}
+                                        <HStack className="justify-between items-center p-4 bg-transparent">
+                                            <Pressable
+                                                className="flex-1"
+                                                onPress={() => {
+                                                    navigation.navigate('ProfileDetail', { profile_id: item.profile_id, module: 'summary' })
+                                                }}
+                                            >
+                                                <HStack space="lg" className="items-center">
+                                                    <Avatar size="xl" className="border border-slate-100 shadow-sm">
+                                                        <AvatarFallbackText>{item.full_name}</AvatarFallbackText>
+                                                        <AvatarImage source={{ uri: getExtension(item.file_name, 'addthumnail') }} />
+                                                    </Avatar>
+
+                                                    <VStack className="flex-1" space="xs">
+                                                        <Text size="xl" className="font-bold text-slate-900">{item.full_name}</Text>
+                                                        {/* Dynamic Sub-text based on Filter */}
+                                                        <Text size="sm" className="text-slate-600 font-medium">{item.city_name || config.subText}</Text>
+                                                    </VStack>
+                                                </HStack>
+                                            </Pressable>
+
+                                            {/* 1. Show Date/Time ONLY for Profile Visitors */}
+                                            {config?.title == 'Profile Visitors' && (
+                                                <VStack className="items-end ml-2 bg-white/60 px-2.5 py-1.5 rounded-xl border border-slate-200/40">
+                                                    <Text size="xs" className="text-slate-700 font-bold">
+                                                        {item.sub_text ?
+                                                            new Intl.DateTimeFormat('en-GB', {
+                                                                day: '2-digit',
+                                                                month: 'short',
+                                                                year: 'numeric'
+                                                            }).format(new Date(item.sub_text)).replace(/ /g, '-')
+                                                            : ''
+                                                        }
+                                                    </Text>
+                                                    <Text size="xs" className="text-slate-500 font-medium mt-0.5">
+                                                        {item.sub_text ?
+                                                            new Date(item.sub_text).toLocaleTimeString([], {
+                                                                hour: '2-digit',
+                                                                minute: '2-digit',
+                                                                hour12: true
+                                                            }) : ''
+                                                        }
+                                                    </Text>
                                                 </VStack>
-                                            </HStack>
-                                        </Pressable>
+                                            )}
 
-                                        {/* 1. Show Date/Time ONLY for Profile Visitors */}
-                                        {config?.title == 'Profile Visitors' && (
-                                            <VStack className="items-end ml-2">
-                                                <Text size="xs" className="text-typography-700 font-bold">
-                                                    {item.sub_text ?
-                                                        new Intl.DateTimeFormat('en-GB', {
-                                                            day: '2-digit',
-                                                            month: 'short',
-                                                            year: 'numeric'
-                                                        }).format(new Date(item.sub_text)).replace(/ /g, '-')
-                                                        : ''
-                                                    }
-                                                </Text>
-                                                <Text size="xs" className="text-typography-500">
-                                                    {item.sub_text ?
-                                                        new Date(item.sub_text).toLocaleTimeString([], {
-                                                            hour: '2-digit',
-                                                            minute: '2-digit',
-                                                            hour12: true
-                                                        }) : ''
-                                                    }
-                                                </Text>
-                                            </VStack>
-                                        )}
-
-                                        {/* 2. Dynamic Action Button ONLY for other views (Liked/Connected) */}
-                                        {config?.title != 'Profile Visitors' && (
-                                            <Box className="ml-2">
-                                                <Pressable onPress={() => handleProfileAction(item.profile_id, item.full_name)}>
-                                                    <LinearGradient
-                                                        colors={config.buttonColors}
-                                                        style={{ borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8, minWidth: 90, alignItems: 'center' }}
-                                                    >
-                                                        <Text className="text-white font-bold text-xs">
-                                                            {config.buttonText}
-                                                        </Text>
-                                                    </LinearGradient>
-                                                </Pressable>
-                                            </Box>
-                                        )}
-                                    </HStack>
+                                            {/* 2. Dynamic Action Button ONLY for other views (Liked/Connected) */}
+                                            {config?.title != 'Profile Visitors' && (
+                                                <Box className="ml-2 shadow-sm shadow-emerald-900/10">
+                                                    <Pressable onPress={() => handleProfileAction(item.profile_id, item.full_name)}>
+                                                        <LinearGradient
+                                                            colors={config.buttonColors || ['#047857', '#065f46']}
+                                                            style={{
+                                                                borderRadius: 12,
+                                                                paddingHorizontal: 16,
+                                                                paddingVertical: 9,
+                                                                minWidth: 95,
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center'
+                                                            }}
+                                                        >
+                                                            <Text className="text-white font-bold text-xs tracking-wide">
+                                                                {config.buttonText}
+                                                            </Text>
+                                                        </LinearGradient>
+                                                    </Pressable>
+                                                </Box>
+                                            )}
+                                        </HStack>
+                                    </LinearGradient>
+                                )
 
 
-                                )}
+                                }
                             />
                         )}
                     </>
