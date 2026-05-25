@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useKeyboardAnimation } from 'react-native-keyboard-controller';
 
@@ -11,6 +11,7 @@ import authService from '@/src/services/authService';
 import { useAuth } from '@/src/context/AuthContext';
 import { CheckIcon, Eye, EyeOff } from '@/src/components/common/IconUI';
 import { AnimateError } from '../common/AnimateError';
+import { LinearGradient } from 'react-native-linear-gradient';
 
 export default function LoginScreen({ navigation }: any) {
   const { progress } = useKeyboardAnimation();
@@ -78,150 +79,164 @@ export default function LoginScreen({ navigation }: any) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={{ flex: 1 }}
     >
-      {/* 1. bg="$background" becomes className="bg-background-0" */}
-      <ScrollView className="flex-1 bg-background-0">
-        <Center className="flex-1 px-4 py-8">
-          <Box className="w-full max-w-[384px]">
+      <LinearGradient
+        colors={['#defbf1ff', '#ffffffff', '#1e473aff']} // Soft white down to light brand-green tint
+        style={{ flex: 1 }}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      >
+        {/* contentContainerStyle="flex-grow" allows us to push the footer to the bottom */}
+        <ScrollView
+          className="flex-1 bg-transparent" // Set to transparent so gradient shows through
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ flexGrow: 1 }}
+        >
+          <Box className="flex-1 justify-between px-6 py-12">
 
-            {/* Logo Section */}
-            <Box className="items-center mb-10 mt-4">
-              <Image
-                source={require('../../assets/images/aglogo.png')}
-                alt="App Logo"
-                className="mb-4 h-32 w-32" // Using Tailwind for size
-              />
-              <Text className="text-4xl font-bold mb-2">Welcome Back</Text>
-              <Text className="text-center">
-                Sign in to continue to your account
-              </Text>
-            </Box>
+            {/* Top & Center Container: Logo + Form */}
+            <Center className="w-full align-middle">
+              <Box className="w-full max-w-[384px]">
 
-            {/* Form Section */}
-            <VStack className="gap-4">
-              {/* Email */}
-              <FormControl isInvalid={!!errors.email}>
-                <FormControlLabel className="mb-1">
-                  <FormControlLabelText size='lg'>Email</FormControlLabelText>
-                </FormControlLabel>
-                <Input className="h-16" size='lg'>
-                  <InputField
-                    placeholder="Enter your email"
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
+                {/* Logo Section */}
+                <Box className="items-center mb-8 mt-4">
+                  <Image
+                    source={require('../../assets/logo/logo_small_fullname.png')}
+                    alt="Assemblies of God Logo"
+                    className="mb-4 h-32 w-32"
+                    resizeMode="contain"
                   />
-                </Input>
-                <AnimateError isVisible={errors.email}>
-                  {errors.email}
-                </AnimateError>
+                  <Text className="text-4xl font-bold mb-2 text-typography-900 tracking-tight">
+                    Welcome Back
+                  </Text>
+                  <Text className="text-center text-typography-500 text-base">
+                    Sign in to continue to your account
+                  </Text>
+                </Box>
 
-              </FormControl>
+                {/* Form Section */}
+                <VStack className="gap-4">
+                  {/* Email / Phone */}
+                  <FormControl isInvalid={!!errors.email}>
+                    <FormControlLabel className="mb-1">
+                      <FormControlLabelText size='md' className="font-medium text-typography-800">
+                        Phone Number
+                      </FormControlLabelText>
+                    </FormControlLabel>
+                    <Input className="h-14 rounded-xl border-background-300" size='lg'>
+                      <InputField
+                        placeholder="Enter phone number"
+                        value={email}
+                        onChangeText={setEmail}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        className="text-typography-900 text-base px-3"
+                      />
+                    </Input>
+                    <AnimateError isVisible={errors.email}>{errors.email}</AnimateError>
+                  </FormControl>
 
-              {/* Password */}
-              <FormControl isInvalid={!!errors.password}>
-                <FormControlLabel className="mb-1">
-                  <FormControlLabelText size='lg'>Password</FormControlLabelText>
-                </FormControlLabel>
+                  {/* Password */}
+                  <FormControl isInvalid={!!errors.password}>
+                    <FormControlLabel className="mb-1">
+                      <FormControlLabelText size='md' className="font-medium text-typography-800">
+                        Password
+                      </FormControlLabelText>
+                    </FormControlLabel>
+                    <Input className="h-14 rounded-xl border-background-300 flex-row items-center" size='lg'>
+                      <InputField
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Enter your password"
+                        value={password}
+                        onChangeText={setPassword}
+                        autoCapitalize="none"
+                        className="flex-1 text-typography-900 text-base px-3"
+                      />
+                      <InputSlot className="pr-4" onPress={handleState}>
+                        <InputIcon as={showPassword ? Eye : EyeOff} className="text-typography-400" size="xl" />
+                      </InputSlot>
+                    </Input>
+                    <AnimateError isVisible={errors.password}>{errors.password}</AnimateError>
+                  </FormControl>
 
-                <Input className="h-16 flex-row items-center" size='lg'>
-                  <InputField
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    value={password}
-                    onChangeText={setPassword}
-                    className="flex-1" // Enforce that the input field leaves room for the icon
-                  />
+                  {/* Options Row */}
+                  <HStack className="justify-between items-center mt-2 px-1">
+                    <Checkbox
+                      size="md"
+                      value="remember"
+                      isChecked={rememberMe}
+                      onChange={(val) => setRememberMe(val)}
+                      aria-label="Remember session options"
+                    >
+                      <CheckboxIndicator className="mr-2 rounded-md">
+                        <CheckboxIcon as={CheckIcon} className="text-white" />
+                      </CheckboxIndicator>
+                      <CheckboxLabel className="text-sm font-medium text-typography-600">
+                        Remember Me
+                      </CheckboxLabel>
+                    </Checkbox>
 
-                  {/* Ensure InputSlot is inside Input but after InputField */}
-                  <InputSlot className="pr-4" onPress={handleState}>
-                    <InputIcon
-                      as={showPassword ? Eye : EyeOff}
-                      className="text-primary-800" // Use tailwind class or the color prop
-                      size="xl"
-                    />
-                  </InputSlot>
-                </Input>
+                    <Link onPress={() => navigation.navigate('forgotpwd', { identifier: email })}>
+                      <LinkText size='sm' className="text-primary-600 font-semibold no-underline">
+                        Forgot Password?
+                      </LinkText>
+                    </Link>
+                  </HStack>
 
-                <AnimateError isVisible={errors.password}>
-                  {errors.password}
-                </AnimateError>
-              </FormControl>
+                  {/* Sign In Button */}
+                  <Button
+                    size='xl'
+                    className="mt-6 h-14 rounded-xl bg-primary-700 active:bg-primary-800 shadow-sm"
+                    onPress={handleLogin}
+                    isDisabled={loading}
+                  >
+                    {loading && <ButtonSpinner className="mr-2 text-white" />}
+                    <ButtonText className="font-semibold text-lg text-white">
+                      {loading ? 'Signing in...' : 'Sign In'}
+                    </ButtonText>
+                  </Button>
 
-              {/* Remember Me & Forgot Password Row */}
-              <HStack className="justify-between items-center mt-2">
-                <Checkbox
-                  size="md"
-                  value="remember"
-                  isChecked={rememberMe}
-                  onChange={(val) => setRememberMe(val)}
-                  aria-label="Remember me"
-                >
-                  <CheckboxIndicator className="mr-2">
-                    <CheckboxIcon as={CheckIcon} />
-                  </CheckboxIndicator>
-                  <CheckboxLabel className="text-sm text-typography-500">Remember Me</CheckboxLabel>
-                </Checkbox>
+                  {/* Register Link */}
+                  <Box className="flex-row justify-center mt-6">
+                    <Text className="text-typography-800 font-bold mr-1 text-sm">Don't have an account?</Text>
+                    <Link onPress={() => navigation.navigate('TermsOfService', { from: 'signup' })}>
+                      <LinkText className="text-primary-600 font-bold text-sm no-underline">
+                        Sign Up
+                      </LinkText>
+                    </Link>
+                  </Box>
+                </VStack>
 
-                <Link onPress={() => navigation.navigate('forgotpwd', {
-                  identifier: email
-                })}>
-                  <LinkText size='md' className="text-primary-500 text-sm no-underline">
-                    Forgot Password?
-                  </LinkText>
-                </Link>
-              </HStack>
-
-
-              {/* Login Button */}
-              <Button
-                size='xl'
-                className="mt-4 bg-primary-700"
-                onPress={handleLogin}
-                isDisabled={loading}
-              >
-                {loading && <ButtonSpinner className="mr-2" />}
-                <ButtonText>{loading ? 'Signing in...' : 'Sign In'}</ButtonText>
-              </Button>
-
-              {/* Sign Up Link */}
-              <Box className="flex-row justify-center mt-6">
-                <Text className="text-typography-500 mr-2">Don't have an account?</Text>
-                <Link onPress={() => navigation.navigate('Signup')}>
-                  <LinkText className="text-primary-500 font-semibold no-underline">
-                    Sign Up
-                  </LinkText>
-                </Link>
               </Box>
-              <Link onPress={() => navigation.navigate('ThemeSettings')}>
-                <LinkText className="text-primary-500 font-semibold no-underline">
-                  Theme Settings
-                </LinkText>
-              </Link>
+            </Center>
 
-              <Link onPress={() => navigation.navigate('profilepwdupdate', {
-                userid: "",
-                mobile: "",
-                email: "",
-                name: "",
-              })}>
-                <LinkText className="text-primary-500 font-semibold no-underline">
-                  Update Profile Password
-                </LinkText>
-              </Link>
+            {/* --- NEW STICKY FOOTER SECTION --- */}
+            <VStack className="items-center mt-8 gap-4">
+              <HStack className='gap-4 items-center px-5 py-2.5'>
+                <Pressable onPress={() => navigation.navigate('TermsOfService', { from: 'login' })}>
+                  <Link onPress={() => navigation.navigate('TermsOfService', { from: 'login' })}>
+                    <LinkText className="text-black-500 hover:text-black-700 text-sm font-medium no-underline">
+                      Terms of Service
+                    </LinkText>
+                  </Link>
+                </Pressable>
 
-              <Link onPress={() => navigation.navigate('updatepwd', {
-                identifier: ""
-              })}>
-                <LinkText className="text-primary-500 font-semibold no-underline">
-                  Reset Password
-                </LinkText>
-              </Link>
+                <Text className="text-slate-300 text-xs">|</Text>
+                <Pressable onPress={() => navigation.navigate('PrivacyPolicy')}>
+                  <Link onPress={() => navigation.navigate('PrivacyPolicy')}>
+                    <LinkText className="text-black-500 hover:text-black-700 text-sm font-medium no-underline">
+                      Privacy Policy
+                    </LinkText>
+                  </Link>
 
+                </Pressable>
+              </HStack>
             </VStack>
+            {/* --- END FOOTER --- */}
+
           </Box>
-        </Center>
-      </ScrollView>
+        </ScrollView>
+      </LinearGradient>
     </KeyboardAvoidingView>
   );
+
 }

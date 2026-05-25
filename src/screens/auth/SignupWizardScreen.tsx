@@ -1481,98 +1481,75 @@ export default function SignupWizardScreen() {
 
           {/* STEP 9: Church details And Spirtual Details */}
           {step === 9 && selectedChurchData && (
-            <><VStack
-              space="lg"
-              className="bg-blue-50/40 p- rounded-[32px] border border-blue-100/50 mt-2 shadow-sm shadow-blue-200/20"
-            >
-              <FormControl isInvalid={validationTriggered && (!formData.church_id)}>
-                <FormControlLabel className="mb-2">
-                  <FormControlLabelText className="font-bold text-slate-700">Church Details</FormControlLabelText>
-                </FormControlLabel>
-                <FuturisticDropdown
-                  data={churches || []}
-                  value={formData.church_id}
-                  onChange={(item: any) => {
-                    updateForm('church_id', item.value);
-                    setSelectedChurchData(item)
-                  }}
-                  placeholder="Select Church "
-                  icon={{ icon: ChurchIcon, color: 'text-blue-500' }}
-                  search={true}
-                  isInvalid={validationTriggered && !formData.church_id}
-                />
-                <AnimateError isVisible={validationTriggered && (!formData.church_id)}>
-                  {"Church details are required"}
-                </AnimateError>
-              </FormControl>
-              {/* Wrap the details in a conditional block with animation classes */}
-              {formData.church_id && (
-                <Box
-                  // This class handles the "Soft Landing" entrance
-                  className="animate-in fade-in slide-in-from-top-4 duration-500 ease-out mt-4 bg-blue-50/40 p-4 rounded-[28px] border border-blue-100/50"
-                >
-                  <HStack space="sm" className="justify-between items-center mb-4">
-                    <VStack>
-                      <Text className="text-[10px] font-black text-blue-600 tracking-widest uppercase opacity-60">
-                        Church Info
-                      </Text>
+
+
+            <Box className='flex-1'>
+              <VStack
+                space="lg"
+                className="bg-blue-50/40 p-4 rounded-[32px] border border-blue-100/50 mt-2 shadow-sm shadow-blue-200/20"
+              >
+                <FormControl isInvalid={validationTriggered && (!formData.church_id)}>
+                  <FormControlLabel className="mb-2">
+                    <FormControlLabelText className="font-bold text-slate-700">Church Details</FormControlLabelText>
+                  </FormControlLabel>
+
+                  <FuturisticDropdown
+                    data={churches || []}
+                    value={formData.church_id}
+                    onChange={(item: any) => {
+                      updateForm('church_id', item.value);
+                      setSelectedChurchData(item);
+                    }}
+                    placeholder="Select Church "
+                    icon={{ icon: ChurchIcon, color: 'text-blue-500' }}
+                    search={true}
+                    isInvalid={validationTriggered && !formData.church_id}
+                  />
+
+                  <AnimateError isVisible={validationTriggered && (!formData.church_id)}>
+                    {"Church details are required"}
+                  </AnimateError>
+                </FormControl>
+
+                {formData.church_id && (
+                  <Box className="animate-in fade-in slide-in-from-top-4 duration-500 ease-out mt-4 bg-blue-50/40 p-4 rounded-[28px] border border-blue-100/50">
+                    <HStack space="sm" className="justify-between items-center mb-4">
+                      <VStack>
+                        <Text className="text-[10px] font-black text-blue-600 tracking-widest uppercase opacity-60">
+                          Church Info
+                        </Text>
+                      </VStack>
+                      <Box className="px-3 py-1 bg-white rounded-full border border-blue-100 shadow-sm shadow-blue-100">
+                        <Text className="text-[10px] font-bold text-blue-500">OFFICIAL</Text>
+                      </Box>
+                    </HStack>
+
+                    <VStack space="sm">
+                      <InfoItem icon={User2} label="Pastor Name" value={selectedChurchData?.pastor_name} />
+
+                      <Box className="h-[1px] bg-blue-100/50 w-full" />
+
+                      <InfoItem icon={BookOpen} label="Denomination" value={selectedChurchData?.denomination} />
+                      <InfoItem icon={MapPin} label="Address" value={selectedChurchData?.address} />
+
+                      <HStack space="xl">
+                        <Box className="flex-1">
+                          <InfoItem icon={Building2} label="City" value={selectedChurchData?.city} />
+                        </Box>
+                        <Box className="flex-1">
+                          <InfoItem icon={Phone} label="Contact" value={selectedChurchData?.church_phone} />
+                        </Box>
+                      </HStack>
                     </VStack>
-                    <Box className="px-3 py-1 bg-white rounded-full border border-blue-100 shadow-sm shadow-blue-100">
-                      <Text className="text-[10px] font-bold text-blue-500">OFFICIAL</Text>
-                    </Box>
-                  </HStack>
-
-                  <VStack space="sm">
-                    {/* Primary Details in a modern Bento grid style */}
-                    <InfoItem icon={User2} label="Pastor Name" value={selectedChurchData?.pastor_name} />
-
-                    <Box className="h-[1px] bg-blue-100/50 w-full" /> {/* Subtle Divider */}
-
-                    <InfoItem icon={BookOpen} label="Denomination" value={selectedChurchData?.denomination} />
-                    <InfoItem icon={MapPin} label="Address" value={selectedChurchData?.address} />
-
-                    <HStack space="xl">
-                      <Box className="flex-1">
-                        <InfoItem icon={Building2} label="City" value={selectedChurchData?.city} />
-                      </Box>
-                      <Box className="flex-1">
-                        <InfoItem icon={Phone} label="Contact" value={selectedChurchData?.church_phone} />
-                      </Box>
-                    </HStack>
-                  </VStack>
-                </Box>
-              )}
-              {/* {formData.church_id &&
-                <Box>
-                  <HStack className="justify-between items-center mb-1">
-                    <Text className="text-xs font-bold text-blue-600 tracking-widest uppercase">Church Info</Text>
-                    <Box className="px-3 py-1 bg-white rounded-full border border-blue-100">
-                      <Text className="text-[10px] font-bold text-blue-400">OFFICIAL</Text>
-                    </Box>
-                  </HStack>
-
-                  <Box className="gap-2">
-                    <InfoItem icon={User2} label="Pastor Name" value={selectedChurchData?.pastor_name} />
-                    <InfoItem icon={BookOpen} label="Denomination" value={selectedChurchData?.denomination} />
-                    <InfoItem icon={MapPin} label="Address" value={selectedChurchData?.address} />
-
-                    <HStack space="xl">
-                      <Box className="flex-1">
-                        <InfoItem icon={Building2} label="City" value={selectedChurchData?.city} />
-                      </Box>
-                      <Box className="flex-1">
-                        <InfoItem icon={Phone} label="Contact" value={selectedChurchData?.church_phone} />
-                      </Box>
-                    </HStack>
                   </Box>
-                </Box>
-              } */}
-            </VStack>
+                )}
+              </VStack>
 
               <VStack space="md" className="mt-6">
-                <Heading size="sm" className="text-slate-900 ml-1">Spiritual Status </Heading>
+                <Heading size="sm" className="text-slate-900 ml-1">Spiritual Status</Heading>
 
                 <VStack space="sm">
+                  {/* Saved Status */}
                   <StatusToggle
                     icon={Flame}
                     iconBg="bg-emerald-400"
@@ -1582,6 +1559,8 @@ export default function SignupWizardScreen() {
                     value={formData.born_again}
                     onToggle={(v: any) => updateForm('born_again', v)}
                   />
+
+                  {/* Water Baptism Section */}
                   <VStack
                     className={`rounded-[32px] transition-all duration-300 border ${formData.baptized ? 'bg-blue-50/30 border-blue-100 p-2' : 'bg-transparent border-transparent'
                       }`}
@@ -1595,11 +1574,14 @@ export default function SignupWizardScreen() {
                       value={formData.baptized}
                       onToggle={(v: any) => {
                         updateForm('baptized', v);
-                        if (!v) updateForm('baptized', ''); // Clear date if toggled off
+                        if (!v) {
+                          updateForm('baptism_details', ''); // ✅ FIXED: Clears details text, not the boolean flag
+                        }
                       }}
                     />
 
-                    {formData.baptized && (
+                    {/* Conditionally rendered inputs safely bound to boolean true */}
+                    {Boolean(formData.baptized) && (
                       <Box className="px-4 pb-4 pt-2 animate-in fade-in zoom-in-95 duration-300">
                         <VStack space="xs">
                           <Text className="text-[10px] font-bold text-blue-600 uppercase ml-1 tracking-wider">
@@ -1615,7 +1597,7 @@ export default function SignupWizardScreen() {
                             <InputField
                               placeholder="e.g. June 2022 or 12/05/2021"
                               className="text-sm text-slate-700"
-                              value={formData.baptism_details}
+                              value={formData.baptism_details || ''}
                               onChangeText={(txt) => updateForm('baptism_details', txt)}
                             />
                           </Input>
@@ -1623,6 +1605,8 @@ export default function SignupWizardScreen() {
                       </Box>
                     )}
                   </VStack>
+
+                  {/* Holy Spirit Baptism Status */}
                   <StatusToggle
                     icon={Wind}
                     iconBg="bg-teal-100"
@@ -1633,7 +1617,10 @@ export default function SignupWizardScreen() {
                     onToggle={(v: any) => updateForm('spirit', v)}
                   />
                 </VStack>
-              </VStack></>
+              </VStack>
+            </Box>
+
+
           )}
 
           {/* STEP 9: Photo */}

@@ -53,7 +53,7 @@ function App() {
   if (loading) {
     return (
       <View  >
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="rgba(11, 63, 40, 1)" />
       </View>
     );
   }

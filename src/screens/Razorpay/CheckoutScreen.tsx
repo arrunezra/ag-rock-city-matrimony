@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SuccessOverlay } from '../common/SuccessOverlay';
 import { Screen } from 'react-native-screens';
 import { useAppToast } from '@/src/context/ToastContext';
-import { rezor_key } from '@/src/utils/environment';
+import { rezor_test_key } from '@/src/utils/environment';
 import { LookupContext } from '@/src/context/LookupContext';
 const CheckoutScreen = ({ route, navigation }: any) => {
     const { totalAmount, customerName, userid, email, phoneNo } = route.params;
@@ -54,13 +54,14 @@ const CheckoutScreen = ({ route, navigation }: any) => {
 
         setIsProcessing(true);
         const options = {
-            description: `Subscription for ${customerName}`,
+            description: `Subscription for ${lookups.appName}`,
             image: lookups?.appLogo, // Use your actual brand logo
             currency: 'INR',
-            key: rezor_key,
+            key: rezor_test_key,
             amount: Math.round(totalAmount),
-            name: customerName,
+            name: lookups.appName,
             order_id: order_id,
+            allow_rotation: false,
             prefill: {
                 email: email,
                 contact: phoneNo,

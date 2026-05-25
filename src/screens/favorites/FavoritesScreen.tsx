@@ -13,6 +13,7 @@ import NotFoundScreen from '../common/NotFoundScreen';
 import { ScrollView } from 'react-native-gesture-handler';
 import { getExtension } from '@/src/utils/common';
 import HeaderSession from '../common/HeaderSession';
+import { CaptureProtection } from 'react-native-capture-protection';
 
 const FavoritesScreen = () => {
     // 1. Add a safety check for navigation
@@ -23,6 +24,18 @@ const FavoritesScreen = () => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [recentViewers, setRecentViewers] = useState([]);
+
+    //#region CaptureProtection 
+    useEffect(
+        useCallback(() => {
+            CaptureProtection.prevent({ screenshot: true, record: true, appSwitcher: true });
+            return () => {
+                CaptureProtection.allow();
+
+            };
+        }, [])
+    );
+    //#endregion
     const loadData = useCallback(async (isSilent = false) => {
         if (!isSilent) setLoading(true);
         try {
@@ -107,8 +120,9 @@ const FavoritesScreen = () => {
                             ) : (
                                 // Inactive State for Liked
                                 <HStack className="py-2.5 items-center justify-center gap-2 rounded-full">
-                                    <Icon as={StarIcon} color="#94a3b8" size="lg" />
-                                    <Text className="text-secondary-400 font-semibold text-sm">
+                                    <Icon as={StarIcon} color="#1b1d1fff" size="lg" />
+
+                                    <Text className="text-secondary-400 font-semibold text-sm " style={{ color: "#181a1dff" }}>
                                         {"Liked"}
                                     </Text>
                                 </HStack>

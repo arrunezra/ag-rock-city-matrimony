@@ -19,9 +19,10 @@ import { useAppToast } from '@/src/context/ToastContext';
 import { useAlert } from '@/src/context/AlertContext';
 import LottieView from 'lottie-react-native';
 import ReportProfileModal from './home_sub_screen/ReportProfileModal';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import HeaderSession from '../common/HeaderSession';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { CaptureProtection } from 'react-native-capture-protection';
 
 export default function ProfileDetailScreen({ route }: any) {
     const { user } = useAuth();
@@ -73,6 +74,20 @@ export default function ProfileDetailScreen({ route }: any) {
             setIsReady(true);
         }
     }, []);
+
+
+    //#region CaptureProtection 
+    useEffect(
+        useCallback(() => {
+            CaptureProtection.prevent({ screenshot: true, record: true, appSwitcher: true });
+            return () => {
+                CaptureProtection.allow();
+
+            };
+        }, [])
+    );
+    //#endregion
+
 
     useEffect(() => {
         fetchProfileDetails()
