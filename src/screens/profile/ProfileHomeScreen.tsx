@@ -58,7 +58,8 @@ const ProfileHomeScreen = () => {
                 onBackPress={() => navigation.goBack()}
                 showRightIcon={true}
                 rightIconType="menu"
-                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+                onRightPress={() => navigation.openDrawer()}
+                showLogo={false}
             />
             <FlatList
                 data={HOME_DATA}

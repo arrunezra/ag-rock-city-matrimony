@@ -124,6 +124,7 @@ const AdminDashboard = ({ navigation }: any) => {
                 showRightIcon={true}
                 rightIconType="menu"
                 onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+                showLogo={true}
             />
             <ScrollView
                 showsVerticalScrollIndicator={false}

@@ -78,7 +78,7 @@ export const ROLE_DRAWER_CONFIG: Record<string, any[]> = {
 // 1. Define the Tab Configuration
 const TAB_CONFIG = {
   admin: [
-    { name: "Dashboard", component: AdminDashboard, icon: HomeIcon, title: "Admin Home" },
+    { name: "Dashboard", component: AdminDashboard, icon: HomeIcon, title: "Home" },
     { name: "Profile", component: ProfileSummary, icon: HeartIcon, title: "Profile" },
     { name: "Payment", component: PaymentHistoryScreen, icon: CreditCard, title: "Payment Details" },
   ],
@@ -93,7 +93,7 @@ const TAB_CONFIG = {
     { name: "Payment", component: PaymentHistoryScreen, icon: CreditCard, title: "Payment Details" },
   ],
   staff: [
-    { name: "Home", component: StaffDashboard, icon: HomeIcon, options: { title: "Staff Overview" } },
+    { name: "Home", component: StaffDashboard, icon: HomeIcon, options: { title: "Home" } },
     { name: "Profile", component: ProfileSummary, icon: HeartIcon, title: "Profile" },
     { name: "staffInbox", component: StaffInboxScreen, icon: MessageCircleIcon, title: "Inbox" },
   ],

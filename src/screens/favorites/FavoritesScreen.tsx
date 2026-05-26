@@ -72,14 +72,14 @@ const FavoritesScreen = () => {
             <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
             {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
             <HeaderSession
-                title="Staff Overview"
+                title="My Shortlist"
                 theme="emerald"
                 showBackButton={false}
                 onBackPress={() => navigation.goBack()}
                 showRightIcon={true}
                 rightIconType="menu"
-                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
-            />
+                onRightPress={() => navigation.openDrawer()}
+                showLogo={false} />
             {loading && profiles.length === 0 ? (
                 <Center className="flex-1">
                     <Spinner size="large" />

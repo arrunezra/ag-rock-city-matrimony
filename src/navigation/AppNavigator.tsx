@@ -15,7 +15,7 @@ export default function AppNavigator() {
     // Start a 2000ms timer as soon as the component mounts
     const timer = setTimeout(() => {
       setIsTimedOut(true);
-    }, 10000);
+    }, 3000);
 
     // Clean up the timeout if the component unmounts early to prevent memory leaks
     return () => clearTimeout(timer);

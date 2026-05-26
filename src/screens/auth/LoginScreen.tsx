@@ -26,7 +26,7 @@ export default function LoginScreen({ navigation }: any) {
   const validateForm = () => {
     const newErrors: any = {};
     if (!email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'Phone No. is required';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = 'Email is invalid';
     }
@@ -59,7 +59,7 @@ export default function LoginScreen({ navigation }: any) {
       } else {
         setErrors((pre: any) => ({
           ...pre,
-          password: "Invalid phone number/email or password"
+          password: "Invalid phone number password"
         }));
 
       }
@@ -128,7 +128,7 @@ export default function LoginScreen({ navigation }: any) {
                         value={email}
                         onChangeText={setEmail}
                         autoCapitalize="none"
-                        keyboardType="email-address"
+                        //keyboardType="phone-pad"
                         className="text-typography-900 text-base px-3"
                       />
                     </Input>

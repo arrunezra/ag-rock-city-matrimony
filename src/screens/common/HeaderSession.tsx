@@ -5,6 +5,7 @@ import { MotiView, MotiText } from 'moti';
 import { Menu, Bell, ChevronLeft, Search, X } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Icon } from '@/src/components/common/IconUI';
+import FastImage from '@d11/react-native-fast-image';
 
 interface HeaderProps {
     title: string;
@@ -14,6 +15,7 @@ interface HeaderProps {
     showRightIcon?: boolean;
     rightIconType?: 'menu' | 'bell' | 'search' | 'close';
     onRightPress?: () => void;
+    showLogo?: boolean;
 }
 
 // Use this to get the height on Android/iOS
@@ -31,7 +33,8 @@ const HeaderSession = ({
     onBackPress,
     showRightIcon = true,
     rightIconType = 'menu', // Set default right icon to 'menu'
-    onRightPress
+    onRightPress,
+    showLogo = false
 }: HeaderProps) => {
 
     const palettes = {
@@ -88,7 +91,7 @@ const HeaderSession = ({
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={{
-                    paddingTop: STATUS_BAR_HEIGHT + 10, // Applied your custom padding tweak
+                    paddingTop: STATUS_BAR_HEIGHT + 10,
                     paddingBottom: 20,
                     elevation: 15,
                     shadowColor: shadowColor,
@@ -97,31 +100,46 @@ const HeaderSession = ({
                     shadowRadius: 15,
                 }}
             >
-                <HStack className="px-6 items-center justify-between">
+                <HStack className="px-6 items-center justify-between gap-2">
 
-                    {/* LEFT SIDE - BACK OPTION */}
-                    <Box className="w-12">
-                        {showBackButton && (
-                            <TouchableOpacity
-                                onPress={onBackPress}
-                                className={`p-3 ${iconBg} rounded-2xl active:scale-90 transition-all`}
-                            >
-                                <Icon as={ChevronLeft} size="lg" color={iconColor} />
-                            </TouchableOpacity>
-                        )}
-                    </Box>
+                    {/* LEFT SIDE SLOT: BACK BUTTON OR LOGO */}
+                    {showLogo ? (
+                        <Box className="w-10 h-10 rounded-xl bg-white/90 items-center justify-center p-1 border border-white/20 mr-3">
 
-                    {/* CENTER TITLE */}
-                    <VStack className="items-center flex-1 mx-2">
+                            <FastImage
+                                source={require('../../assets/icons/without_name.png')}
+                                style={{ width: 56, height: 56, borderRadius: 32 }}
+                                resizeMode={FastImage.resizeMode.cover}
+                            />
+
+
+                        </Box>
+
+
+                    ) : (
+                        <Box className="w-12">
+                            {showBackButton && (
+                                <TouchableOpacity
+                                    onPress={onBackPress}
+                                    className={`p-3 ${iconBg} rounded-2xl active:scale-90 transition-all`}
+                                >
+                                    <Icon as={ChevronLeft} size="lg" color={iconColor} />
+                                </TouchableOpacity>
+                            )}
+                        </Box>
+                    )}
+
+                    {/* TITLE ADJUSTMENT: Centers text normally, but left-aligns cleanly if logo is present */}
+                    <VStack className={`flex-1 mx-2 ${showLogo ? 'items-start' : 'items-center'}`}>
                         <Heading
                             numberOfLines={1}
-                            className={`font-extrabold text-xl tracking-tight text-center ${textColor}`}
+                            className={`font-extrabold text-xl tracking-tight ${textColor} ${showLogo ? 'text-left' : 'text-center'}`}
                         >
                             {title}
                         </Heading>
                     </VStack>
 
-                    {/* RIGHT SIDE - MENU & OTHER OPTIONS */}
+                    {/* RIGHT SIDE SLOT */}
                     <Box className="w-12 items-end">
                         {showRightIcon && (
                             <TouchableOpacity
@@ -133,7 +151,7 @@ const HeaderSession = ({
                                     {rightIconType === 'bell' && (
                                         <Box
                                             className="absolute top-0 right-0 w-3 h-3 bg-cyan-400 rounded-full border-2"
-                                            style={{ borderColor: palettes[theme][0] }} // Dynamic border color match
+                                            style={{ borderColor: palettes[theme][0] }}
                                         />
                                     )}
                                 </Box>
@@ -144,7 +162,6 @@ const HeaderSession = ({
             </LinearGradient>
         </MotiView>
     );
-
 };
 
 export default HeaderSession;

@@ -24,9 +24,9 @@ const SplashScreen = () => {
                     />
                 </View>
 
-                <View style={styles.centerSpinnerContainer}>
+                {/* <View style={styles.centerSpinnerContainer}>
                     <ActivityIndicator size="large" color="#e2b45c" />
-                </View>
+                </View> */}
             </ImageBackground>
         </View>
     );

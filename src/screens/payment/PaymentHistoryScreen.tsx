@@ -48,7 +48,7 @@ const PaymentHistoryScreen = ({ navigation }: any) => {
 
     // --- INTERACTIVE UI STATES ---
     const [selectedChurchId, setSelectedChurchId] = useState<string>('all');
-    const [selectedStatus, setSelectedStatus] = useState<string>('all');
+    const [selectedStatus, setSelectedStatus] = useState<string>('completed');
     const [fromDate, setFromDate] = useState<Date>(getDefaultFromDate());
     const [toDate, setToDate] = useState<Date>(getDefaultToDate());
     const [showFromPicker, setShowFromPicker] = useState(false);
@@ -58,7 +58,7 @@ const PaymentHistoryScreen = ({ navigation }: any) => {
     // --- COMMITTED STATE ENGINE ---
     const [searchCriteria, setSearchCriteria] = useState({
         church_id: 'all',
-        status: 'all',
+        status: 'completed',
         from_date: getDefaultFromDate().toISOString().split('T')[0],
         to_date: getDefaultToDate().toISOString().split('T')[0]
     });
@@ -249,7 +249,8 @@ const PaymentHistoryScreen = ({ navigation }: any) => {
                 onBackPress={() => navigation.goBack()}
                 showRightIcon={true}
                 rightIconType="menu"
-                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+                onRightPress={() => navigation.openDrawer()}
+                showLogo={true}
             />
 
             {/* --- REVENUE HERO SUMMARY DISPLAY --- */}

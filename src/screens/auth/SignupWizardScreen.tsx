@@ -1115,7 +1115,7 @@ export default function SignupWizardScreen() {
                     }}
                     placeholder="Select Community "
                     icon={{ icon: Fingerprint, color: 'text-blue-500' }}
-                    search={true}
+                    search={false}
                     isInvalid={validationTriggered && !formData.sub_community}
                   />
                   <AnimateError isVisible={validationTriggered && (!formData.sub_community)}>

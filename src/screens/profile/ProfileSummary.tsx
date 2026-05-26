@@ -63,7 +63,8 @@ const ProfileSummary = ({ navigation }: any) => {
                 onBackPress={() => navigation.goBack()}
                 showRightIcon={true}
                 rightIconType="menu"
-                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+                onRightPress={() => navigation.openDrawer()}
+                showLogo={true}
             />
             <KeyboardAwareScrollView
                 className="flex-1 bg-slate-50 p-4"

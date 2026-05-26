@@ -196,13 +196,14 @@ const MatchesScreen = () => {
             <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
             {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
             <HeaderSession
-                title="Staff Overview"
+                title="Suggested Profiles"
                 theme="emerald"
                 showBackButton={false}
                 onBackPress={() => navigation.goBack()}
                 showRightIcon={true}
                 rightIconType="menu"
                 onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+                showLogo={false}
             />
 
             {isSubscribed ?

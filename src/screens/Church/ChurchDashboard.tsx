@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AdminStackParamList } from '@/src/types/navigation';
 import AnimatedListItem, { ChurchSkeleton } from './AnimattedSummary';
 import HeaderSession from '../common/HeaderSession';
+import { dateFormat } from '@/src/utils/validators';
 
 export default function ChurchDashboard({ navigation }: any) {
     const [stats, setStats] = useState<any>(null);
@@ -291,11 +292,11 @@ export default function ChurchDashboard({ navigation }: any) {
                                             <HStack space="sm" className="items-center">
                                                 <Box className="bg-slate-100 px-3 py-1 rounded-full flex-row items-center">
                                                     <Icon as={MapPin} size="xs" className="mr-1 text-slate-500" />
-                                                    <Text className="text-[10px] font-bold text-slate-600 uppercase tracking-tight">{item.city}</Text>
+                                                    <Text className="text-[10px] font-bold text-slate-600 uppercase tracking-tight">{item.city_name}</Text>
                                                 </Box>
                                                 <Box className="bg-primary-50 px-3 py-1 rounded-full flex-row items-center">
                                                     <Icon as={Globe} size="xs" className="mr-1 text-primary-600" />
-                                                    <Text className="text-[10px] font-bold text-primary-600 uppercase tracking-tight">{item.denomination}</Text>
+                                                    <Text className="text-[10px] font-bold text-primary-600 uppercase tracking-tight">{item.denomination_name}</Text>
                                                 </Box>
                                             </HStack>
 
@@ -305,7 +306,7 @@ export default function ChurchDashboard({ navigation }: any) {
                                                 {/* Secondary Info/Status */}
                                                 <VStack>
                                                     <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Last Modified</Text>
-                                                    <Text className="text-xs font-semibold text-slate-600">Feb 13, 2026</Text>
+                                                    <Text className="text-xs font-semibold text-slate-600">{dateFormat(item?.updated_at)}</Text>
                                                 </VStack>
 
                                                 {/* The New Action Button */}
