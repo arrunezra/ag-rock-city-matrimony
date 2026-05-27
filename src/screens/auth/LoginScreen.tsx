@@ -25,16 +25,30 @@ export default function LoginScreen({ navigation }: any) {
   const [showPassword, setShowPassword] = useState(false);
   const validateForm = () => {
     const newErrors: any = {};
-    if (!email) {
-      newErrors.email = 'Phone No. is required';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email is invalid';
+
+    // Clean up whitespace
+    const inputTrimmed = email ? email.trim() : '';
+
+    if (!inputTrimmed) {
+      newErrors.email = 'Email or Phone number is required';
+    } else {
+      // Standard Email Regex
+      const isEmail = /\S+@\S+\.\S+/.test(inputTrimmed);
+
+      // Standard Phone Regex (Accepts 10 digits, optional country code like +91)
+      const isPhone = /^\+?[0-9]{10,14}$/.test(inputTrimmed);
+
+      if (!isEmail && !isPhone) {
+        newErrors.email = 'Please enter a valid email or 10-digit phone number';
+      }
     }
+
     if (!password) {
       newErrors.password = 'Password is required';
     } else if (password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -119,16 +133,17 @@ export default function LoginScreen({ navigation }: any) {
                   <FormControl isInvalid={!!errors.email}>
                     <FormControlLabel className="mb-1">
                       <FormControlLabelText size='md' className="font-medium text-typography-800">
-                        Phone Number
+                        Email / Phone Number
                       </FormControlLabelText>
                     </FormControlLabel>
                     <Input className="h-14 rounded-xl border-background-300" size='lg'>
                       <InputField
-                        placeholder="Enter phone number"
+                        placeholder="Enter Email or Phone number"
                         value={email}
                         onChangeText={setEmail}
                         autoCapitalize="none"
-                        //keyboardType="phone-pad"
+                        // "default" ensures they can switch back and forth between numbers & letters easily
+                        keyboardType="default"
                         className="text-typography-900 text-base px-3"
                       />
                     </Input>
