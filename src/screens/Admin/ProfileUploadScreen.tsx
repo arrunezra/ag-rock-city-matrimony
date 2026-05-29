@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, TouchableOpacity, ScrollView, StatusBar, Dimensions } from 'react-native';
+import { View, TouchableOpacity, ScrollView, StatusBar, Dimensions, Platform, Alert } from 'react-native';
 import { Box, VStack, HStack, Heading, Text, Avatar, AvatarImage, Center, useToast, Toast, ToastTitle, ToastDescription } from '@/src/components/common/GluestackUI';
 import LinearGradient from 'react-native-linear-gradient';
 import { MotiView } from 'moti';
@@ -7,7 +7,6 @@ import { Camera, Upload, Check, Trash2, Image as ImageIcon, ArrowLeft } from 'lu
 import { Icon } from '@/src/components/common/IconUI';
 import api from '@/src/api/api';
 import { cleanupImage, handleImageCompression } from '@/src/utils/ImageService';
-import ImagePickerForDevice from 'react-native-image-crop-picker';
 import { useAuth } from '@/src/context/AuthContext';
 import { useAlert } from '@/src/context/AlertContext';
 import * as ImagePicker from 'react-native-image-picker'; // Standard library usage
@@ -16,9 +15,10 @@ import HeaderSession from '../common/HeaderSession';
 import { User } from '@/src/utils/models';
 import { useFocusEffect } from '@react-navigation/native';
 import { getExtension } from '@/src/utils/common';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 const { width } = Dimensions.get('window');
 
-const ProfileUploadScreen = ({ navigation, onUploadComplete }: any) => {
+export const ProfileUploadScreen = ({ navigation, onUploadComplete }: any) => {
     const { user, updateUser } = useAuth();
     const { showAlert, hideAlert } = useAlert();
     const { showToast } = useAppToast();
@@ -29,144 +29,140 @@ const ProfileUploadScreen = ({ navigation, onUploadComplete }: any) => {
     const [uploading, setUploading] = useState<boolean>(false);
     const [progress, setProgress] = useState<number>(0);
 
-    // Default system fallback presets for users who prefer icons
-    const avatarPresets = [
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-    ];
     useEffect(() => {
-
-        if (user?.role == 'member')
-            setImageUri(getExtension(user?.profilePic, 'addthumnail'))
-        else setImageUri(getExtension(user?.profilePic, 'url'))
-    }, [])
-
+        if (user?.role === 'member') {
+            setImageUri(getExtension(user?.profilePic, 'addthumnail'));
+        } else {
+            setImageUri(getExtension(user?.profilePic, 'url'));
+        }
+    }, []);
 
     // Handle Native Photo Gallery Launcher
     const handleSelectImage = async () => {
-
-
-        let tempUri: string | undefined;
-
         try {
-            const image = await ImagePickerForDevice.openPicker({
-                cropping: true,
-                cropperCircleOverlay: true,
+            // 1. Open the secure, policy-compliant Native Photo Picker
+            const result = await launchImageLibrary({
                 mediaType: 'photo',
-                multiple: false
+                quality: 1, // Pass raw quality to handleImageCompression to run optimizations
+                selectionLimit: 1,
             });
 
+            // Handle user cancellation gracefully
+            if (result.didCancel || !result.assets || result.assets.length === 0) {
+                return;
+            }
 
-            // 1. Optimize
-            const compressed = await handleImageCompression(image);
+            const selectedImage = result.assets[0];
+
+            // Map assets to keep structural compatibility with your handleImageCompression utility
+            const mappedImageForCompression = {
+                path: selectedImage.uri || '',
+                mime: selectedImage.type || 'image/jpeg',
+                filename: selectedImage.fileName || `${user?.userid || 'user'}_${Date.now()}.jpg`,
+            };
+
+            // 2. Optimize
+            const compressed = await handleImageCompression(mappedImageForCompression as any);
             if (!compressed) throw new Error("Compression failed");
-            tempUri = compressed.uri;
-            setImageUri(compressed.uri)
-            setTempImageUri(compressed)
 
-
+            setImageUri(compressed.uri);
+            setTempImageUri(compressed);
 
         } catch (error: any) {
-            if (error.message !== 'User cancelled image selection') {
-                showAlert({
-                    type: 'error',
-                    title: 'Gallery Info.',
-                    message: error.message || "Something went wrong. Please try again.",
-                    confirmText: "OK",
-                    onConfirm: async () => {
-                        // setIsUploading(false);
-                        hideAlert();
-                    }
-                });
-                // Alert.alert("Error", error.message);
-            }
-        } finally {
-
+            //Alert.alert('profile upload')
+            showAlert({
+                type: 'error',
+                title: 'Gallery Info.',
+                message: error.message || "Something went wrong. Please try again.",
+                confirmText: "OK",
+                onConfirm: async () => {
+                    hideAlert();
+                }
+            });
         }
-
     };
 
     // Handle Camera Capture Launcher
     const handleCameraCapture = () => {
-        ImagePicker.launchCamera(
+        launchCamera(
             {
                 mediaType: 'photo',
                 quality: 0.8,
                 saveToPhotos: true,
-
             },
             (response) => {
                 if (response.didCancel) return;
                 if (response.errorMessage) {
                     showToast("Camera Error", response.errorMessage, "error");
                 } else if (response.assets && response.assets[0].uri) {
-                    console.log('response.assets', response.assets);
-                    setImageUri(response.assets[0].uri);
+                    const capturedAsset = response.assets[0];
+                    setImageUri(capturedAsset.uri || null);
+
+                    // Create a simulated compression footprint for direct uploads from camera rolls
+                    setTempImageUri({
+                        uri: capturedAsset.uri,
+                        type: capturedAsset.type || 'image/jpeg',
+                        name: capturedAsset.fileName || `${user?.userid || 'user'}_camera_${Date.now()}.jpg`
+                    });
                 }
             }
         );
     };
 
-    // Simulated Server Upload Sequence
+    // Server Upload Execution Sequence
     const handleSaveProfilePicture = async () => {
         if (!imageUri) return;
 
         setUploading(true);
-        setProgress(0); // This ties straight to your overlay tracking UI mask
+        setProgress(0);
 
         try {
             // 1. Prepare Multipart Form Data Payload
             const uploadData = new FormData();
-            let file = {
-                uri: imageUri,
-                type: tempImageUri.type, // Standard safe default fallback format configuration
-                name: tempImageUri.name,
-            }
-            //console.log('file', file)
+
+            // Handle clean URI mappings depending on current platform operating environment
+            const cleanUri = Platform.OS === 'ios' ? imageUri.replace('file://', '') : imageUri;
+
+            // Resolve safe standard properties in case components are submitted directly out of local memory pools
+            const finalFileType = tempImageUri?.type || 'image/jpeg';
+            const finalFileName = tempImageUri?.name || `${user?.userid || 'upload'}_${Date.now()}.jpg`;
+
             uploadData.append('file', {
-                uri: imageUri,
-                type: tempImageUri.type, // Standard safe default fallback format configuration
-                name: tempImageUri.name,
+                uri: cleanUri,
+                type: finalFileType,
+                name: finalFileName,
             } as any);
 
             uploadData.append('userid', user?.userid);
 
-            // 2. Perform Real Network Execution via Axios Post Router
+            // 2. Perform Network Execution via Axios Post Router
             const response = await api.post('/files/upload_staff_profile.php', uploadData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 },
-                // This captures real hardware transmission streaming ticks over the wire
                 onUploadProgress: ({ loaded, total }) => {
                     if (total && total > 0) {
-                        // Calculate the raw percentage
                         const calculatedPercentage = Math.round((loaded * 100) / total);
-
-                        // FIX: Math.min guarantees the value cap never crosses 100%
                         const currentPercentage = Math.min(calculatedPercentage, 100);
-                        setProgress(currentPercentage); // Updates your UI numbers dynamically
+                        setProgress(currentPercentage);
                     }
                 }
             });
 
-            // 3. Process Server Responses Intercepts
+            // 3. Process Server Responses
             if (response.data && response.data.success) {
-                // Slight delay so the user feels the completion state hit 100% smoothly
-                console.log('response.data', response.data);
                 setTimeout(async () => {
                     setUploading(false);
                     showToast("Success", "Profile photo uploaded beautifully!", "success");
+
                     await updateUser({
                         ...user,
                         profilePic: response.data?.file_name ?? "",
                         profileThumb: response.data?.file_name ?? ""
                     } as User);
-                    // Fire callbacks to update parent wrappers or local state caches
+
                     if (onUploadComplete) onUploadComplete(imageUri);
-                    //navigation.goBack();
-                    navigation.openDrawer()
+                    navigation.openDrawer();
                 }, 300);
             } else {
                 throw new Error(response.data?.message || "Upload rejected by cloud server parameters.");
@@ -175,9 +171,8 @@ const ProfileUploadScreen = ({ navigation, onUploadComplete }: any) => {
         } catch (error: any) {
             setUploading(false);
             setProgress(0);
-            console.log('cleaen imageUri', imageUri)
             if (imageUri) await cleanupImage(imageUri);
-            // Graceful error state handling to UI feedback system
+
             console.error("API Profile Image Upload Failure Context:", error);
             showToast(
                 "Upload Failed",
@@ -187,13 +182,9 @@ const ProfileUploadScreen = ({ navigation, onUploadComplete }: any) => {
         }
     };
 
-
-
     return (
         <Box className="flex-1 bg-slate-50">
-            {/* <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" translucent={false} /> */}
             <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-            {/* 2. The Header (Fixed at the top, handling the Safe Area) */}
             <HeaderSession
                 title="Upload Photo"
                 theme="emerald"
@@ -201,9 +192,8 @@ const ProfileUploadScreen = ({ navigation, onUploadComplete }: any) => {
                 onBackPress={() => navigation.goBack()}
                 showRightIcon={true}
                 rightIconType="menu"
-                onRightPress={() => navigation.openDrawer()} // If using React Navigation Drawer
+                onRightPress={() => navigation.openDrawer()}
             />
-
 
             <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
                 <VStack className="px-6 pt-8 items-center gap-8">
@@ -229,7 +219,6 @@ const ProfileUploadScreen = ({ navigation, onUploadComplete }: any) => {
                             {/* Circular Upload Progress Overlay Mask */}
                             {uploading && (
                                 <Box className="absolute inset-0 bg-slate-950/70 items-center justify-center z-30">
-                                    {/* FIX 1: Explicit string template encapsulation */}
                                     <Text className="text-white font-black text-2xl">{`${progress}%`}</Text>
                                     <Text className="text-white/80 text-[10px] font-bold uppercase tracking-wider mt-1">Uploading...</Text>
 
@@ -243,7 +232,10 @@ const ProfileUploadScreen = ({ navigation, onUploadComplete }: any) => {
                         {/* Quick Trash Reset Action Button */}
                         {imageUri && !uploading && (
                             <TouchableOpacity
-                                onPress={() => setImageUri(null)}
+                                onPress={() => {
+                                    setImageUri(null);
+                                    setTempImageUri(null);
+                                }}
                                 activeOpacity={0.8}
                                 className="absolute top-1 right-1 bg-rose-500 p-2.5 rounded-full border-2 border-white shadow-md z-20"
                             >
@@ -272,32 +264,6 @@ const ProfileUploadScreen = ({ navigation, onUploadComplete }: any) => {
                             </TouchableOpacity>
                         </HStack>
                     )}
-
-                    {/* Creative Avatar Quick-Select Tray */}
-                    {/* {!uploading && (
-                        <VStack space="sm" className="w-full bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm mt-2">
-                            <Text size="xs" className="text-slate-400 font-black uppercase tracking-wider mb-1">Or use an avatar preset</Text>
-                            <HStack space="md" className="justify-between">
-                                {avatarPresets.map((uri, index) => (
-                                    <TouchableOpacity
-                                        key={index}
-                                        onPress={() => setImageUri(uri)}
-                                        className="relative rounded-full"
-                                        activeOpacity={0.8}
-                                    >
-                                        <Avatar size="md" className="border-2 border-transparent">
-                                            <AvatarImage source={{ uri }} />
-                                        </Avatar>
-                                        {imageUri === uri && (
-                                            <Box className="absolute inset-0 bg-cyan-600/60 rounded-full items-center justify-center">
-                                                <Icon as={Check} size="xs" color="white" />
-                                            </Box>
-                                        )}
-                                    </TouchableOpacity>
-                                ))}
-                            </HStack>
-                        </VStack>
-                    )} */}
                 </VStack>
             </ScrollView>
 

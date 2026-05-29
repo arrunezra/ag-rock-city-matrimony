@@ -21,8 +21,6 @@ import {
   Switch
 } from '@/src/components/common/GluestackUI';
 import { Icon, ChevronLeftIcon, ChevronDownIcon, CheckIcon, SearchIcon, CalendarDays, UserCheck, User, Globe, ChevronDown, Users, Church, ShieldCheck, Phone, Mail, CheckCircle2, Check, Fingerprint, Building2, MapPin, Trash2, Baby, Heart, Ruler, BookOpen, School, GraduationCap, UserRound, Briefcase, Banknote, Building, Sparkles, X, Lightbulb } from '@/src/components/common/IconUI';
-//import { launchImageLibrary } from 'react-native-image-picker';
-import ImagePicker from 'react-native-image-crop-picker';
 import api from '@/src/api/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SuccessScreen from '../common/SuccessScreen';
@@ -44,6 +42,7 @@ import FuturisticDropdown from '@/src/components/common/FuturisticDropdown';
 import { LookupContext } from '@/src/context/LookupContext';
 import { CameraIcon, CheckCircleIcon, ChurchIcon, CreditCardIcon, Droplets, Flame, User2, UserIcon, Wind, ZapIcon } from 'lucide-react-native';
 import ChruchService from '@/src/services/ChruchService';
+import { launchImageLibrary } from 'react-native-image-picker';
 
 // --- DATA SOURCES ---
 
@@ -201,31 +200,41 @@ export default function SignupWizardScreen() {
 
   const handlePickImage = async () => {
     try {
-      // 1. Open Picker with Cropping enabled
-      const image = await ImagePicker.openPicker({
-        cropping: true,       // Enable the crop tool
-        cropperCircleOverlay: true, // Shows a circle mask (perfect for profile pics)
-        compressImageQuality: 0.8,
+      // 1. Open the secure, policy-compliant Native Photo Picker
+      const result = await launchImageLibrary({
         mediaType: 'photo',
+        quality: 0.8, // Built-in compression quality matching your old config
+        selectionLimit: 1,
       });
+
+      // Handle user cancellation gracefully
+      if (result.didCancel || !result.assets || result.assets.length === 0) {
+        return;
+      }
+
+      const selectedImage = result.assets[0];
+
+      if (!selectedImage.uri) {
+        throw new Error('No image URI found');
+      }
 
       // 2. Prepare FormData
       const uploadData = new FormData();
 
-      // image-crop-picker paths usually work directly in FormData
-      const cleanUri = Platform.OS === 'ios' ? image.path.replace('file://', '') : image.path;
+      // Clean URI processing for iOS and Android
+      const cleanUri = Platform.OS === 'ios' ? selectedImage.uri.replace('file://', '') : selectedImage.uri;
 
       uploadData.append('file', {
         uri: cleanUri,
-        type: image.mime || 'image/jpeg', // Library uses 'mime' instead of 'type'
-        name: `${formData.userid}_${Date.now()}.jpg`,
+        type: selectedImage.type || 'image/jpeg', // react-native-image-picker exposes 'type' natively
+        name: selectedImage.fileName || `${formData.userid}_${Date.now()}.jpg`,
       } as any);
 
       uploadData.append('userid', formData.userid);
       uploadData.append('profile_id', profileID);
       uploadData.append('is_profile_pic', 1);
 
-      // 3. Start Upload
+      // 3. Start Upload Process via Axios
       setIsUploading(true);
       setUploadProgress(0);
 
@@ -247,10 +256,7 @@ export default function SignupWizardScreen() {
         throw new Error(response.data.message || 'Upload failed');
       }
     } catch (error: any) {
-      // Library throws an error if user cancels, so we check for that
-      if (error.message !== 'User cancelled image selection') {
-        console.error("Upload process error:", error);
-      }
+      console.error("Upload process error:", error);
     } finally {
       setIsUploading(false);
     }

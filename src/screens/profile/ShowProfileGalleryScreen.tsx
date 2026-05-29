@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAlert } from '@/src/context/AlertContext';
 import { CustomAlertConfig, GlobalAlertProps } from '../common/GlobalAlert';
 import HeaderSession from '../common/HeaderSession';
+import { UploadProgressModal } from '../common/UploadProgressModal';
 
 const { width } = Dimensions.get('window');
 const COLUMN_WIDTH = (width - 48) / 2;
@@ -30,11 +31,12 @@ export default function ShowProfileGalleryScreen({ route, navigation }: any) {
         user?.userid ?? "",
         user?.profile_id,
         async (data) => {
+            console.log('after upload', data)
             fetchProfileDetails();
-            const updatedProfile: any = {
-                profileThumb: data.thumb_url,
-                profilePic: data.full_url,
-            };
+            // const updatedProfile: any = {
+            //     profileThumb: data.thumb_url,
+            //     profilePic: data.full_url,
+            // };
             //await updateUser({ ...user, ...updatedProfile });
         }
     );
@@ -309,6 +311,7 @@ export default function ShowProfileGalleryScreen({ route, navigation }: any) {
                         </VStack>
                     </HStack>
                 </Box>
+
             </ScrollView>
             <Modal
                 isOpen={isPreviewVisible}
@@ -351,6 +354,10 @@ export default function ShowProfileGalleryScreen({ route, navigation }: any) {
                     />
                 </Box>
             </Modal>
+            <UploadProgressModal
+                isOpen={isUploading}
+                uploadProgress={uploadProgress}
+            />
         </Box>
     );
 }

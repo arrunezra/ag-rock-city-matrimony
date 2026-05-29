@@ -17,8 +17,6 @@ import api from '@/src/api/api';
 import { AddIcon, Building2, CheckCircle2, Globe, Hash, Icon, Mail, MapPin, Phone, SearchIcon, Trash2, User } from '@/src/components/common/IconUI';
 const denominations = ["Baptist", "Catholic", "Pentecostal", "Methodist", "Anglican"];
 const statuses = ["Active", "Inactive", "Merged", "Closed"];
-import ImagePicker from 'react-native-image-crop-picker';
-import StaffImageCropView from '@/src/components/common/StaffImageCropView';
 import { AdminStackParamList } from '@/src/types/navigation';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -26,6 +24,7 @@ import AnimatedListItem, { ChurchSkeleton } from './AnimattedSummary';
 import { Edit3, Settings2, XIcon } from 'lucide-react-native';
 import { ChruchService } from '@/src/services/ChruchService';
 import HeaderSession from '../common/HeaderSession';
+import { launchImageLibrary } from 'react-native-image-picker';
 type Props = NativeStackScreenProps<AdminStackParamList, 'ChurchSummary'>;
 export default function ChurchSummary({ route, navigation }: any) {
     const [list, setList] = useState<any[]>([]);
@@ -157,7 +156,7 @@ export default function ChurchSummary({ route, navigation }: any) {
         setShowPreview(true);
         handlePickAndCrop();
     };
-    const handlePickAndCrop = () => {
+    const handlePickAndCrop = async () => {
         console.log('handlePickAndCrop', previewStaff);
 
         // Ensure previewStaff exists before starting
@@ -166,63 +165,67 @@ export default function ChurchSummary({ route, navigation }: any) {
             return;
         }
 
-        ImagePicker.openPicker({
-            width: 800,
-            height: 800,
-            cropping: true,
-            includeBase64: false, // Set to false if using FormData to save memory
-            compressImageQuality: 0.8,
-            mediaType: 'photo',
-        }).then(async (res: any) => {
-            // Use 'res.path' which contains the URI of the cropped image
-            const croppedUri = res.path;
+        try {
+            // 1. Launch the safe, privacy-compliant System Photo Picker
+            const result = await launchImageLibrary({
+                mediaType: 'photo',
+                quality: 0.8, // Built-in compression quality matching your old config
+                selectionLimit: 1,
+            });
 
-            setImage(res);
+            // Handle user cancellation gracefully up front
+            if (result.didCancel || !result.assets || result.assets.length === 0) {
+                return;
+            }
+
+            const selectedImage = result.assets[0];
+            const rawUri = selectedImage.uri || '';
+
+            // 2. Set UI states for previewing the chosen photo
+            setImage(selectedImage);
             setShowPreview(true);
 
+            // 3. Assemble Multipart Form Data
             const formData = new FormData();
 
-            // Prepare the file object
+            // Standardizing URI paths for both iOS and Android platforms
+            const cleanUri = Platform.OS === 'ios' ? rawUri.replace('file://', '') : rawUri;
+
             const fileToUpload = {
-                // Standardizing URI for both platforms
-                uri: Platform.OS === 'ios' ? croppedUri.replace('file://', '') : croppedUri,
-                type: res.mime || 'image/jpeg',
-                name: `staff_avatar_${previewStaff.id}.jpg`,
+                uri: cleanUri,
+                type: selectedImage.type || 'image/jpeg', // react-native-image-picker returns 'type'
+                name: selectedImage.fileName || `staff_avatar_${previewStaff.id}.jpg`,
             };
 
             formData.append('profile_image', fileToUpload as any);
             formData.append('staff_id', previewStaff.id.toString());
             formData.append('action', 'upload_avatar');
 
-            try {
-                const response = await api.post('/church/staffmanagement.php', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                    onUploadProgress: (progressEvent) => {
-                        if (progressEvent.total) {
-                            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                            console.log(`Upload progress: ${percentCompleted}%`);
-                        }
-                    },
-                });
+            // 4. Fire Async Network Upload Request
+            const response = await api.post('/church/staffmanagement.php', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                onUploadProgress: (progressEvent) => {
+                    if (progressEvent.total) {
+                        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                        console.log(`Upload progress: ${percentCompleted}%`);
+                    }
+                },
+            });
 
-                if (response.data.success) {
-                    Alert.alert("Success", "Profile photo updated!");
-                    // Optionally refresh your list here
-                    fetchChurches(1, false);
-                } else {
-                    Alert.alert("Error", response.data.message || "Server rejected upload");
-                }
-            } catch (error) {
-                console.error("Upload error:", error);
-                Alert.alert("Error", "Failed to upload image to server.");
+            if (response.data.success) {
+                Alert.alert("Success", "Profile photo updated!");
+                // Refresh local components or data collections
+                fetchChurches(1, false);
+            } else {
+                Alert.alert("Error", response.data.message || "Server rejected upload");
             }
-        }).catch((err: any) => {
-            if (err.code !== 'E_PICKER_CANCELLED') {
-                Alert.alert("Error", err.message);
-            }
-        });
+
+        } catch (error: any) {
+            console.error("Upload error:", error);
+            Alert.alert("Error", "Failed to upload image to server.");
+        }
     };
     const handleConfirm = (result: any) => {
         console.log('handleConfirm', result);

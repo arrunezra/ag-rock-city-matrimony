@@ -15,7 +15,6 @@ import ContactModal from './home_sub_screen/ContactModal';
 import EditHobbiesModal from './home_sub_screen/EditHobbiesModal';
 import { FamilyDetailsModal } from './home_sub_screen/FamilyDetailsModal';
 import { EducationDetailsModal } from './home_sub_screen/EducationDetailsModal';
-import ImagePicker from 'react-native-image-crop-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL_DEV_Profiles_Images } from '@/src/utils/environment';
 import { compressWithSkia } from '@/src/utils/compressWithSkia';

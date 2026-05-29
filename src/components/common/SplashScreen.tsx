@@ -1,6 +1,7 @@
 import HeaderSession from '@/src/screens/common/HeaderSession';
+import FastImage from '@d11/react-native-fast-image';
 import React from 'react';
-import { View, Image, ActivityIndicator, StyleSheet, Dimensions, ImageBackground, StatusBar } from 'react-native';
+import { View, Image, StyleSheet, Dimensions, ImageBackground, StatusBar } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -10,23 +11,21 @@ const SplashScreen = () => {
             <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
             <ImageBackground
-                source={require('@/src/assets/images/bgimage.png')}
+                source={require('../../assets/images/bgimage.png')}
                 style={styles.backgroundImage}
                 resizeMode="cover"
             >
                 <View style={styles.darkOverlay} />
 
                 <View style={styles.logoContainer}>
-                    <Image
-                        source={require('@/src/assets/logo/splace_screen.jpg')}
-                        style={styles.logo}
-                        resizeMode="contain"
+                    <FastImage
+                        source={require('../../assets/logo/splace_screen.jpg')}
+                        style={{ width: '100%', height: '100%' }}
+                        resizeMode={FastImage.resizeMode.contain}
                     />
-                </View>
 
-                {/* <View style={styles.centerSpinnerContainer}>
-                    <ActivityIndicator size="large" color="#e2b45c" />
-                </View> */}
+
+                </View>
             </ImageBackground>
         </View>
     );
@@ -59,7 +58,7 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     centerSpinnerContainer: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         justifyContent: 'center',
         alignItems: 'center',
         top: 60,

@@ -1,7 +1,6 @@
-// hooks/useProfileUpload.ts
 import { useState, useEffect } from 'react';
-import { Alert } from 'react-native';
-import ImagePicker from 'react-native-image-crop-picker';
+import { Alert, Platform } from 'react-native';
+import { launchImageLibrary } from 'react-native-image-picker';
 import NetInfo from "@react-native-community/netinfo";
 import { cleanupImage, handleImageCompression } from '../utils/ImageService';
 import api from '../api/api';
@@ -23,8 +22,9 @@ export const useProfileUpload = (userid: string, profileid: any, onUploadSuccess
   }, []);
 
   const startUpload = async (from: any, profilepic: any) => {
-    console.log('profileid=', from, profileid)
-    let url = `/files/${from == 'gallery' ? 'profile_gallery_upload.php' : 'profile_photo_upload.php'}`;
+    //console.log('profileid=', from, profileid);
+    let url = `/files/${from === 'gallery' ? 'profile_gallery_upload.php' : 'profile_photo_upload.php'}`;
+
     if (isOffline) {
       Alert.alert("Offline", "Please check your internet connection.");
       return;
@@ -33,62 +33,79 @@ export const useProfileUpload = (userid: string, profileid: any, onUploadSuccess
     let tempUri: string | undefined;
 
     try {
-      const image = await ImagePicker.openPicker({
-        cropping: true,
-        cropperCircleOverlay: from !== 'gallery',
+      // 1. Open Native Photo Picker
+      const result = await launchImageLibrary({
         mediaType: 'photo',
-        multiple: false
+        quality: 1,
+        selectionLimit: 1,
       });
+
+      // Handle cancellation gracefully
+      if (result.didCancel || !result.assets || result.assets.length === 0) {
+        return;
+      }
+
+      const selectedImage = result.assets[0];
 
       setIsUploading(true);
       setUploadProgress(0);
 
-      // 1. Optimize
-      const compressed = await handleImageCompression(image);
+      // Map format for compression utility
+      const mappedImageForCompression = {
+        path: selectedImage.uri || '',
+        mime: selectedImage.type || 'image/jpeg',
+        filename: selectedImage.fileName || `${userid}_${Date.now()}.jpg`,
+      };
+
+      // 2. Optimize image using compression engine
+      const compressed = await handleImageCompression(mappedImageForCompression as any);
       if (!compressed) throw new Error("Compression failed");
       tempUri = compressed.uri;
 
-      // 2. Upload
+      // 3. Setup FormData payload variables
       const uploadData = new FormData();
+
       uploadData.append('file', {
         uri: compressed.uri,
         type: compressed.type,
         name: compressed.name,
       } as any);
+
+      // ✅ FIX: Send raw URI string parameter explicitly to satisfy backend requirements (like Line 84 lookup)
+      uploadData.append('uri', compressed.uri);
+
       uploadData.append('userid', userid);
       uploadData.append('profile_id', profileid);
+      uploadData.append('is_profile_pic', profilepic ? '1' : '0'); // Pass profile placement parameter safely
+
       const response = await api.post(url, uploadData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: ({ loaded, total }) => {
           if (total && total > 0) {
-            // Calculate progress and clamp it to a maximum ceiling of 100
             const progressPercentage = Math.min(Math.round((loaded * 100) / total), 100);
             setUploadProgress(progressPercentage);
           }
-
         }
       });
 
       if (response.data.success) {
         onUploadSuccess(response.data);
+
       } else {
         throw new Error(response.data.message || "Upload failed");
       }
 
     } catch (error: any) {
-      if (error.message !== 'User cancelled image selection') {
-        showAlert({
-          type: 'error',
-          title: 'Gallery Info.',
-          message: error.message || "Something went wrong. Please try again.",
-          confirmText: "OK",
-          onConfirm: async () => {
-            setIsUploading(false);
-            hideAlert();
-          }
-        });
-        // Alert.alert("Error", error.message);
-      }
+      showAlert({
+        type: 'error',
+        title: 'Gallery Info.',
+        message: error.message || "Something went wrong. Please try again.",
+        confirmText: "OK",
+        onConfirm: async () => {
+          setIsUploading(false);
+          hideAlert();
+        }
+      });
     } finally {
       setIsUploading(false);
       if (tempUri) await cleanupImage(tempUri);

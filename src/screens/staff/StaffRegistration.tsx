@@ -89,7 +89,7 @@ const StaffRegistration = ({ navigation, route }: any) => {
     }, [id]);
     const fetchSingleStaffById = async () => {
         const responses = await StaffService.fetchSingleStaffById(id);
-        console.log('response', responses);
+        //console.log('response', responses);
         if (responses.success) {
             let response = cloneDeep(responses);
             response.data.joiningDate = new Date(response.data.joiningDate);
@@ -103,7 +103,7 @@ const StaffRegistration = ({ navigation, route }: any) => {
     }, [formData.city]);
 
     const getCurchBranches = async () => {
-        console.log('formData', formData.city)
+        //console.log('formData', formData.city)
         const branches = await ChruchService.getCurchBranches(formData.city ?? "")
         if (branches.success) {
             if (branches?.data?.length == 0) {
@@ -128,8 +128,8 @@ const StaffRegistration = ({ navigation, route }: any) => {
                 if (indx != -1) {
                     updateForm('selected_pastor', transformedData[indx].pastor_name);
                     updateForm('selected_address', transformedData[indx].address);
-                    console.log('selected_pastor', transformedData[indx].pastor_name);
-                    console.log('selected_address', transformedData[indx].address);
+                    // console.log('selected_pastor', transformedData[indx].pastor_name);
+                    // console.log('selected_address', transformedData[indx].address);
 
                 }
             }

@@ -185,7 +185,7 @@ export default function CustomDrawerContent(props: any) {
                         </Pressable>
 
                         {/* The Floating Footer Card */}
-                        <Box className="mx-6 bg-green-600 rounded-[40px] p-5  ">
+                        <Box className="mx-6 rounded-[40px] p-5  ">
                             <Box className="bg-slate-50 rounded-2xl p-4">
                                 <VStack space="xs" className="items-center">
                                     <Text className="text-slate-900 font-black text-[10px] tracking-[2px]">

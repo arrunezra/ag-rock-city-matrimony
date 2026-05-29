@@ -110,3 +110,16 @@ deleted_at
 active_status
 created_at
 updated_at
+
+
+TRUNCATE TABLE profiles_background;
+TRUNCATE TABLE profiles_blocks;
+TRUNCATE TABLE profiles_docs;
+TRUNCATE TABLE profiles_family;
+TRUNCATE TABLE profiles_interests;
+TRUNCATE TABLE profiles_physical;
+TRUNCATE TABLE profiles_professional;
+TRUNCATE TABLE profiles_reports;
+TRUNCATE TABLE profiles_views;
+TRUNCATE TABLE profile_files;
+TRUNCATE TABLE profile_likes;

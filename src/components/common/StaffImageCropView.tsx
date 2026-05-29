@@ -8,7 +8,6 @@ import {
 } from '@/src/components/common/GluestackUI';
 
 export default function StaffImageCropView({ imageUri, onConfirm, onCancel }: any) {
-    console.log('imageUri', imageUri,);
 
     const cropZoomRef = useRef<CropZoomRefType>(null);
 
